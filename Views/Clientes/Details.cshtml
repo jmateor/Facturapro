@@ -1,0 +1,346 @@
+@model Facturapro.Models.Entities.Cliente
+
+@{
+    ViewData["Title"] = "Detalles del Cliente";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-user-star-line me-1"></i>
+                @Model.Nombre
+            </h4>
+            <p class="text-muted mb-0">Información detallada del cliente</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-primary">
+                <i class="ri-edit-line me-1"></i> Editar
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Columna Izquierda - Información del Cliente -->
+    <div class="col-xl-8">
+        <!-- Información Básica -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-primary rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">1</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Información Básica</h5>
+                        <p class="text-muted mb-0 small">Datos de identificación del cliente</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">RNC / Cédula</label>
+                        <div class="fw-semibold">
+                            <i class="ri-id-card-line me-1 text-primary"></i>
+                            @(Model.RNC ?? "-")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">NIF / CIF</label>
+                        <div class="fw-semibold">
+                            <i class="ri-bank-card-line me-1 text-primary"></i>
+                            @(Model.NIF ?? "-")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Email</label>
+                        <div class="fw-semibold">
+                            <i class="ri-mail-line me-1 text-primary"></i>
+                            @if (!string.IsNullOrEmpty(Model.Email))
+                            {
+                                <a href="mailto:@Model.Email" class="text-decoration-none">@Model.Email</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Teléfono</label>
+                        <div class="fw-semibold">
+                            <i class="ri-phone-line me-1 text-primary"></i>
+                            @(Model.Telefono ?? "-")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Estado</label>
+                        <div>
+                            @if (Model.Activo)
+                            {
+                                <span class="badge bg-success-soft text-success">
+                                    <i class="ri-checkbox-circle-fill me-1"></i>Activo
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-soft text-secondary">
+                                    <i class="ri-stop-circle-fill me-1"></i>Inactivo
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Fecha de Alta</label>
+                        <div class="fw-semibold">
+                            <i class="ri-calendar-line me-1 text-primary"></i>
+                            @Model.FechaAlta.ToString("dd/MM/yyyy")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dirección -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-info rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">2</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Ubicación</h5>
+                        <p class="text-muted mb-0 small">Dirección y datos de ubicación</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label text-muted small">Dirección</label>
+                        <div class="fw-semibold">
+                            <i class="ri-map-pin-line me-1 text-info"></i>
+                            @(Model.Direccion ?? "-")
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Ciudad / Municipio</label>
+                        <div class="fw-semibold">
+                            @(Model.Ciudad ?? "-")
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Código Postal</label>
+                        <div class="fw-semibold">
+                            @(Model.CodigoPostal ?? "-")
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">País</label>
+                        <div class="fw-semibold">
+                            <i class="ri-global-line me-1 text-info"></i>
+                            @(Model.Pais ?? "-")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Facturas del Cliente -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-success rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">3</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Facturas Asociadas</h5>
+                        <p class="text-muted mb-0 small">Historial de facturas del cliente</p>
+                    </div>
+                </div>
+
+                @if (Model.Facturas != null && Model.Facturas.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-centered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Comprobante</th>
+                                    <th>Fecha</th>
+                                    <th class="text-end">Monto</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var factura in Model.Facturas.OrderByDescending(f => f.FechaEmision))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="fw-semibold">@factura.NumeroFactura</span>
+                                        </td>
+                                        <td>@factura.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                        <td class="text-end fw-bold text-success">
+                                            @factura.Total.ToString("C", cultura)
+                                        </td>
+                                        <td class="text-center">
+                                            @if (factura.Estado == "Pagada")
+                                            {
+                                                <span class="badge bg-success-soft text-success">
+                                                    <i class="ri-checkbox-circle-fill"></i> Pagada
+                                                </span>
+                                            }
+                                            else if (factura.Estado == "Pendiente")
+                                            {
+                                                <span class="badge bg-warning-soft text-warning">
+                                                    <i class="ri-time-line"></i> Pendiente
+                                                </span>
+                                            }
+                                            else if (factura.Estado == "Anulada")
+                                            {
+                                                <span class="badge bg-danger-soft text-danger">
+                                                    <i class="ri-close-circle-fill"></i> Anulada
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">@factura.Estado</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="@Url.Action("Details", "Facturas", new { id = factura.Id })" class="btn btn-sm btn-soft-info">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="2" class="fw-bold">Total General:</td>
+                                    <td class="text-end fw-bold text-success">
+                                        @Model.Facturas.Sum(f => f.Total).ToString("C", cultura)
+                                    </td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <div class="avatar-lg bg-soft-success rounded-circle mb-3 mx-auto d-inline-flex" style="width: 64px; height: 64px;">
+                            <i class="ri-file-list-3-line display-4 text-success"></i>
+                        </div>
+                        <h6 class="fw-semibold">Sin facturas registradas</h6>
+                        <p class="text-muted mb-3 small">Este cliente aún no tiene facturas asociadas</p>
+                        <a href="@Url.Action("Create", "Facturas", new { clienteId = Model.Id })" class="btn btn-success">
+                            <i class="ri-add-line me-1"></i> Crear primera factura
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna Derecha - Resumen y Estadísticas -->
+    <div class="col-xl-4">
+        <!-- Tarjeta de Perfil -->
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="avatar-lg bg-white text-primary rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center fw-bold" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                    @Model.Nombre.Substring(0, 1).ToUpper()
+                </div>
+                <h5 class="mb-1">@Model.Nombre</h5>
+                <p class="text-white-50 small mb-3">
+                    Cliente desde @Model.FechaAlta.ToString("MMMM yyyy")
+                </p>
+                <span class="badge bg-white text-primary">
+                    @(Model.Activo ? "Activo" : "Inactivo")
+                </span>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-bar-chart-box-line me-1 text-primary"></i>
+                    Estadísticas
+                </h6>
+
+                <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                    <div>
+                        <p class="text-muted mb-0 small">Total Facturas</p>
+                        <h4 class="mb-0 fw-bold">@Model.Facturas?.Count ?? 0</h4>
+                    </div>
+                    <div class="text-end">
+                        <p class="text-muted mb-0 small">Total Facturado</p>
+                        <h4 class="mb-0 fw-bold text-success">@(Model.Facturas?.Sum(f => f.Total) ?? 0).ToString("C0", cultura)</h4>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="p-3 bg-soft-primary rounded-3 text-center">
+                            <i class="ri-check-line text-success fs-4"></i>
+                            <p class="text-muted small mb-0">Pagadas</p>
+                            <h5 class="mb-0 fw-bold">@(Model.Facturas?.Count(f => f.Estado == "Pagada") ?? 0)</h5>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-soft-warning rounded-3 text-center">
+                            <i class="ri-time-line text-warning fs-4"></i>
+                            <p class="text-muted small mb-0">Pendientes</p>
+                            <h5 class="mb-0 fw-bold">@(Model.Facturas?.Count(f => f.Estado == "Pendiente") ?? 0)</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones Rápidas -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-flashlight-line me-1 text-warning"></i>
+                    Acciones Rápidas
+                </h6>
+
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-soft-primary">
+                        <i class="ri-edit-line me-1"></i> Editar Cliente
+                    </a>
+                    <a href="@Url.Action("Create", "Facturas", new { clienteId = Model.Id })" class="btn btn-soft-success">
+                        <i class="ri-file-text-line me-1"></i> Nueva Factura
+                    </a>
+                    <a href="mailto:@Model.Email" class="btn btn-soft-info" @(string.IsNullOrEmpty(Model.Email) ? "disabled" : "")>
+                        <i class="ri-mail-send-line me-1"></i> Enviar Email
+                    </a>
+                    <a href="tel:@Model.Telefono" class="btn btn-soft-secondary" @(string.IsNullOrEmpty(Model.Telefono) ? "disabled" : "")>
+                        <i class="ri-phone-line me-1"></i> Llamar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notas -->
+        <div class="card bg-soft-info border-0">
+            <div class="card-body">
+                <h6 class="card-title text-info mb-2">
+                    <i class="ri-information-line me-1"></i>
+                    Información
+                </h6>
+                <p class="small text-muted mb-0">
+                    Esta vista muestra toda la información disponible del cliente en el sistema.
+                    Para modificar cualquier dato, utiliza el botón "Editar".
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

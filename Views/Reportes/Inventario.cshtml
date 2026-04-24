@@ -1,0 +1,132 @@
+@model Facturapro.Models.ViewModels.Reportes.ReporteInventarioViewModel
+@{
+    ViewData["Title"] = "Reporte de Inventario";
+}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Reporte de Inventario</h1>
+        <p>Estado actual del inventario y productos</p>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Dashboard", "Reportes")" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Volver al Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h3>Filtros</h3>
+    </div>
+    <div class="card-body">
+        <form method="get" class="d-flex gap-2" style="flex-wrap: wrap;">
+            <div class="form-group" style="min-width: 200px;">
+                <label>Categoría</label>
+                <select name="categoriaId" class="form-select" asp-items="ViewBag.Categorias">
+                    <option value="">Todas las categorías</option>
+                </select>
+            </div>
+            <div class="form-group" style="min-width: 200px;">
+                <label>Estado de Stock</label>
+                <select name="estadoStock" class="form-select">
+                    <option value="" selected="@(Model.EstadoStock == null)">Todos</option>
+                    <option value="bajo" selected="@(Model.EstadoStock == "bajo")">Bajo Stock</option>
+                    <option value="sin_stock" selected="@(Model.EstadoStock == "sin_stock")">Sin Stock</option>
+                </select>
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <a href="@Url.Action("Inventario")" class="btn btn-ghost ml-2">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="grid grid-cols-4 mb-4">
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-1">Total Productos</p>
+            <h2>@Model.TotalProductos</h2>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-1">Valor del Inventario</p>
+            <h2>RD$@Model.ValorInventarioTotal.ToString("N2")</h2>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center" style="background: #fef3c7;">
+            <p class="text-muted mb-1">Bajo Stock</p>
+            <h2 style="color: #d97706;">@Model.ProductosBajoStock</h2>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center" style="background: #fee2e2;">
+            <p class="text-muted mb-1">Sin Stock</p>
+            <h2 style="color: #dc2626;">@Model.ProductosSinStock</h2>
+        </div>
+    </div>
+</div>
+
+<!-- Detalle -->
+<div class="card">
+    <div class="card-header">
+        <h3>Detalle de Productos</h3>
+    </div>
+    <div class="card-body">
+        @if (Model.Productos.Any())
+        {
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Código</th>
+                            <th>Categoría</th>
+                            <th class="text-right">Stock</th>
+                            <th class="text-right">Mínimo</th>
+                            <th class="text-right">Costo</th>
+                            <th class="text-right">Precio</th>
+                            <th class="text-right">Valor Inv.</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var producto in Model.Productos.OrderBy(p => p.Nombre))
+                        {
+                            <tr>
+                                <td>@producto.Nombre</td>
+                                <td>@producto.CodigoBarra</td>
+                                <td>@producto.Categoria</td>
+                                <td class="text-right">@producto.StockActual.ToString("N2")</td>
+                                <td class="text-right">@producto.StockMinimo.ToString("N2")</td>
+                                <td class="text-right">RD$@producto.Costo.ToString("N2")</td>
+                                <td class="text-right">RD$@producto.Precio.ToString("N2")</td>
+                                <td class="text-right">RD$@producto.ValorInventario.ToString("N2")</td>
+                                <td><span class="badge @producto.EstadoClass">@producto.EstadoTexto</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: #f8fafc; font-weight: 600;">
+                            <td colspan="4">TOTALES</td>
+                            <td colspan="4" class="text-right">RD$@Model.Productos.Sum(p => p.ValorInventario).ToString("N2")</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted text-center py-4">No se encontraron productos con los filtros seleccionados</p>
+        }
+    </div>
+</div>

@@ -1,0 +1,610 @@
+/* Custom styles for Facturapro with Velonic theme */
+
+/* ===================================
+   Core Styles
+   =================================== */
+
+/* Fix for active menu items */
+.side-nav-link.active {
+    color: var(--ct-menu-item-active-color) !important;
+}
+
+.side-nav-link.active i {
+    color: var(--ct-menu-item-active-color) !important;
+}
+
+/* Logo text styling */
+.logo-text {
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+/* Custom widget colors for Facturapro */
+.widget-flat.text-bg-facturapro {
+    background-color: #6658dd !important;
+}
+
+/* Page title styling */
+.page-title-box {
+    margin-bottom: 1.5rem;
+}
+
+/* Custom badges for invoice states */
+.badge-pagada {
+    background-color: #1abc9c;
+}
+
+.badge-pendiente {
+    background-color: #f7b84b;
+}
+
+.badge-cancelada {
+    background-color: #6c757d;
+}
+
+/* Stats cards custom colors */
+.stat-ventas {
+    background-color: #6658dd !important;
+}
+
+.stat-facturas {
+    background-color: #1abc9c !important;
+}
+
+.stat-clientes {
+    background-color: #f672a7 !important;
+}
+
+.stat-productos {
+    background-color: #4fc6e1 !important;
+}
+
+/* Table actions */
+.table-action-icon {
+    font-size: 1.1rem;
+    color: #6c757d;
+    transition: color 0.2s;
+}
+
+.table-action-icon:hover {
+    color: #6658dd;
+}
+
+/* Custom forms */
+.form-label-required::after {
+    content: " *";
+    color: #f672a7;
+}
+
+/* POS specific styles */
+.pos-product-card {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pos-product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Kalder inventory styles */
+.kalder-stat-card {
+    border-left: 4px solid;
+}
+
+.kalder-stat-card.primary {
+    border-left-color: #6658dd;
+}
+
+.kalder-stat-card.success {
+    border-left-color: #1abc9c;
+}
+
+.kalder-stat-card.warning {
+    border-left-color: #f7b84b;
+}
+
+.kalder-stat-card.danger {
+    border-left-color: #f672a7;
+}
+
+/* Dashboard grid improvements */
+.dashboard-stat-card {
+    transition: transform 0.2s;
+}
+
+.dashboard-stat-card:hover {
+    transform: translateY(-3px);
+}
+
+/* Fix for user dropdown */
+.account-user-avatar {
+    display: inline-flex;
+}
+
+/* Custom scrollbar for sidebar */
+.leftside-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.leftside-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.leftside-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+/* Print styles */
+@media print {
+    .leftside-menu,
+    .navbar-custom,
+    .footer,
+    .btn {
+        display: none !important;
+    }
+
+    .content-page {
+        margin-left: 0 !important;
+    }
+}
+
+/* ===================================
+   DGII & Empresa Configuration Pages
+   =================================== */
+
+/* Soft background colors */
+.bg-soft-primary {
+    background-color: rgba(102, 88, 221, 0.1) !important;
+}
+
+.bg-soft-success {
+    background-color: rgba(26, 188, 156, 0.1) !important;
+}
+
+.bg-soft-warning {
+    background-color: rgba(247, 184, 75, 0.1) !important;
+}
+
+.bg-soft-info {
+    background-color: rgba(79, 198, 225, 0.1) !important;
+}
+
+.bg-soft-danger {
+    background-color: rgba(246, 114, 167, 0.1) !important;
+}
+
+.bg-soft-light {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+}
+
+.bg-soft-dark {
+    background-color: rgba(52, 58, 64, 0.1) !important;
+}
+
+/* Badge soft variants */
+.badge-soft-primary {
+    background-color: rgba(102, 88, 221, 0.1);
+    color: #6658dd;
+}
+
+.badge-soft-success {
+    background-color: rgba(26, 188, 156, 0.1);
+    color: #1abc9c;
+}
+
+.badge-soft-warning {
+    background-color: rgba(247, 184, 75, 0.1);
+    color: #f7b84b;
+}
+
+.badge-soft-danger {
+    background-color: rgba(246, 114, 167, 0.1);
+    color: #f672a7;
+}
+
+.badge-soft-info {
+    background-color: rgba(79, 198, 225, 0.1);
+    color: #4fc6e1;
+}
+
+/* Avatar styling */
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+}
+
+.avatar-sm.bg-primary { background-color: #6658dd !important; }
+.avatar-sm.bg-success { background-color: #1abc9c !important; }
+.avatar-sm.bg-warning { background-color: #f7b84b !important; }
+.avatar-sm.bg-info { background-color: #4fc6e1 !important; }
+.avatar-sm.bg-dark { background-color: #343a40 !important; }
+
+/* Large switch */
+.form-switch-lg {
+    padding-left: 3em;
+}
+
+.form-switch-lg .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    margin-left: -3em;
+}
+
+/* Card hover effect */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.075);
+}
+
+/* Page header styling */
+.page-header-title {
+    margin-bottom: 1.5rem;
+}
+
+.page-header-title h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 0.25rem;
+}
+
+.page-header-title p {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Form enhancements */
+.form-control:focus,
+.form-select:focus {
+    border-color: #6658dd;
+    box-shadow: 0 0 0 0.2rem rgba(102, 88, 221, 0.25);
+}
+
+/* Code styling */
+code {
+    font-size: 0.875em;
+    word-break: break-all;
+}
+
+/* Alert improvements */
+.alert {
+    border-radius: 0.5rem;
+}
+
+/* Spinner animation */
+.ri-spin {
+    animation: ri-spin 1s infinite linear;
+}
+
+@keyframes ri-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Border dashed utility */
+.border-dashed {
+    border-style: dashed !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+    }
+
+    .display-4 {
+        font-size: 2rem;
+    }
+
+    .page-header-title h4 {
+        font-size: 1.25rem;
+    }
+}
+
+/* ===================================
+   DGII Configuration Page Styles
+   =================================== */
+
+/* Status cards with soft colors */
+.bg-soft-primary {
+    background-color: rgba(102, 88, 221, 0.1) !important;
+}
+
+.bg-soft-success {
+    background-color: rgba(26, 188, 156, 0.1) !important;
+}
+
+.bg-soft-warning {
+    background-color: rgba(247, 184, 75, 0.1) !important;
+}
+
+.bg-soft-info {
+    background-color: rgba(79, 198, 225, 0.1) !important;
+}
+
+.bg-soft-danger {
+    background-color: rgba(246, 114, 167, 0.1) !important;
+}
+
+.bg-soft-light {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+}
+
+.bg-soft-dark {
+    background-color: rgba(52, 58, 64, 0.1) !important;
+}
+
+/* Badge soft variants */
+.badge-soft-primary {
+    background-color: rgba(102, 88, 221, 0.1);
+    color: #6658dd;
+}
+
+.badge-soft-success {
+    background-color: rgba(26, 188, 156, 0.1);
+    color: #1abc9c;
+}
+
+.badge-soft-warning {
+    background-color: rgba(247, 184, 75, 0.1);
+    color: #f7b84b;
+}
+
+.badge-soft-danger {
+    background-color: rgba(246, 114, 167, 0.1);
+    color: #f672a7;
+}
+
+.badge-soft-info {
+    background-color: rgba(79, 198, 225, 0.1);
+    color: #4fc6e1;
+}
+
+/* Avatar styling */
+.avatar-sm {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-sm.bg-primary { background-color: #6658dd !important; }
+.avatar-sm.bg-success { background-color: #1abc9c !important; }
+.avatar-sm.bg-warning { background-color: #f7b84b !important; }
+.avatar-sm.bg-info { background-color: #4fc6e1 !important; }
+.avatar-sm.bg-dark { background-color: #343a40 !important; }
+
+/* Large switch */
+.form-switch-lg {
+    padding-left: 3em;
+}
+
+.form-switch-lg .form-check-input {
+    width: 3em;
+    height: 1.5em;
+    margin-left: -3em;
+}
+
+/* Card hover effect */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.075);
+}
+
+/* Page header styling */
+.page-header-title {
+    margin-bottom: 1.5rem;
+}
+
+.page-header-title h4 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #343a40;
+    margin-bottom: 0.25rem;
+}
+
+/* Form enhancements */
+.form-control:focus,
+.form-select:focus {
+    border-color: #6658dd;
+    box-shadow: 0 0 0 0.2rem rgba(102, 88, 221, 0.25);
+}
+
+/* Code styling */
+code {
+    font-size: 0.875em;
+    word-break: break-all;
+}
+
+/* Alert improvements */
+.alert {
+    border-radius: 0.5rem;
+}
+
+/* Spinner animation */
+.ri-spin {
+    animation: ri-spin 1s infinite linear;
+}
+
+@keyframes ri-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        font-size: 0.875rem;
+    }
+
+    .display-4 {
+        font-size: 2rem;
+    }
+
+    .page-header-title h4 {
+        font-size: 1.25rem;
+    }
+}
+
+.side-nav-link.active i {
+    color: var(--ct-menu-item-active-color) !important;
+}
+
+/* Logo text styling */
+.logo-text {
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+/* Custom widget colors for Facturapro */
+.widget-flat.text-bg-facturapro {
+    background-color: #6658dd !important;
+}
+
+/* Page title styling */
+.page-title-box {
+    margin-bottom: 1.5rem;
+}
+
+/* Custom badges for invoice states */
+.badge-pagada {
+    background-color: #1abc9c;
+}
+
+.badge-pendiente {
+    background-color: #f7b84b;
+}
+
+.badge-cancelada {
+    background-color: #6c757d;
+}
+
+/* Stats cards custom colors */
+.stat-ventas {
+    background-color: #6658dd !important;
+}
+
+.stat-facturas {
+    background-color: #1abc9c !important;
+}
+
+.stat-clientes {
+    background-color: #f672a7 !important;
+}
+
+.stat-productos {
+    background-color: #4fc6e1 !important;
+}
+
+/* Table actions */
+.table-action-icon {
+    font-size: 1.1rem;
+    color: #6c757d;
+    transition: color 0.2s;
+}
+
+.table-action-icon:hover {
+    color: #6658dd;
+}
+
+/* Custom forms */
+.form-label-required::after {
+    content: " *";
+    color: #f672a7;
+}
+
+/* POS specific styles */
+.pos-product-card {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pos-product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Kalder inventory styles */
+.kalder-stat-card {
+    border-left: 4px solid;
+}
+
+.kalder-stat-card.primary {
+    border-left-color: #6658dd;
+}
+
+.kalder-stat-card.success {
+    border-left-color: #1abc9c;
+}
+
+.kalder-stat-card.warning {
+    border-left-color: #f7b84b;
+}
+
+.kalder-stat-card.danger {
+    border-left-color: #f672a7;
+}
+
+/* Dashboard grid improvements */
+.dashboard-stat-card {
+    transition: transform 0.2s;
+}
+
+.dashboard-stat-card:hover {
+    transform: translateY(-3px);
+}
+
+/* Fix for user dropdown */
+.account-user-avatar {
+    display: inline-flex;
+}
+
+/* Custom scrollbar for sidebar */
+.leftside-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.leftside-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.leftside-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+/* Print styles */
+@media print {
+    .leftside-menu,
+    .navbar-custom,
+    .footer,
+    .btn {
+        display: none !important;
+    }
+
+    .content-page {
+        margin-left: 0 !important;
+    }
+}

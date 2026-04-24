@@ -1,0 +1,76 @@
+@model Facturapro.Models.Entities.Producto
+
+@{
+    ViewData["Title"] = "Registrar Entrada - Kalder";
+}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Registrar Entrada</h1>
+        <p>Agregar stock al inventario</p>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Inventario")" class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Volver
+        </a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h3 class="card-title">@Model.Nombre</h3>
+    </div>
+    <div class="card-body">
+        <div style="background: var(--gray-50); padding: var(--space-lg); border-radius: var(--radius); margin-bottom: var(--space-lg);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Código</div>
+                    <div style="font-weight: 600;">@Model.Codigo</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Stock Actual</div>
+                    <div style="font-weight: 600; font-size: 1.25rem;">@Model.Stock unidades</div>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="Entrada" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+
+            <div class="form-group">
+                <label class="form-label required">Cantidad a Ingresar</label>
+                <input type="number" name="cantidad" class="form-input" min="1" required autofocus />
+                <span class="form-hint">Ingrese la cantidad de unidades que están entrando al almacén</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Proveedor</label>
+                <input type="text" name="proveedor" class="form-input" placeholder="Nombre del proveedor (opcional)" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">N° Factura Proveedor</label>
+                <input type="text" name="numeroFacturaProveedor" class="form-input" placeholder="Número de referencia (opcional)" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Motivo / Notas</label>
+                <textarea name="motivo" class="form-textarea" rows="3" placeholder="Motivo de la entrada..."></textarea>
+            </div>
+
+            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: var(--space-md);">
+                <a href="@Url.Action("Inventario")" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                    </svg>
+                    Registrar Entrada
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,284 @@
+@model Facturapro.Models.ViewModels.Reportes.ReporteVentasViewModel
+@{
+    ViewData["Title"] = "Reporte de Ventas";
+}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Reporte de Ventas</h1>
+        <p>Análisis detallado de ventas por período</p>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Dashboard", "Reportes")" class="btn btn-ghost">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Volver al Dashboard
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h3>Filtros</h3>
+    </div>
+    <div class="card-body">
+        <form method="get" class="grid grid-cols-5 gap-2">
+            <div class="form-group">
+                <label>Desde</label>
+                <input type="date" name="desde" class="form-control" value="@Model.FechaDesde.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="form-group">
+                <label>Hasta</label>
+                <input type="date" name="hasta" class="form-control" value="@Model.FechaHasta.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="form-group">
+                <label>Tipo e-CF</label>
+                <select name="tipoECF" class="form-select" asp-items="ViewBag.TiposECF"></select>
+            </div>
+            <div class="form-group">
+                <label>Estado DGII</label>
+                <select name="estadoDGII" class="form-select" asp-items="ViewBag.EstadosDGII"></select>
+            </div>
+            <div class="form-group">
+                <label>Cliente</label>
+                <select name="clienteId" class="form-select" asp-items="ViewBag.Clientes">
+                    <option value="">Todos los clientes</option>
+                </select>
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+                <button type="submit" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                    Filtrar
+                </button>
+                <a href="@Url.Action("Ventas")" class="btn btn-ghost ml-2">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="grid grid-cols-4 mb-4">
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-1">Total Ventas</p>
+            <h2>RD$@Model.TotalVentas.ToString("N2")</h2>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-1">Total ITBIS</p>
+            <h2>RD$@Model.TotalITBIS.ToString("N2")</h2>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-1">Total Facturas</p>
+            <h2>@Model.TotalFacturas</h2>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-body text-center">
+            <p class="text-muted mb-1">Promedio por Factura</p>
+            <h2>RD$@Model.PromedioFactura.ToString("N2")</h2>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-2 mb-4">
+    <!-- Gráfico de ventas por día -->
+    @if (Model.VentasPorDia.Any())
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3>Ventas por Día</h3>
+            </div>
+            <div class="card-body">
+                <div style="height: 250px;">
+                    <canvas id="ventasDiaChart"></canvas>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Gráfico por tipo de comprobante -->
+    @if (Model.VentasPorTipo.Any())
+    {
+        <div class="card">
+            <div class="card-header">
+                <h3>Ventas por Tipo e-CF</h3>
+            </div>
+            <div class="card-body">
+                <div style="height: 250px;">
+                    <canvas id="ventasTipoChart"></canvas>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Detalle de Facturas -->
+<div class="card">
+    <div class="card-header">
+        <h3>Detalle de Facturas</h3>
+    </div>
+    <div class="card-body">
+        @if (Model.Facturas.Any())
+        {
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nº / e-CF</th>
+                            <th>Tipo</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th class="text-right">Subtotal</th>
+                            <th class="text-right">ITBIS</th>
+                            <th class="text-right">Total</th>
+                            <th>Estado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var factura in Model.Facturas)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@factura.NumeroFactura</strong>
+                                    @if (!string.IsNullOrEmpty(factura.ENCF))
+                                    {
+                                        <br /><small class="text-muted">@factura.ENCF</small>
+                                    }
+                                </td>
+                                <td><span class="badge badge-primary">E@factura.TipoECF</span></td>
+                                <td>@factura.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @factura.ClienteNombre
+                                    @if (!string.IsNullOrEmpty(factura.ClienteRNC))
+                                    {
+                                        <br /><small class="text-muted">RNC: @factura.ClienteRNC</small>
+                                    }
+                                </td>
+                                <td class="text-right">RD$@factura.Subtotal.ToString("N2")</td>
+                                <td class="text-right">RD$@factura.ITBIS.ToString("N2")</td>
+                                <td class="text-right"><strong>RD$@factura.Total.ToString("N2")</strong></td>
+                                <td><span class="badge @factura.EstadoClass">@factura.EstadoDGII</span></td>
+                                <td>
+                                    <a href="@Url.Action("Details", "Facturas", new { id = factura.FacturaId })" class="btn btn-sm btn-ghost">Ver</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: #f8fafc; font-weight: 600;">
+                            <td colspan="4">TOTALES</td>
+                            <td class="text-right">RD$@Model.Facturas.Sum(f => f.Subtotal).ToString("N2")</td>
+                            <td class="text-right">RD$@Model.Facturas.Sum(f => f.ITBIS).ToString("N2")</td>
+                            <td class="text-right">RD$@Model.Facturas.Sum(f => f.Total).ToString("N2")</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted text-center py-4">No se encontraron facturas con los filtros seleccionados</p>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        @if (Model.VentasPorDia.Any())
+        {
+            <text>
+            const ventasDiaCtx = document.getElementById('ventasDiaChart').getContext('2d');
+            new Chart(ventasDiaCtx, {
+                type: 'line',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.VentasPorDia.Select(v => v.FechaFormateada))),
+                    datasets: [{
+                        label: 'Ventas (RD$)',
+                        data: @Html.Raw(Json.Serialize(Model.VentasPorDia.Select(v => v.Total))),
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderColor: '#2563eb',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#2563eb'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'RD$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+
+        @if (Model.VentasPorTipo.Any())
+        {
+            <text>
+            const ventasTipoCtx = document.getElementById('ventasTipoChart').getContext('2d');
+            new Chart(ventasTipoCtx, {
+                type: 'pie',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.VentasPorTipo.Select(v => v.TipoECFTexto))),
+                    datasets: [{
+                        data: @Html.Raw(Json.Serialize(Model.VentasPorTipo.Select(v => v.Total))),
+                        backgroundColor: [
+                            '#2563eb',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { boxWidth: 12 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return label + ': RD$' + value.toLocaleString() + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+    </script>
+}

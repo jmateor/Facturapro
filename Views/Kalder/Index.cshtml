@@ -1,0 +1,203 @@
+@{
+    ViewData["Title"] = "Kalder - Sistema de Almacén";
+    var productosBajoStock = ViewData["ProductosBajoStock"] as List<Facturapro.Models.Entities.Producto> ?? new List<Facturapro.Models.Entities.Producto>();
+    var movimientosRecientes = ViewData["MovimientosRecientes"] as List<Facturapro.Models.Entities.MovimientoInventario> ?? new List<Facturapro.Models.Entities.MovimientoInventario>();
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <div class="btn-group">
+                    <a href="@Url.Action("Inventario")" class="btn btn-soft-primary">
+                        <i class="ri-archive-line me-1"></i>
+                        Ver Inventario
+                    </a>
+                    <a href="@Url.Action("Historial")" class="btn btn-soft-secondary">
+                        <i class="ri-history-line me-1"></i>
+                        Historial
+                    </a>
+                    <a href="@Url.Action("ReporteStock")" class="btn btn-soft-info">
+                        <i class="ri-bar-chart-box-line me-1"></i>
+                        Reporte
+                    </a>
+                </div>
+            </div>
+            <h4 class="page-title">
+                <i class="ri-archive-line me-2"></i>
+                Kalder
+            </h4>
+            <p class="text-muted mb-0">Sistema de Gestión de Almacén e Inventario</p>
+        </div>
+    </div>
+</div>
+<!-- end page title -->
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-double-line me-1"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-1"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Estadísticas -->
+<div class="row mb-3">
+    <div class="col-md-3">
+        <div class="card widget-flat text-bg-primary">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-box-3-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0">Productos en Inventario</h6>
+                <h2 class="my-2">@ViewData["TotalProductos"]</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card widget-flat text-bg-success">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-stack-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0">Unidades en Stock</h6>
+                <h2 class="my-2">@ViewData["StockTotal"]</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card widget-flat text-bg-purple">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-money-dollar-circle-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0">Valor del Inventario</h6>
+                <h2 class="my-2">@(((decimal)ViewData["ValorInventario"]!).ToString("C", cultura))</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card widget-flat text-bg-warning">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-exchange-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0">Movimientos Hoy</h6>
+                <h2 class="my-2">@ViewData["MovimientosHoy"]</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Alertas de Stock Bajo -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="header-title mb-0 text-danger">
+                    <i class="ri-alarm-warning-line me-1"></i>
+                    Alertas de Stock Bajo
+                    <span class="badge bg-danger ms-2">@productosBajoStock.Count</span>
+                </h5>
+            </div>
+            <div class="card-body" style="max-height: 350px; overflow-y: auto;">
+                @if (productosBajoStock.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var producto in productosBajoStock)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <h6 class="mb-1">@producto.Nombre</h6>
+                                    <small class="text-danger">
+                                        <i class="ri-error-warning-line me-1"></i>
+                                        Stock: @producto.Stock unidades
+                                    </small>
+                                </div>
+                                <a href="@Url.Action("Entrada", new { id = producto.Id })" class="btn btn-sm btn-soft-success">
+                                    <i class="ri-add-line me-1"></i>
+                                    Entrada
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="ri-check-double-line text-success" style="font-size: 3rem;"></i>
+                        <p class="text-success mt-2 mb-0">No hay productos con stock bajo</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Movimientos Recientes -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="header-title mb-0">
+                    <i class="ri-history-line me-1"></i>
+                    Movimientos Recientes
+                </h5>
+            </div>
+            <div class="card-body p-0" style="max-height: 350px; overflow-y: auto;">
+                @if (movimientosRecientes.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var mov in movimientosRecientes)
+                        {
+                            var esEntrada = mov.TipoMovimiento == TipoMovimiento.EntradaCompra ||
+                                            mov.TipoMovimiento == TipoMovimiento.EntradaAjuste ||
+                                            mov.TipoMovimiento == TipoMovimiento.EntradaDevolucion;
+                            var esAjuste = mov.TipoMovimiento.ToString().Contains("Ajuste");
+                            var bgColor = esEntrada ? "bg-success-subtle text-success" : (esAjuste ? "bg-warning-subtle text-warning" : "bg-danger-subtle text-danger");
+                            var signo = esEntrada ? "+" : "-";
+                            var icono = esEntrada ? "ri-arrow-down-line" : (esAjuste ? "ri-refresh-line" : "ri-arrow-up-line");
+
+                            <div class="list-group-item">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="avatar-sm rounded-circle @bgColor d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="ri-lg @icono"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-0">@(mov.Producto?.Nombre ?? "N/A")</h6>
+                                        <small class="text-muted">@mov.TipoMovimiento.ToString() - @mov.FechaMovimiento.ToString("dd/MM HH:mm")</small>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="fw-bold @bgColor px-2 py-1 rounded">@signo@mov.Cantidad</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="ri-history-line text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2 mb-0">No hay movimientos recientes</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

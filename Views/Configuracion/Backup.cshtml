@@ -1,0 +1,151 @@
+@{
+    ViewData["Title"] = "Respaldo de Datos";
+}
+
+<style>
+    .config-wrapper {
+        max-width: 700px;
+        margin: 0 auto;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .config-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-lg);
+    }
+
+    .config-card-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: var(--space-md);
+        color: var(--text-primary);
+    }
+
+    .backup-option {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-lg);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        margin-bottom: var(--space-md);
+        cursor: pointer;
+        transition: all var(--transition);
+    }
+
+    .backup-option:hover {
+        border-color: var(--primary-color);
+        background: rgb(99 102 241 / 0.02);
+    }
+
+    .backup-option svg {
+        width: 40px;
+        height: 40px;
+        color: var(--primary-color);
+    }
+
+    .backup-option-content {
+        flex: 1;
+    }
+
+    .backup-option-title {
+        font-weight: 600;
+        margin-bottom: var(--space-xs);
+    }
+
+    .backup-option-desc {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .backup-history {
+        margin-top: var(--space-lg);
+    }
+
+    .backup-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: var(--space) var(--space-md);
+        border-bottom: 1px solid var(--gray-100);
+    }
+
+    .backup-item:last-child {
+        border-bottom: none;
+    }
+
+    .backup-date {
+        font-weight: 500;
+    }
+
+    .backup-size {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+</style>
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Respaldo de Datos</h1>
+        <p>Exporte y proteja la información de su negocio</p>
+    </div>
+</div>
+
+<div class="config-wrapper">
+    <div class="config-card">
+        <h3 class="config-card-title">Crear Respaldo</h3>
+
+        <div class="backup-option" onclick="alert('Funcionalidad en desarrollo')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15m0-3l-3-3m0 0l-3 3m3-3v11.25" />
+            </svg>
+            <div class="backup-option-content">
+                <div class="backup-option-title">Exportar datos completos</div>
+                <div class="backup-option-desc">Descargue una copia de toda su base de datos</div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+        </div>
+
+        <div class="backup-option" onclick="alert('Funcionalidad en desarrollo')">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1..007a.75.75 0 01-.75.75H6.75a.75.75 0 01-.75-.75V18zm-3-3.75v1..007a.75.75 0 01-.75.75H3.75a.75.75 0 01-.75-.75V15zm6 0v1..007a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75V15zm6 0v1..007a.75.75 0 01-.75.75H15.75a.75.75 0 01-.75-.75V15zm-12-3.75v1..007a.75.75 0 01-.75.75H3.75a.75.75 0 01-.75-.75V11.25zm6 0v1..007a.75.75 0 01-.75.75H9.75a.75.75 0 01-.75-.75V11.25zm6 0v1..007a.75.75 0 01-.75.75H15.75a.75.75 0 01-.75-.75V11.25zM21 15.75a.75.75 0 01-.75.75h-1..007a.75.75 0 01-.75-.75V15zm0-3a.75.75 0 01-.75.75h-1..007a.75.75 0 01-.75-.75V12zm0-3a.75.75 0 01-.75.75h-1..007a.75.75 0 01-.75-.75V9z" />
+            </svg>
+            <div class="backup-option-content">
+                <div class="backup-option-title">Exportar solo productos</div>
+                <div class="backup-option-desc">Descargue su catálogo de productos en Excel</div>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="config-card">
+        <h3 class="config-card-title">Historial de Respaldos</h3>
+        <p style="color: var(--text-muted); margin-bottom: var(--space-lg);">
+            No hay respaldos recientes
+        </p>
+    </div>
+
+    <div class="config-card">
+        <h3 class="config-card-title">Restaurar Datos</h3>
+        <div class="alert alert-warning" style="margin-bottom: var(--space-md);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            Esta acción reemplazará todos los datos actuales
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="alert('Funcionalidad en desarrollo')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            Cargar respaldo
+        </button>
+    </div>
+</div>

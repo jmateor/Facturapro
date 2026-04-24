@@ -1,0 +1,198 @@
+@model List<Facturapro.Models.ViewModels.Reportes.VentasPorCategoriaViewModel>
+
+@{
+    ViewData["Title"] = "Ventas por Categoría";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-pie-chart-2-line me-1"></i>
+                Ventas por Categoría
+            </h4>
+            <p class="text-muted mb-0">Distribución de ventas por categoría de productos</p>
+        </div>
+        <div>
+            <a href="@Url.Action("General")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small">Desde</label>
+                <input type="date" name="desde" class="form-control" value="@Context.Request.Query["desde"]" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small">Hasta</label>
+                <input type="date" name="hasta" class="form-control" value="@Context.Request.Query["hasta"]" />
+            </div>
+            <div class="col-md-4">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="ri-filter-search-line me-1"></i> Filtrar
+                    </button>
+                    <a href="@Url.Action("VentasPorCategoria")" class="btn btn-soft-secondary">
+                        <i class="ri-close-line"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Resumen -->
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-0 small">Total Categorías</p>
+                        <h4 class="mb-0 fw-bold">@Model.Count</h4>
+                    </div>
+                    <div class="avatar-md bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="ri-price-tag-3-line fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-0 small">Categoría Top</p>
+                        <h4 class="mb-0 fw-bold text-success">@(Model.FirstOrDefault()?.CategoriaNombre ?? "-")</h4>
+                    </div>
+                    <div class="avatar-md bg-success text-white rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="ri-trophy-line fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-0 small">Total Ventas</p>
+                        <h4 class="mb-0 fw-bold">@Model.Sum(c => c.TotalVentas).ToString("C", cultura)</h4>
+                    </div>
+                    <div class="avatar-md bg-info text-white rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="ri-money-dollar-circle-line fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico y Tabla -->
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-pie-chart-line me-1"></i>
+                    Distribución Porcentual
+                </h6>
+                <div style="height: 300px;">
+                    <canvas id="categoriaCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-list-check me-1"></i>
+                    Detalle por Categoría
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-hover table-centered mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Categoría</th>
+                                <th class="text-center">Productos</th>
+                                <th class="text-end">Ventas</th>
+                                <th class="text-end">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var cat in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-soft-primary text-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                <i class="ri-price-tag-3-line"></i>
+                                            </div>
+                                            <span class="fw-semibold">@cat.CategoriaNombre</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">@cat.CantidadProductos</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fw-bold text-success">@cat.TotalVentas.ToString("C", cultura)</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex align-items-center justify-content-end gap-2">
+                                            <div class="progress" style="width: 80px; height: 8px;">
+                                                <div class="progress-bar bg-primary" role="progressbar" style="width: @cat.Porcentaje%"></div>
+                                            </div>
+                                            <span class="fw-bold">@cat.Porcentaje.ToString("F1")%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('categoriaCanvas').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.Select(c => c.CategoriaNombre))),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.Select(c => c.TotalVentas))),
+                    backgroundColor: [
+                        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+                        '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 12, font: { size: 10 } }
+                    }
+                }
+            }
+        });
+    </script>
+}

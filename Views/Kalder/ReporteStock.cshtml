@@ -1,0 +1,153 @@
+@model IEnumerable<Facturapro.Models.Entities.Producto>
+
+@{
+    ViewData["Title"] = "Reporte de Stock - Kalder";
+    var estado = ViewData["Estado"] as string;
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+    var totalValor = Model.Sum(p => p.Stock * p.Precio);
+}
+
+<style>
+    .reporte-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--space-md);
+        margin-bottom: var(--space-lg);
+    }
+
+    .reporte-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        padding: var(--space-lg);
+        text-align: center;
+    }
+
+    .reporte-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .reporte-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: var(--space-sm) var(--space-md);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius);
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all var(--transition);
+    }
+
+    .filter-tab:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .filter-tab.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+</style>
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Reporte de Stock</h1>
+        <p>Análisis de inventario por estado</p>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Volver a Kalder
+        </a>
+    </div>
+</div>
+
+<!-- Tabs de Filtro -->
+<div class="filter-tabs">
+    <a href="@Url.Action("ReporteStock")" class="filter-tab @(string.IsNullOrEmpty(estado) ? "active" : "")">
+        Todos los Productos
+    </a>
+    <a href="@Url.Action("ReporteStock", new { estado = "bajo" })" class="filter-tab @(estado == "bajo" ? "active" : "")">
+        Stock Bajo (≤5)
+    </a>
+    <a href="@Url.Action("ReporteStock", new { estado = "agotado" })" class="filter-tab @(estado == "agotado" ? "active" : "")">
+        Agotados (0)
+    </a>
+    <a href="@Url.Action("ReporteStock", new { estado = "sobre" })" class="filter-tab @(estado == "sobre" ? "active" : "")">
+        Sobrestock (>100)
+    </a>
+</div>
+
+<!-- Resumen -->
+<div class="reporte-summary">
+    <div class="reporte-card">
+        <div class="reporte-value">@Model.Count()</div>
+        <div class="reporte-label">Productos</div>
+    </div>
+    <div class="reporte-card">
+        <div class="reporte-value">@Model.Sum(p => p.Stock)</div>
+        <div class="reporte-label">Unidades Totales</div>
+    </div>
+    <div class="reporte-card">
+        <div class="reporte-value">@totalValor.ToString("C", cultura)</div>
+        <div class="reporte-label">Valor del Inventario</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Stock</th>
+                        <th>Precio Unitario</th>
+                        <th>Valor Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var valorTotal = item.Stock * item.Precio;
+                        var stockClass = item.Stock == 0 ? "color: var(--error-color); font-weight: bold;" :
+                                        (item.Stock <= 5 ? "color: var(--warning-color); font-weight: bold;" : "");
+
+                        <tr>
+                            <td><span class="badge badge-secondary">@item.Codigo</span></td>
+                            <td>@item.Nombre</td>
+                            <td>@(item.Categoria?.Nombre ?? "-")</td>
+                            <td style="@stockClass">@item.Stock</td>
+                            <td>@item.Precio.ToString("C", cultura)</td>
+                            <td>@valorTotal.ToString("C", cultura)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight: bold; background: var(--gray-50);">
+                        <td colspan="5" style="text-align: right;">TOTAL:</td>
+                        <td>@totalValor.ToString("C", cultura)</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,740 @@
+@model IEnumerable<Facturapro.Models.ApplicationUser>
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Facturapro.Models.ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Usuarios y Permisos";
+    var usuarios = Model?.ToList() ?? new List<Facturapro.Models.ApplicationUser>();
+    var currentUser = await UserManager.GetUserAsync(User);
+    var esAdmin = currentUser != null && currentUser.Rol == "Admin";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <h4 class="page-title">
+        <i class="ri-team-line me-1"></i>
+        Usuarios y Permisos
+    </h4>
+    <p class="text-muted">Gestione los usuarios que acceden al sistema y sus roles</p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (!esAdmin)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-warning border-0" role="alert">
+                <i class="ri-alert-line me-2"></i>
+                <strong>Acceso restringido:</strong> Solo los administradores pueden gestionar usuarios.
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Lista de Usuarios -->
+    <div class="col-xl-8">
+
+        @if (esAdmin)
+        {
+            <!-- Header con botón -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 fw-semibold">
+                    <i class="ri-user-star-line me-2 text-primary"></i>
+                    Usuarios Activos
+                    <span class="badge bg-primary ms-2">@usuarios.Count()</span>
+                </h5>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#NuevoUsuarioModal">
+                    <i class="ri-add-line me-1"></i> Nuevo Usuario
+                </button>
+            </div>
+        }
+
+        <!-- Lista de Usuarios -->
+        @if (usuarios.Any())
+        {
+            <div class="card border-0">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var usuario in usuarios)
+                        {
+                            var rol = usuario.Rol ?? "Usuario";
+                            var inicial = (usuario.Nombre ?? usuario.Email ?? "U")[0].ToString().ToUpper();
+                            string colorClass = rol.ToLower() switch
+                            {
+                                "admin" => "bg-primary",
+                                "gerente" => "bg-purple",
+                                "vendedor" => "bg-info",
+                                "cajero" => "bg-success",
+                                _ => "bg-secondary"
+                            };
+
+                            <div class="list-group-item list-group-item-action border-bottom-0 px-4 py-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <!-- Avatar -->
+                                        <div class="avatar-sm @colorClass rounded-circle d-flex align-items-center justify-content-center text-white fw-bold">
+                                            @inicial
+                                        </div>
+
+                                        <!-- Info -->
+                                        <div>
+                                            <h6 class="mb-0 fw-semibold">@usuario.Nombre @usuario.Apellido</h6>
+                                            <small class="text-muted">@usuario.Email</small>
+                                            @if (!string.IsNullOrEmpty(usuario.Rol))
+                                            {
+                                                <br />
+                                                <span class="badge badge-soft-@(rol.ToLower() == "admin" ? "primary" : rol.ToLower() == "gerente" ? "warning" : rol.ToLower() == "vendedor" ? "info" : "success") mt-1">
+                                                    <i class="ri-shield-line me-1"></i>@rol
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- Acciones (Solo Admin) -->
+                                    @if (esAdmin)
+                                    {
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm btn-soft-primary" onclick="editarUsuario('@usuario.Id')" title="Editar usuario">
+                                                <i class="ri-pencil-line"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-soft-info" onclick="cambiarContrasena('@usuario.Id', '@usuario.Email')" title="Cambiar contraseña">
+                                                <i class="ri-key-2-line"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-soft-danger" onclick="eliminarUsuario('@usuario.Id')" title="Eliminar usuario">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Estado vacío -->
+            <div class="card border-0">
+                <div class="card-body text-center py-5">
+                    <i class="ri-user-unfollow-line display-4 text-muted mb-3"></i>
+                    <h6 class="text-muted">No hay usuarios registrados</h6>
+                    <p class="text-muted small">Comienza agregando tu primer usuario al sistema</p>
+                    @if (esAdmin)
+                    {
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#NuevoUsuarioModal">
+                            <i class="ri-add-line me-1"></i> Agregar Usuario
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Columna Derecha - Roles y Permisos -->
+    <div class="col-xl-4">
+
+        <!-- Tarjeta de Roles -->
+        <div class="card border-0 mb-4">
+            <div class="card-header bg-white border-0 pb-0">
+                <h6 class="card-title mb-0">
+                    <i class="ri-shield-keyhole-line me-1 text-primary"></i>
+                    Roles Disponibles
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-column gap-2">
+                    <div class="p-3 bg-soft-primary rounded-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-primary">Administrador</h6>
+                                <small class="text-muted">Acceso completo</small>
+                            </div>
+                            <i class="ri-crown-line fs-4 text-primary"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-soft-warning rounded-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-warning">Gerente</h6>
+                                <small class="text-muted">Gestión y reportes</small>
+                            </div>
+                            <i class="ri-briefcase-line fs-4 text-warning"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-soft-info rounded-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-info">Vendedor</h6>
+                                <small class="text-muted">Ventas y clientes</small>
+                            </div>
+                            <i class="ri-shopping-cart-2-line fs-4 text-info"></i>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-soft-success rounded-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0 text-success">Cajero</h6>
+                                <small class="text-muted">Solo punto de venta</small>
+                            </div>
+                            <i class="ri-safe-2-line fs-4 text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permisos por Rol -->
+        <div class="card border-0">
+            <div class="card-header bg-white border-0 pb-0">
+                <h6 class="card-title mb-0">
+                    <i class="ri-list-check-3 me-1 text-success"></i>
+                    Permisos por Rol
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="accordionPermisos">
+
+                    <!-- Administrador -->
+                    <div class="accordion-item border-0 mb-2">
+                        <h6 class="accordion-header">
+                            <button class="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdmin">
+                                <i class="ri-crown-line me-2 text-primary"></i> Administrador
+                            </button>
+                        </h6>
+                        <div id="collapseAdmin" class="accordion-collapse collapse show" data-bs-parent="#accordionPermisos">
+                            <div class="accordion-body small">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Acceso total al sistema</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Gestión de usuarios</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Cambiar contraseñas</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Configuración DGII</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Reportes y estadísticas</li>
+                                    <li><i class="ri-checkbox-circle-fill text-success me-2"></i>Eliminación de registros</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Gerente -->
+                    <div class="accordion-item border-0 mb-2">
+                        <h6 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGerente">
+                                <i class="ri-briefcase-line me-2 text-warning"></i> Gerente
+                            </button>
+                        </h6>
+                        <div id="collapseGerente" class="accordion-collapse collapse" data-bs-parent="#accordionPermisos">
+                            <div class="accordion-body small">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Ver reportes y dashboard</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Gestionar inventario</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Ver facturas y ventas</li>
+                                    <li class="mb-2"><i class="ri-close-circle-fill text-danger me-2"></i>Configuración del sistema</li>
+                                    <li><i class="ri-close-circle-fill text-danger me-2"></i>Eliminar usuarios</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vendedor -->
+                    <div class="accordion-item border-0 mb-2">
+                        <h6 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseVendedor">
+                                <i class="ri-shopping-cart-2-line me-2 text-info"></i> Vendedor
+                            </button>
+                        </h6>
+                        <div id="collapseVendedor" class="accordion-collapse collapse" data-bs-parent="#accordionPermisos">
+                            <div class="accordion-body small">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Punto de venta (POS)</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Gestionar clientes</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Ver productos</li>
+                                    <li class="mb-2"><i class="ri-close-circle-fill text-danger me-2"></i>Ver reportes financieros</li>
+                                    <li><i class="ri-close-circle-fill text-danger me-2"></i>Configuración</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cajero -->
+                    <div class="accordion-item border-0">
+                        <h6 class="accordion-header">
+                            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCajero">
+                                <i class="ri-safe-2-line me-2 text-success"></i> Cajero
+                            </button>
+                        </h6>
+                        <div id="collapseCajero" class="accordion-collapse collapse" data-bs-parent="#accordionPermisos">
+                            <div class="accordion-body small">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Realizar ventas</li>
+                                    <li class="mb-2"><i class="ri-checkbox-circle-fill text-success me-2"></i>Imprimir facturas</li>
+                                    <li><i class="ri-close-circle-fill text-danger me-2"></i>Modificar precios</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (esAdmin)
+{
+    <!-- Modal Nuevo Usuario -->
+    <div class="modal fade" id="NuevoUsuarioModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="ri-user-add-line me-1 text-primary"></i>
+                        Nuevo Usuario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formNuevoUsuario">
+                        @Html.AntiForgeryToken()
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" name="Nombre" class="form-control" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Apellido</label>
+                                <input type="text" name="Apellido" class="form-control" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Correo Electrónico <span class="text-danger">*</span></label>
+                                <input type="email" name="Email" class="form-control" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Contraseña <span class="text-danger">*</span></label>
+                                <input type="password" name="Password" class="form-control" required minlength="8" />
+                                <small class="text-muted">Mínimo 8 caracteres</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Confirmar Contraseña</label>
+                                <input type="password" name="ConfirmPassword" class="form-control" required />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Rol</label>
+                                <select name="Rol" class="form-select">
+                                    <option value="Vendedor">Vendedor</option>
+                                    <option value="Cajero">Cajero</option>
+                                    <option value="Gerente">Gerente</option>
+                                    <option value="Admin">Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="guardarUsuario()">
+                        <i class="ri-save-line me-1"></i> Guardar Usuario
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Usuario -->
+    <div class="modal fade" id="EditarUsuarioModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="ri-user-settings-line me-1 text-info"></i>
+                        Editar Usuario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditarUsuario">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" id="editUsuarioId" />
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" name="nombre" id="editNombre" class="form-control" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Apellido</label>
+                                <input type="text" name="apellido" id="editApellido" class="form-control" />
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Correo Electrónico</label>
+                                <input type="email" id="editEmail" class="form-control" disabled />
+                                <small class="text-muted">El correo no se puede modificar</small>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Rol</label>
+                                <select name="rol" id="editRol" class="form-select">
+                                    <option value="Vendedor">Vendedor</option>
+                                    <option value="Cajero">Cajero</option>
+                                    <option value="Gerente">Gerente</option>
+                                    <option value="Admin">Administrador</option>
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-info" onclick="guardarEdicion()">
+                        <i class="ri-save-line me-1"></i> Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Contraseña -->
+    <div class="modal fade" id="CambiarContrasenaModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="ri-key-2-line me-1 text-warning"></i>
+                        Cambiar Contraseña
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCambiarContrasena">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="Id" id="contrasenaUsuarioId" />
+                        <div class="mb-3">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" id="contrasenaEmail" class="form-control" disabled />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva Contraseña <span class="text-danger">*</span></label>
+                            <input type="password" name="nuevaContrasena" id="nuevaContrasena" class="form-control" required minlength="8" />
+                            <small class="text-muted">Mínimo 8 caracteres</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar Contraseña <span class="text-danger">*</span></label>
+                            <input type="password" id="confirmarContrasena" class="form-control" required minlength="8" />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-warning" onclick="guardarContrasena()">
+                        <i class="ri-key-2-line me-1"></i> Cambiar Contraseña
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Obtener token CSRF
+        function getCsrfToken() {
+            return document.querySelector('input[name="__RequestVerificationToken"]')?.value ||
+                   document.querySelector('meta[name="csrf-token"]')?.content || '';
+        }
+
+        // Guardar nuevo usuario
+        async function guardarUsuario() {
+            const form = document.getElementById('formNuevoUsuario');
+            const formData = new FormData(form);
+
+            // Validar contraseñas
+            const password = formData.get('Password');
+            const confirmPassword = formData.get('ConfirmPassword');
+
+            if (password !== confirmPassword) {
+                mostrarAlerta('Las contraseñas no coinciden', 'danger');
+                return;
+            }
+
+            if (password.length < 8) {
+                mostrarAlerta('La contraseña debe tener al menos 8 caracteres', 'danger');
+                return;
+            }
+
+            try {
+                const token = getCsrfToken();
+                if (token) {
+                    formData.append('__RequestVerificationToken', token);
+                }
+
+                const response = await fetch('/Account/Register', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    mostrarAlerta(data.message || 'Error al guardar el usuario', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error de conexión al guardar el usuario', 'danger');
+            }
+        }
+
+        // Editar usuario
+        async function editarUsuario(id) {
+            try {
+                const response = await fetch(`/Account/ObtenerUsuario/${id}`);
+                if (!response.ok) {
+                    mostrarAlerta('Error al cargar los datos del usuario', 'danger');
+                    return;
+                }
+
+                const usuario = await response.json();
+
+                // Llenar el modal de edición
+                document.getElementById('editUsuarioId').value = usuario.id;
+                document.getElementById('editNombre').value = usuario.nombre;
+                document.getElementById('editApellido').value = usuario.apellido;
+                document.getElementById('editEmail').value = usuario.email;
+                document.getElementById('editRol').value = usuario.rol;
+
+                // Mostrar modal
+                const modal = new bootstrap.Modal(document.getElementById('EditarUsuarioModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error al cargar los datos del usuario', 'danger');
+            }
+        }
+
+        // Guardar cambios de edición
+        async function guardarEdicion() {
+            const form = document.getElementById('formEditarUsuario');
+            const formData = new FormData(form);
+
+            try {
+                const token = getCsrfToken();
+                if (token) {
+                    formData.append('__RequestVerificationToken', token);
+                }
+
+                const response = await fetch('/Account/EditarUsuario', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    mostrarAlerta(data.message || 'Error al actualizar el usuario', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error de conexión al actualizar el usuario', 'danger');
+            }
+        }
+
+        // Cambiar contraseña
+        function cambiarContrasena(id, email) {
+            document.getElementById('contrasenaUsuarioId').value = id;
+            document.getElementById('contrasenaEmail').value = email;
+            document.getElementById('nuevaContrasena').value = '';
+            document.getElementById('confirmarContrasena').value = '';
+
+            const modal = new bootstrap.Modal(document.getElementById('CambiarContrasenaModal'));
+            modal.show();
+        }
+
+        // Guardar contraseña
+        async function guardarContrasena() {
+            const form = document.getElementById('formCambiarContrasena');
+            const formData = new FormData(form);
+            const id = formData.get('Id');
+            const nuevaContrasena = document.getElementById('nuevaContrasena').value;
+            const confirmarContrasena = document.getElementById('confirmarContrasena').value;
+
+            // Validar contraseñas
+            if (nuevaContrasena !== confirmarContrasena) {
+                mostrarAlerta('Las contraseñas no coinciden', 'danger');
+                return;
+            }
+
+            if (nuevaContrasena.length < 8) {
+                mostrarAlerta('La contraseña debe tener al menos 8 caracteres', 'danger');
+                return;
+            }
+
+            try {
+                const token = getCsrfToken();
+                const data = new FormData();
+                data.append('id', id);
+                data.append('nuevaContrasena', nuevaContrasena);
+                if (token) {
+                    data.append('__RequestVerificationToken', token);
+                }
+
+                const response = await fetch('/Account/CambiarContrasena', {
+                    method: 'POST',
+                    body: data
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    mostrarAlerta(result.message || 'Contraseña cambiada exitosamente', 'success');
+                    document.getElementById('CambiarContrasenaModal').querySelector('.btn-close').click();
+                } else {
+                    const errorData = await response.json().catch(() => ({}));
+                    mostrarAlerta(errorData.message || 'Error al cambiar la contraseña', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error de conexión al cambiar la contraseña', 'danger');
+            }
+        }
+
+        // Eliminar usuario
+        async function eliminarUsuario(id) {
+            // Mostrar confirmación personalizada
+            const confirmed = await mostrarConfirmacion('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.');
+
+            if (!confirmed) return;
+
+            try {
+                const token = getCsrfToken();
+                const formData = new FormData();
+                formData.append('id', id);
+                if (token) {
+                    formData.append('__RequestVerificationToken', token);
+                }
+
+                const response = await fetch('/Account/EliminarUsuario', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    mostrarAlerta(data.message || 'Error al eliminar el usuario', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error de conexión al eliminar el usuario', 'danger');
+            }
+        }
+
+        // Mostrar alerta temporal
+        function mostrarAlerta(mensaje, tipo = 'info') {
+            const alertHtml = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    <i class="ri-${tipo === 'success' ? 'checkbox-circle-line' : tipo === 'danger' ? 'error-warning-line' : 'information-line'} me-2"></i>
+                    ${mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+
+            const container = document.querySelector('.page-header-title');
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = alertHtml;
+            container.parentNode.insertBefore(tempDiv.firstElementChild, container.nextSibling);
+
+            setTimeout(() => {
+                const alert = tempDiv.firstElementChild;
+                if (alert && alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+        }
+
+        // Mostrar confirmación
+        function mostrarConfirmacion(mensaje) {
+            return new Promise((resolve) => {
+                const modalHtml = `
+                    <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-sm">
+                            <div class="modal-content">
+                                <div class="modal-header border-0">
+                                    <h5 class="modal-title">
+                                        <i class="ri-alert-line me-1 text-warning"></i>
+                                        Confirmar eliminación
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body text-center py-3">
+                                    <i class="ri-question-line display-4 text-warning mb-2"></i>
+                                    <p class="mb-0">${mensaje}</p>
+                                </div>
+                                <div class="modal-footer border-0 justify-content-center gap-2">
+                                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+                modal.show();
+
+                document.getElementById('btnConfirmarEliminar').addEventListener('click', () => {
+                    modal.hide();
+                    resolve(true);
+                });
+
+                document.getElementById('modalConfirmacion').addEventListener('hidden.bs.modal', () => {
+                    document.getElementById('modalConfirmacion').remove();
+                    resolve(false);
+                });
+            });
+        }
+
+        // Validar formulario al enviar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Limpiar formulario cuando se cierra el modal
+            document.getElementById('NuevoUsuarioModal')?.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('formNuevoUsuario')?.reset();
+            });
+
+            document.getElementById('EditarUsuarioModal')?.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('formEditarUsuario')?.reset();
+            });
+
+            document.getElementById('CambiarContrasenaModal')?.addEventListener('hidden.bs.modal', function() {
+                document.getElementById('formCambiarContrasena')?.reset();
+            });
+        });
+    </script>
+}

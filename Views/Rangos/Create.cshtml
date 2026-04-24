@@ -1,0 +1,172 @@
+@model Facturapro.Models.Entities.RangoNumeracion
+
+@{
+    ViewData["Title"] = "Nuevo Rango de Numeración";
+}
+
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="ri-arrow-left-line me-1"></i>
+                    Volver
+                </a>
+            </div>
+            <h4 class="page-title">
+                <i class="ri-add-circle-line me-2"></i>
+                Nuevo Rango de Numeración
+            </h4>
+            <p class="text-muted mb-0">Configure un rango autorizado por la DGII para emitir e-CF</p>
+        </div>
+    </div>
+</div>
+<!-- end page title -->
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="alert alert-info d-flex align-items-start" role="alert">
+                        <i class="ri-information-line fs-4 me-2"></i>
+                        <div>
+                            Los rangos de numeración deben ser solicitados previamente a la DGII a través del portal de e-CF.
+                            El formato debe ser: <strong>E + Tipo (2 dígitos) + Secuencial (10 dígitos)</strong>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6 col-lg-3">
+                            <div class="mb-3">
+                                <label asp-for="TipoECF" class="form-label required">Tipo de Comprobante</label>
+                                <select asp-for="TipoECF" class="form-select" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="31">E31 - Factura de Crédito Fiscal</option>
+                                    <option value="32">E32 - Factura de Consumo</option>
+                                    <option value="33">E33 - Nota de Débito</option>
+                                    <option value="34">E34 - Nota de Crédito</option>
+                                    <option value="41">E41 - Comprobante de Compras</option>
+                                    <option value="43">E43 - Gastos Menores</option>
+                                    <option value="44">E44 - Regímenes Especiales</option>
+                                    <option value="45">E45 - Gubernamental</option>
+                                    <option value="46">E46 - Exportaciones</option>
+                                    <option value="47">E47 - Pagos al Exterior</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <div class="mb-3">
+                                <label asp-for="RangoDesde" class="form-label required">Rango Desde</label>
+                                <input asp-for="RangoDesde" class="form-control" placeholder="E310000000001" maxlength="13" required />
+                                <div class="form-text">Formato: E + Tipo + Secuencial (13 caracteres)</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <div class="mb-3">
+                                <label asp-for="RangoHasta" class="form-label required">Rango Hasta</label>
+                                <input asp-for="RangoHasta" class="form-control" placeholder="E310009999999" maxlength="13" required />
+                                <div class="form-text">Formato: E + Tipo + Secuencial (13 caracteres)</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 col-lg-3">
+                            <div class="mb-3">
+                                <label asp-for="FechaVencimiento" class="form-label required">Fecha de Vencimiento</label>
+                                <input asp-for="FechaVencimiento" type="date" class="form-control" required />
+                                <div class="form-text">Fecha límite según autorización DGII</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="mb-3">
+                                <label asp-for="Observaciones" class="form-label">Observaciones</label>
+                                <textarea asp-for="Observaciones" class="form-control" rows="3" placeholder="Número de resolución DGII, fecha de autorización, etc."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i>
+                            Crear Rango
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="ri-close-line me-1"></i>
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Validación del formato de rango
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const tipo = document.getElementById('TipoECF').value;
+            const desde = document.getElementById('RangoDesde').value;
+            const hasta = document.getElementById('RangoHasta').value;
+
+            if (!tipo) {
+                e.preventDefault();
+                if (typeof AppNotification !== 'undefined') {
+                    AppNotification.error('Debe seleccionar un tipo de comprobante');
+                }
+                return;
+            }
+
+            // Validar formato E + tipo + 10 dígitos
+            const regex = new RegExp(`^E${tipo}\\d{10}$`);
+
+            if (!regex.test(desde)) {
+                e.preventDefault();
+                if (typeof AppNotification !== 'undefined') {
+                    AppNotification.error(`El rango DESDE debe tener formato: E${tipo} + 10 dígitos (13 caracteres total)`);
+                }
+                return;
+            }
+
+            if (!regex.test(hasta)) {
+                e.preventDefault();
+                if (typeof AppNotification !== 'undefined') {
+                    AppNotification.error(`El rango HASTA debe tener formato: E${tipo} + 10 dígitos (13 caracteres total)`);
+                }
+                return;
+            }
+
+            // Validar que el rango desde sea menor que hasta
+            const numDesde = parseInt(desde.substring(3));
+            const numHasta = parseInt(hasta.substring(3));
+
+            if (numDesde >= numHasta) {
+                e.preventDefault();
+                if (typeof AppNotification !== 'undefined') {
+                    AppNotification.error('El número DESDE debe ser menor que el número HASTA');
+                }
+                return;
+            }
+        });
+
+        // Auto-formatear mientras escribe
+        document.getElementById('RangoDesde').addEventListener('blur', function() {
+            let val = this.value.toUpperCase().trim();
+            const tipo = document.getElementById('TipoECF').value;
+
+            if (val && tipo && val.startsWith('E') && !val.startsWith(`E${tipo}`)) {
+                // Corregir el tipo si no coincide
+                val = `E${tipo}${val.substring(3).padStart(10, '0')}`;
+                this.value = val;
+            }
+        });
+    </script>
+}

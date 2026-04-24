@@ -1,0 +1,343 @@
+@model Facturapro.Controllers.ImportacionResultado
+
+@{
+    ViewData["Title"] = "Resultado de Importación";
+}
+
+<style>
+    .result-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .result-header {
+        text-align: center;
+        margin-bottom: var(--space-xl);
+    }
+
+    .result-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--space-lg);
+    }
+
+    .result-icon.success {
+        background: rgb(16 185 129 / 0.1);
+        color: var(--success-color);
+    }
+
+    .result-icon.warning {
+        background: rgb(245 158 11 / 0.1);
+        color: var(--warning-color);
+    }
+
+    .result-icon svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--space-md);
+        margin-bottom: var(--space-xl);
+    }
+
+    @@media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .stat-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: var(--space-xs);
+    }
+
+    .stat-value.success {
+        color: var(--success-color);
+    }
+
+    .stat-value.warning {
+        color: var(--warning-color);
+    }
+
+    .stat-value.error {
+        color: var(--error-color);
+    }
+
+    .stat-value.info {
+        color: var(--primary-color);
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .details-section {
+        background: var(--bg-primary);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-bottom: var(--space-lg);
+    }
+
+    .details-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: var(--space-md);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .duplicate-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .duplicate-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        background: rgb(245 158 11 / 0.05);
+        border-left: 3px solid var(--warning-color);
+        border-radius: var(--radius);
+        margin-bottom: var(--space-sm);
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+    }
+
+    .duplicate-item svg {
+        width: 16px;
+        height: 16px;
+        color: var(--warning-color);
+    }
+
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .error-item {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--space-sm);
+        padding: var(--space-sm) var(--space-md);
+        background: rgb(239 68 68 / 0.05);
+        border-left: 3px solid var(--error-color);
+        border-radius: var(--radius);
+        margin-bottom: var(--space-sm);
+        font-size: 0.875rem;
+    }
+
+    .error-item svg {
+        width: 16px;
+        height: 16px;
+        color: var(--error-color);
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .success-message {
+        background: rgb(16 185 129 / 0.1);
+        border: 1px solid rgb(16 185 129 / 0.2);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        text-align: center;
+    }
+
+    .success-message h3 {
+        color: var(--success-color);
+        margin-bottom: var(--space-sm);
+    }
+
+    .success-message p {
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .actions-footer {
+        display: flex;
+        justify-content: center;
+        gap: var(--space-md);
+        margin-top: var(--space-xl);
+    }
+
+    @@media (max-width: 640px) {
+        .actions-footer {
+            flex-direction: column;
+        }
+
+        .actions-footer .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="result-container">
+    <div class="result-header">
+        @if (Model.ProductosImportados > 0 && Model.ProductosDuplicados == 0 && Model.ProductosConError == 0)
+        {
+            <div class="result-icon success">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h1>¡Importación Exitosa!</h1>
+            <p style="color: var(--text-secondary);">Todos los productos fueron importados correctamente</p>
+        }
+        else if (Model.ProductosImportados > 0)
+        {
+            <div class="result-icon warning">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
+            </div>
+            <h1>Importación Parcial</h1>
+            <p style="color: var(--text-secondary);">Algunos productos no pudieron ser importados</p>
+        }
+        else
+        {
+            <div class="result-icon" style="background: rgb(239 68 68 / 0.1); color: var(--error-color);">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+            </div>
+            <h1>Importación Fallida</h1>
+            <p style="color: var(--text-secondary);">No se pudo importar ningún producto</p>
+        }
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value info">@Model.TotalFilas</div>
+            <div class="stat-label">Total Filas</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value success">@Model.ProductosImportados</div>
+            <div class="stat-label">Importados</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value warning">@Model.ProductosDuplicados</div>
+            <div class="stat-label">Duplicados</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value error">@Model.ProductosConError</div>
+            <div class="stat-label">Con Error</div>
+        </div>
+    </div>
+
+    @if (Model.ProductosImportados > 0)
+    {
+        <div class="success-message">
+            <h3><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="display: inline; vertical-align: middle; margin-right: var(--space-sm);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Productos agregados al sistema</h3>
+            <p>Se han importado exitosamente @Model.ProductosImportados productos nuevos. Puede revisarlos en el listado de productos.</p>
+        </div>
+    }
+
+    @if (Model.CodigosDuplicados.Any())
+    {
+        <div class="details-section">
+            <h3 class="details-title" style="color: var(--warning-color);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
+                Productos Duplicados Ignorados (@Model.CodigosDuplicados.Count)
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-md);">
+                Los siguientes códigos ya existen en el sistema y no fueron importados:
+            </p>
+            <ul class="duplicate-list">
+                @foreach (var codigo in Model.CodigosDuplicados)
+                {
+                    <li class="duplicate-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                        @codigo
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    @if (Model.Errores.Any())
+    {
+        <div class="details-section">
+            <h3 class="details-title" style="color: var(--error-color);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
+                Errores Encontrados (@Model.Errores.Count)
+            </h3>
+            <ul class="error-list">
+                @foreach (var error in Model.Errores.Take(10))
+                {
+                    <li class="error-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                        </svg>
+                        @error
+                    </li>
+                }
+                @if (Model.Errores.Count > 10)
+                {
+                    <li class="error-item" style="background: transparent; border: none; font-style: italic; color: var(--text-muted);">
+                        ... y @(Model.Errores.Count - 10) errores más
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    <div class="actions-footer">
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Ver Productos
+        </a>
+
+        @if (Model.ProductosDuplicados > 0 || Model.ProductosConError > 0)
+        {
+            <a href="@Url.Action("Importar")" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                Intentar Nuevamente
+            </a>
+        }
+        else
+        {
+            <a href="@Url.Action("Importar")" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                Importar Más Productos
+            </a>
+        }
+    </div>
+</div>

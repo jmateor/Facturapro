@@ -1,0 +1,125 @@
+@model IEnumerable<Facturapro.Models.Entities.Compra>
+
+@{
+    ViewData["Title"] = "Compras";
+    var estados = ViewData["Estados"] as List<EstadoCompra> ?? new List<EstadoCompra>();
+}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Compras</h1>
+        <p>Gestiona las compras a proveedores</p>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Create", "Compras")" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Nueva Compra
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<!-- Filtros -->
+<div class="card" style="margin-bottom: var(--space-lg);">
+    <div class="card-body">
+        <form method="get" class="d-flex gap-1" style="flex-wrap: wrap;">
+            <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+                <input type="text" name="buscar" class="form-input" placeholder="Buscar por número o proveedor..." value="@Context.Request.Query["buscar"]" />
+            </div>
+            <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+                <select name="estado" class="form-select">
+                    <option value="">Todos los estados</option>
+                    @foreach (var est in estados)
+                    {
+                        <option value="@est" selected="@(Context.Request.Query["estado"] == est.ToString())">@est</option>
+                    }
+                </select>
+            </div>
+            <button type="submit" class="btn btn-secondary">Filtrar</button>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Factura</th>
+                        <th>Proveedor</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><span class="badge badge-secondary">@item.NumeroFactura</span></td>
+                            <td>@item.Proveedor?.Nombre</td>
+                            <td>@item.FechaCompra.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @switch (item.Estado)
+                                {
+                                    case EstadoCompra.Pendiente:
+                                        <span class="badge badge-warning">Pendiente</span>
+                                        break;
+                                    case EstadoCompra.Recibida:
+                                        <span class="badge badge-success">Recibida</span>
+                                        break;
+                                    case EstadoCompra.Cancelada:
+                                        <span class="badge badge-secondary">Cancelada</span>
+                                        break;
+                                }
+                            </td>
+                            <td style="font-weight: 600;">@item.Total.ToString("C", new System.Globalization.CultureInfo("es-ES"))</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-ghost btn-sm">Ver</a>
+                                    @if (item.Estado == EstadoCompra.Pendiente)
+                                    {
+                                        <form asp-action="Recibir" asp-route-id="@item.Id" method="post" style="display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-success btn-sm">Recibir</button>
+                                        </form>
+                                    }
+                                    @if (item.Estado != EstadoCompra.Cancelada)
+                                    {
+                                        <form asp-action="Cancelar" asp-route-id="@item.Id" method="post" style="display: inline;">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de cancelar esta compra?')">Cancelar</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

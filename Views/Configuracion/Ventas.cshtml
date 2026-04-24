@@ -1,0 +1,522 @@
+@{
+    ViewData["Title"] = "Configuración de Ventas";
+    ViewData["PageDescription"] = "Define las reglas y preferencias para el proceso de ventas";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <h4 class="page-title">
+        <i class="ri-shopping-cart-2-line me-1"></i>
+        Configuración de Ventas
+    </h4>
+    <p class="text-muted">Define las reglas y preferencias para el proceso de ventas y facturación</p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Configuración -->
+    <div class="col-xl-8">
+        <form asp-action="Ventas" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- 1. Reglas de Venta -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Reglas de Venta</h5>
+                            <p class="text-muted mb-0 small">Configura cómo se procesan las ventas en tu negocio</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Ventas a Crédito -->
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-soft-light h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm bg-soft-primary text-primary rounded-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ri-hand-coin-line"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-6 fw-semibold">Ventas a Crédito</h6>
+                                                <p class="mb-0 text-muted small">Permitir pago diferido</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg mb-0">
+                                            <input type="checkbox" class="form-check-input" id="PermitirVentasCredito" name="PermitirVentasCredito" value="true" checked />
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">Habilite esta opción para registrar ventas con pago diferido</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Imprimir Automáticamente -->
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-soft-light h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm bg-soft-success text-success rounded-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ri-printer-line"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-6 fw-semibold">Imprimir Automático</h6>
+                                                <p class="mb-0 text-muted small">Ticket al completar venta</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg mb-0">
+                                            <input type="checkbox" class="form-check-input" id="ImprimirAutomático" name="ImprimirAutomático" value="true" checked />
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">Imprime automáticamente al completar una venta en POS</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cliente Obligatorio -->
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-soft-light h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm bg-soft-warning text-warning rounded-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ri-user-star-line"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-6 fw-semibold">Cliente Obligatorio</h6>
+                                                <p class="mb-0 text-muted small">Requerir cliente en venta</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg mb-0">
+                                            <input type="checkbox" class="form-check-input" id="ClienteObligatorio" name="ClienteObligatorio" value="true" />
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">Requiere seleccionar un cliente antes de procesar la venta</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descuento por Cantidad -->
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-soft-light h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm bg-soft-info text-info rounded-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ri-percent-line"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-6 fw-semibold">Descuento por Volumen</h6>
+                                                <p class="mb-0 text-muted small">Descuento automático</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg mb-0">
+                                            <input type="checkbox" class="form-check-input" id="DescuentoCantidad" name="DescuentoCantidad" value="true" checked />
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">Permite descuentos automáticos por compras en volumen</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Control de Stock Negativo -->
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-soft-light h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm bg-soft-danger text-danger rounded-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ri-alert-triangle-line"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-6 fw-semibold">Permitir Stock Negativo</h6>
+                                                <p class="mb-0 text-muted small">Ventas sin stock</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg mb-0">
+                                            <input type="checkbox" class="form-check-input" id="StockNegativo" name="StockNegativo" value="true" />
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">Permite vender productos con stock insuficiente</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Usar Valor por Defecto -->
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-soft-light h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm bg-soft-secondary text-secondary rounded-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ri-settings-4-line"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-6 fw-semibold">Valores por Defecto</h6>
+                                                <p class="mb-0 text-muted small">Autocompletar campos</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg mb-0">
+                                            <input type="checkbox" class="form-check-input" id="UsarValoresDefecto" name="UsarValoresDefecto" value="true" checked />
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">Autocompleta campos con valores predeterminados</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Configuración de Precios -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Precios y Moneda</h5>
+                            <p class="text-muted mb-0 small">Configura cómo se muestran y calculan los precios</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="DecimalesPrecios" class="form-label fw-semibold">Decimales en Precios</label>
+                            <select class="form-select" id="DecimalesPrecios" name="DecimalesPrecios">
+                                <option value="0">0 decimales (RD$ 100)</option>
+                                <option value="2" selected>2 decimales (RD$ 100.00)</option>
+                                <option value="3">3 decimales (RD$ 100.000)</option>
+                                <option value="4">4 decimales (RD$ 100.0000)</option>
+                            </select>
+                            <small class="text-muted">Número de decimales para mostrar en precios unitarios</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="RedondeoTotales" class="form-label fw-semibold">Redondeo de Totales</label>
+                            <select class="form-select" id="RedondeoTotales" name="RedondeoTotales">
+                                <option value="none" selected>Sin redondeo</option>
+                                <option value="0.05">A 5 centavos (RD$ 0.05)</option>
+                                <option value="0.10">A 10 centavos (RD$ 0.10)</option>
+                                <option value="0.25">A 25 centavos (RD$ 0.25)</option>
+                                <option value="0.50">A 50 centavos (RD$ 0.50)</option>
+                                <option value="1.00">A 1 peso entero (RD$ 1)</option>
+                            </select>
+                            <small class="text-muted">Redondeo automático del total final de la venta</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="Moneda" class="form-label fw-semibold">Moneda</label>
+                            <select class="form-select" id="Moneda" name="Moneda">
+                                <option value="DOP" selected>Peso Dominicano (RD$)</option>
+                                <option value="USD">Dólar Estadounidense (US$)</option>
+                                <option value="EUR">Euro (€)</option>
+                            </select>
+                            <small class="text-muted">Moneda principal para mostrar precios</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="SimboloMoneda" class="form-label fw-semibold">Símbolo de Moneda</label>
+                            <div class="input-group">
+                                <select class="form-select" id="SimboloMoneda" name="SimboloMoneda">
+                                    <option value="prefix" selected>Antes (RD$ 100)</option>
+                                    <option value="suffix">Después (100 RD$)</option>
+                                </select>
+                            </div>
+                            <small class="text-muted">Posición del símbolo de moneda</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Configuración de Facturación -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-warning rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Facturación e Impuestos</h5>
+                            <p class="text-muted mb-0 small">Parámetros para la generación de comprobantes</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="TipoComprobanteDefecto" class="form-label fw-semibold">Tipo de Comprobante por Defecto</label>
+                            <select class="form-select" id="TipoComprobanteDefecto" name="TipoComprobanteDefecto">
+                                <option value="E31" selected>E31 - Factura de Crédito Fiscal</option>
+                                <option value="E32">E32 - Factura de Consumo</option>
+                                <option value="E41">E41 - Comprobante de Gastos Menores</option>
+                                <option value="E43">E43 - Comprobante de Compras</option>
+                                <option value="E44">E44 - Comprobante de Operaciones por Turismo</option>
+                                <option value="E45">E45 - Comprobante de Ingresos por Ventas</option>
+                                <option value="E46">E46 - Comprobante para Retenciones</option>
+                                <option value="E47">E47 - Comprobante para Pagos al Exterior</option>
+                            </select>
+                            <small class="text-muted">Tipo de NCF a usar por defecto en ventas</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="ITBISPorDefecto" class="form-label fw-semibold">ITBIS por Defecto (%)</label>
+                            <input type="number" class="form-control" id="ITBISPorDefecto" name="ITBISPorDefecto" value="18" step="0.01" min="0" max="100" />
+                            <small class="text-muted">Porcentaje de ITBIS a aplicar por defecto</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="TipoIngresoPorDefecto" class="form-label fw-semibold">Tipo de Ingreso por Defecto</label>
+                            <select class="form-select" id="TipoIngresoPorDefecto" name="TipoIngresoPorDefecto">
+                                <option value="01" selected>01 - Operaciones</option>
+                                <option value="02">02 - Financieros</option>
+                                <option value="03">03 - Extraordinarios</option>
+                                <option value="04">04 - Arrendamientos</option>
+                                <option value="05">05 - Venta de Activo</option>
+                                <option value="06">06 - Otros</option>
+                            </select>
+                            <small class="text-muted">Clasificación de ingresos para la DGII</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="TipoPagoPorDefecto" class="form-label fw-semibold">Tipo de Pago por Defecto</label>
+                            <select class="form-select" id="TipoPagoPorDefecto" name="TipoPagoPorDefecto">
+                                <option value="1" selected>Contado</option>
+                                <option value="2">Crédito</option>
+                                <option value="3">Mixto (Contado/Crédito)</option>
+                            </select>
+                            <small class="text-muted">Forma de pago predeterminada</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Límites y Alertas -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-danger rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">4</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Límites y Alertas</h5>
+                            <p class="text-muted mb-0 small">Configura umbrales para notificaciones y restricciones</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="MontoVentaMinima" class="form-label fw-semibold">Monto Mínimo de Venta (RD$)</label>
+                            <input type="number" class="form-control" id="MontoVentaMinima" name="MontoVentaMinima" value="0" step="0.01" min="0" />
+                            <small class="text-muted">Monto mínimo para procesar una venta (0 = sin límite)</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="MontoVentaMaxima" class="form-label fw-semibold">Monto Máximo de Venta (RD$)</label>
+                            <input type="number" class="form-control" id="MontoVentaMaxima" name="MontoVentaMaxima" value="0" step="0.01" min="0" />
+                            <small class="text-muted">Monto máximo sin autorización (0 = sin límite)</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="MontoCreditoMaximo" class="form-label fw-semibold">Límite de Crédito por Defecto (RD$)</label>
+                            <input type="number" class="form-control" id="MontoCreditoMaximo" name="MontoCreditoMaximo" value="0" step="0.01" min="0" />
+                            <small class="text-muted">Límite máximo para ventas a crédito (0 = sin límite)</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="DiasPlazoCredito" class="form-label fw-semibold">Plazo de Crédito por Defecto (días)</label>
+                            <input type="number" class="form-control" id="DiasPlazoCredito" name="DiasPlazoCredito" value="30" min="1" max="365" />
+                            <small class="text-muted">Días de crédito por defecto para ventas a plazo</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-light" onclick="history.back()">
+                    <i class="ri-arrow-left-line me-1"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Configuración
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Resumen y Ayuda -->
+    <div class="col-xl-4">
+        <!-- Estado de Configuración -->
+        <div class="card sticky-top" style="top: 1rem; z-index: 100;">
+            <div class="card-header bg-soft-primary border-0">
+                <h6 class="card-title mb-0 text-primary">
+                    <i class="ri-file-list-3-line me-1"></i>
+                    Resumen de Configuración
+                </h6>
+            </div>
+            <div class="card-body p-3">
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-hand-coin-line me-2 text-primary"></i>Ventas a Crédito</span>
+                        <span class="badge bg-success-subtle text-success" id="summaryCredito">Activado</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-printer-line me-2 text-success"></i>Impresión Automática</span>
+                        <span class="badge bg-success-subtle text-success" id="summaryImpresion">Activado</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-user-star-line me-2 text-warning"></i>Cliente Obligatorio</span>
+                        <span class="badge bg-secondary-subtle text-secondary" id="summaryCliente">Desactivado</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-percent-line me-2 text-info"></i>Desc. por Volumen</span>
+                        <span class="badge bg-success-subtle text-success" id="summaryDescuento">Activado</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-alert-triangle-line me-2 text-danger"></i>Stock Negativo</span>
+                        <span class="badge bg-secondary-subtle text-secondary" id="summaryStock">Desactivado</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-settings-4-line me-2 text-secondary"></i>ITBIS por Defecto</span>
+                        <span class="badge bg-primary-subtle text-primary" id="summaryItbis">18%</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-footer bg-soft-light border-0 p-3">
+                <small class="text-muted">
+                    <i class="ri-information-line me-1"></i>
+                    Esta configuración afecta el comportamiento del POS y la facturación electrónica.
+                </small>
+            </div>
+        </div>
+
+        <!-- Información Fiscal -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-book-open-line me-1 text-primary"></i>
+                    Información Fiscal
+                </h6>
+                <p class="small text-muted mb-2">
+                    Los tipos de comprobante y configuraciones de impuestos deben cumplir con las normativas de la DGII para República Dominicana.
+                </p>
+                <ul class="small text-muted mb-0" style="padding-left: 1.2rem;">
+                    <li>El ITBIS general es 18%</li>
+                    <li>Los tipos de ingreso son requeridos por la DGII</li>
+                    <li>El tipo de pago afecta el reporte de 606</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Soporte -->
+        <div class="card bg-soft-success border-0">
+            <div class="card-body text-center">
+                <i class="ri-customer-service-2-line display-4 text-success mb-2"></i>
+                <h6 class="fw-semibold mb-1">¿Necesitas Ayuda?</h6>
+                <p class="small text-muted mb-2">
+                    Consulta el manual de usuario para más detalles sobre cada opción.
+                </p>
+                <a href="#" class="btn btn-success btn-sm">
+                    <i class="ri-book-line me-1"></i> Ver Manual
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Actualizar resumen de configuración
+        function updateSummary() {
+            // Ventas a Crédito
+            const credito = document.getElementById('PermitirVentasCredito').checked;
+            document.getElementById('summaryCredito').textContent = credito ? 'Activado' : 'Desactivado';
+            document.getElementById('summaryCredito').className = credito ? 'badge bg-success-subtle text-success' : 'badge bg-secondary-subtle text-secondary';
+
+            // Impresión Automática
+            const impresion = document.getElementById('ImprimirAutomático').checked;
+            document.getElementById('summaryImpresion').textContent = impresion ? 'Activado' : 'Desactivado';
+            document.getElementById('summaryImpresion').className = impresion ? 'badge bg-success-subtle text-success' : 'badge bg-secondary-subtle text-secondary';
+
+            // Cliente Obligatorio
+            const cliente = document.getElementById('ClienteObligatorio').checked;
+            document.getElementById('summaryCliente').textContent = cliente ? 'Activado' : 'Desactivado';
+            document.getElementById('summaryCliente').className = cliente ? 'badge bg-success-subtle text-success' : 'badge bg-secondary-subtle text-secondary';
+
+            // Descuento por Volumen
+            const descuento = document.getElementById('DescuentoCantidad').checked;
+            document.getElementById('summaryDescuento').textContent = descuento ? 'Activado' : 'Desactivado';
+            document.getElementById('summaryDescuento').className = descuento ? 'badge bg-success-subtle text-success' : 'badge bg-secondary-subtle text-secondary';
+
+            // Stock Negativo
+            const stock = document.getElementById('StockNegativo').checked;
+            document.getElementById('summaryStock').textContent = stock ? 'Activado' : 'Desactivado';
+            document.getElementById('summaryStock').className = stock ? 'badge bg-success-subtle text-success' : 'badge bg-secondary-subtle text-secondary';
+
+            // ITBIS
+            const itbis = document.getElementById('ITBISPorDefecto').value;
+            document.getElementById('summaryItbis').textContent = itbis + '%';
+        }
+
+        // Escuchar cambios en los inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            // Actualizar al cargar
+            updateSummary();
+
+            // Escuchar cambios en los toggles
+            const toggles = document.querySelectorAll('input[type="checkbox"]');
+            toggles.forEach(toggle => {
+                toggle.addEventListener('change', updateSummary);
+            });
+
+            // Escuchar cambios en ITBIS
+            const itbisInput = document.getElementById('ITBISPorDefecto');
+            if (itbisInput) {
+                itbisInput.addEventListener('input', updateSummary);
+            }
+        });
+    </script>
+}

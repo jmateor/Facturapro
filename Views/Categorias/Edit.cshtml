@@ -1,0 +1,279 @@
+@model Facturapro.Models.Entities.Categoria
+
+@{
+    ViewData["Title"] = "Editar Categoría";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-edit-2-line me-1"></i>
+                Editar Categoría
+            </h4>
+            <p class="text-muted mb-0">Modifica la información de @Model.Nombre</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-soft-info">
+                <i class="ri-eye-line me-1"></i> Ver Detalles
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                Por favor corrige los errores marcados en el formulario.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Formulario -->
+    <div class="col-xl-8">
+        <form asp-action="Edit" method="post" id="categoriaForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="FechaCreacion" />
+
+            <!-- Sección 1: Información Básica -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información Básica</h5>
+                            <p class="text-muted mb-0 small">Datos principales de la categoría</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Nombre" class="form-label">
+                                Nombre <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Ej: Electrónica, Ropa, Hogar..." />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Descripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="4" placeholder="Descripción de la categoría..."></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch form-switch-lg">
+                                <input asp-for="Activo" class="form-check-input" id="activoToggle" />
+                                <label class="form-check-label fw-semibold" for="activoToggle">
+                                    <i class="ri-toggle-line me-1"></i>
+                                    <span id="activoLabel">@(Model.Activo ? "Categoría Activa" : "Categoría Inactiva")</span>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ri-information-line me-1"></i>
+                                <span id="activoDescripcion">@(Model.Activo ? "Las categorías activas aparecen en listados y filtros" : "Las categorías inactivas no aparecen en listados ni filtros")</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-light" onclick="history.back()">
+                    <i class="ri-arrow-left-line me-1"></i> Cancelar
+                </button>
+                <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-danger"
+                   onclick="return confirm('¿Está seguro de eliminar esta categoría? Esta acción no se puede deshacer.')">
+                    <i class="ri-delete-bin-line me-1"></i> Eliminar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Resumen e Información -->
+    <div class="col-xl-4">
+        <!-- Resumen de la Categoría -->
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="avatar-lg bg-white text-primary rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="ri-price-tag-3-line display-4"></i>
+                </div>
+                <h5 class="mb-1">@Model.Nombre</h5>
+                <p class="text-white-50 small mb-2">
+                    Creada el @Model.FechaCreacion.ToString("dd/MM/yyyy")
+                </p>
+                <span class="badge bg-white text-primary">
+                    @(Model.Activo ? "Activa" : "Inactiva")
+                </span>
+            </div>
+        </div>
+
+        <!-- Información Rápida -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-file-info-line me-1 text-primary"></i>
+                    Información Rápida
+                </h6>
+
+                <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                    <div>
+                        <p class="text-muted mb-0 small">Productos</p>
+                        <h4 class="mb-0 fw-bold">@Model.Productos?.Count ?? 0</h4>
+                    </div>
+                    <div class="text-end">
+                        <p class="text-muted mb-0 small">Estado</p>
+                        <h4 class="mb-0 fw-bold @(Model.Activo ? "text-success" : "text-secondary")">
+                            @(Model.Activo ? "Activa" : "Inactiva")
+                        </h4>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Descripcion))
+                {
+                    <div class="small">
+                        <label class="text-muted small">Descripción:</label>
+                        <p class="mb-0">@Model.Descripcion</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Productos Asociados -->
+        @if (Model.Productos != null && Model.Productos.Any())
+        {
+            <div class="card bg-soft-success border-0">
+                <div class="card-body">
+                    <h6 class="card-title text-success mb-2">
+                        <i class="ri-box-3-line me-1"></i>
+                        Productos Asociados
+                    </h6>
+                    <p class="small text-muted mb-2">
+                        Esta categoría tiene <strong>@Model.Productos.Count producto(s)</strong> asociado(s).
+                    </p>
+                    <div class="alert alert-warning-soft mb-0 small">
+                        <i class="ri-alert-line me-1"></i>
+                        No se puede eliminar una categoría con productos asociados
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Zona de Peligro -->
+        <div class="card border-danger border-1">
+            <div class="card-body">
+                <h6 class="card-title text-danger mb-2">
+                    <i class="ri-delete-bin-2-line me-1"></i>
+                    Zona de Peligro
+                </h6>
+                <p class="small text-muted mb-3">
+                    Eliminar una categoría es irreversible. Asegúrate de que no tenga productos asociados.
+                </p>
+                <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-outline-danger w-100"
+                   onclick="return confirm('¿Está completamente seguro? Esta acción es irreversible.')">
+                    <i class="ri-delete-bin-line me-1"></i> Eliminar Categoría
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Actualizar etiqueta del toggle de estado
+        document.getElementById('activoToggle').addEventListener('change', function() {
+            const label = document.getElementById('activoLabel');
+            const descripcion = document.getElementById('activoDescripcion');
+
+            if (this.checked) {
+                label.textContent = 'Categoría Activa';
+                descripcion.textContent = 'Las categorías activas aparecen en listados y filtros';
+            } else {
+                label.textContent = 'Categoría Inactiva';
+                descripcion.textContent = 'Las categorías inactivas no aparecen en listados ni filtros';
+            }
+        });
+
+        // Validación de Nombre
+        document.querySelector('input[name="Nombre"]').addEventListener('input', function(e) {
+            if (this.value.length > 0) {
+                this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+            }
+        });
+
+        // Validación del formulario
+        document.getElementById('categoriaForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            const nombreInput = document.querySelector('input[name="Nombre"]');
+
+            if (!nombreInput || !nombreInput.value.trim()) {
+                isValid = false;
+                if (nombreInput) {
+                    nombreInput.classList.add('is-invalid');
+                    nombreInput.classList.add('border-danger');
+                }
+            } else if (nombreInput) {
+                nombreInput.classList.remove('is-invalid');
+                nombreInput.classList.remove('border-danger');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+
+                const alerta = document.createElement('div');
+                alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
+                alerta.setAttribute('role', 'alert');
+                alerta.innerHTML = `
+                    <i class="ri-error-warning-line me-2"></i>
+                    El nombre de la categoría es obligatorio.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                const formContainer = document.querySelector('.page-header-title');
+                const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
+                if (alertaExistente) {
+                    alertaExistente.remove();
+                }
+                formContainer.after(alerta);
+            }
+        });
+
+        // Remover clase de error al escribir
+        document.querySelectorAll('.form-control, textarea').forEach(function(input) {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                this.classList.remove('border-danger');
+            });
+        });
+    </script>
+}

@@ -1,0 +1,74 @@
+@model Facturapro.Models.Entities.Producto
+
+@{
+    ViewData["Title"] = "Registrar Salida - Kalder";
+}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Registrar Salida</h1>
+        <p>Retirar stock del inventario</p>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Inventario")" class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Volver
+        </a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <div class="card-header">
+        <h3 class="card-title">@Model.Nombre</h3>
+    </div>
+    <div class="card-body">
+        <div style="background: var(--gray-50); padding: var(--space-lg); border-radius: var(--radius); margin-bottom: var(--space-lg);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Código</div>
+                    <div style="font-weight: 600;">@Model.Codigo</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">Stock Disponible</div>
+                    <div style="font-weight: 600; font-size: 1.25rem; @(Model.Stock <= 5 ? "color: var(--error-color);" : "")">@Model.Stock unidades</div>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="Salida" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+
+            <div class="form-group">
+                <label class="form-label required">Cantidad a Retirar</label>
+                <input type="number" name="cantidad" class="form-input" min="1" max="@Model.Stock" required autofocus
+                       @(Model.Stock == 0 ? "disabled" : "") />
+                @if (Model.Stock == 0)
+                {
+                    <span class="form-error">No hay stock disponible para retirar</span>
+                }
+                else
+                {
+                    <span class="form-hint">Máximo disponible: @Model.Stock unidades</span>
+                }
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Motivo / Notas</label>
+                <textarea name="motivo" class="form-textarea" rows="3" placeholder="Motivo de la salida..." @(Model.Stock == 0 ? "disabled" : "")></textarea>
+            </div>
+
+            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: var(--space-md);">
+                <a href="@Url.Action("Inventario")" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-danger" @(Model.Stock == 0 ? "disabled" : "")>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                    </svg>
+                    Registrar Salida
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

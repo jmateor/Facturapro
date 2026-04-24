@@ -1,0 +1,407 @@
+@model Facturapro.Models.ViewModels.Reportes.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <div class="btn-group">
+                    <a href="@Url.Action("General")" class="btn btn-primary">
+                        <i class="ri-file-chart-line me-1"></i>
+                        Reportes Generales
+                    </a>
+                    <button type="button" class="btn btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                        <span class="visually-hidden">Más reportes</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="@Url.Action("ProductosMasVendidos")"><i class="ri-trophy-line me-2"></i>Productos Más Vendidos</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("VentasPorCategoria")"><i class="ri-pie-chart-2-line me-2"></i>Ventas por Categoría</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("VentasPorCiudad")"><i class="ri-map-pin-2-line me-2"></i>Ventas por Ciudad</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("VentasPorAnio")"><i class="ri-calendar-2-line me-2"></i>Ventas por Año</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="@Url.Action("Devoluciones")"><i class="ri-return-line me-2"></i>Devoluciones</a></li>
+                        <li><a class="dropdown-item" href="@Url.Action("Inventario")"><i class="ri-archive-line me-2"></i>Inventario</a></li>
+                    </ul>
+                </div>
+            </div>
+            <h4 class="page-title">
+                <i class="ri-dashboard-3-line me-2"></i>
+                Dashboard
+            </h4>
+            <p class="text-muted mb-0">Resumen de ventas y métricas clave del negocio</p>
+        </div>
+    </div>
+</div>
+<!-- end page title -->
+
+<!-- Alertas -->
+@if (Model.Alertas.Any())
+{
+    @foreach (var alerta in Model.Alertas)
+    {
+        var alertClass = alerta.Tipo switch
+        {
+            "danger" => "alert-danger",
+            "warning" => "alert-warning",
+            "success" => "alert-success",
+            _ => "alert-info"
+        };
+
+        <div class="alert @alertClass alert-dismissible fade show" role="alert">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>@alerta.Titulo:</strong> @alerta.Mensaje
+                </div>
+                @if (!string.IsNullOrEmpty(alerta.AccionUrl))
+                {
+                    <a href="@alerta.AccionUrl" class="btn btn-sm btn-ghost">@alerta.AccionTexto</a>
+                }
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+}
+
+<!-- Tarjetas de Resumen -->
+<div class="row mb-3">
+    <!-- Ventas Hoy -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card widget-flat">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-money-dollar-circle-line widget-icon text-primary"></i>
+                </div>
+                <h6 class="text-muted text-uppercase mt-0">Ventas Hoy</h6>
+                <h2 class="my-2">@Model.VentasHoy.ToString("C", cultura)</h2>
+                <p class="mb-0 text-muted">
+                    @if (Model.VariacionVentasHoy > 0)
+                    {
+                        <span class="text-success me-1"><i class="ri-arrow-up-line"></i> @Model.VariacionVentasHoy.ToString("F1")%</span>
+                    }
+                    else if (Model.VariacionVentasHoy < 0)
+                    {
+                        <span class="text-danger me-1"><i class="ri-arrow-down-line"></i> @Math.Abs(Model.VariacionVentasHoy).ToString("F1")%</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted me-1">- 0%</span>
+                    }
+                    <span class="text-nowrap">vs mes ant.</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ventas Mes -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card widget-flat">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-calendar-check-line widget-icon text-success"></i>
+                </div>
+                <h6 class="text-muted text-uppercase mt-0">Ventas del Mes</h6>
+                <h2 class="my-2">@Model.VentasMes.ToString("C", cultura)</h2>
+                <p class="mb-0 text-muted">
+                    @if (Model.VariacionVentasMes > 0)
+                    {
+                        <span class="text-success me-1"><i class="ri-arrow-up-line"></i> @Model.VariacionVentasMes.ToString("F1")%</span>
+                    }
+                    else if (Model.VariacionVentasMes < 0)
+                    {
+                        <span class="text-danger me-1"><i class="ri-arrow-down-line"></i> @Math.Abs(Model.VariacionVentasMes).ToString("F1")%</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted me-1">- 0%</span>
+                    }
+                    <span class="text-nowrap">vs mes ant.</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Facturas Hoy -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card widget-flat">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-file-list-3-line widget-icon text-warning"></i>
+                </div>
+                <h6 class="text-muted text-uppercase mt-0">Facturas Hoy</h6>
+                <h2 class="my-2">@Model.FacturasHoy</h2>
+                <p class="mb-0 text-muted">
+                    <span class="text-nowrap">@Model.FacturasMes facturas este mes</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="col-md-6 col-xl-3">
+        <div class="card widget-flat">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-user-follow-line widget-icon text-info"></i>
+                </div>
+                <h6 class="text-muted text-uppercase mt-0">Clientes / Productos</h6>
+                <h2 class="my-2">@Model.TotalClientes / @Model.TotalProductos</h2>
+                <p class="mb-0 text-muted">
+                    <span class="text-nowrap">Activos en el sistema</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Gráfico de Ventas - Últimos 7 días -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="header-title mb-0">
+                    <i class="ri-bar-chart-box-line me-1"></i>
+                    Ventas Últimos 7 Días
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.VentasUltimos7Dias.Any())
+                {
+                    <div style="height: 300px;">
+                        <canvas id="ventasCanvas"></canvas>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="ri-bar-chart-box-line text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2 mb-0">No hay datos de ventas recientes</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Facturas por Estado -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="header-title mb-0">
+                    <i class="ri-pie-chart-line me-1"></i>
+                    Facturas por Estado
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.FacturasPorEstado.Any())
+                {
+                    <div style="height: 200px;">
+                        <canvas id="estadoCanvas"></canvas>
+                    </div>
+                    <div class="table-responsive mt-3">
+                        <table class="table table-sm table-centered mb-0">
+                            <tbody>
+                                @foreach (var estado in Model.FacturasPorEstado)
+                                {
+                                    var badgeClass = estado.Estado.ToLower() switch
+                                    {
+                                        "aprobado" => "bg-success",
+                                        "firmado" => "bg-primary",
+                                        "enviado" => "bg-warning",
+                                        "rechazado" => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+                                    <tr>
+                                        <td>
+                                            <span class="badge @badgeClass">@estado.Estado</span>
+                                        </td>
+                                        <td class="text-end">@estado.Cantidad</td>
+                                        <td class="text-end">@estado.Total.ToString("C", cultura)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="ri-pie-chart-line text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2 mb-0">No hay facturas registradas</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <!-- Top Productos -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="header-title mb-0">
+                    <i class="ri-box-3-line me-1"></i>
+                    Top 5 Productos - Este Mes
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopProductos.Any())
+                {
+                    <div class="table-responsive-sm">
+                        <table class="table table-centered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-end">Cant.</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in Model.TopProductos)
+                                {
+                                    <tr>
+                                        <td>@producto.Nombre</td>
+                                        <td class="text-end">@producto.CantidadVendida.ToString("N2")</td>
+                                        <td class="text-end">@producto.TotalVenta.ToString("C", cultura)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="ri-box-3-line text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2 mb-0">No hay ventas este mes</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Clientes -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="header-title mb-0">
+                    <i class="ri-user-star-line me-1"></i>
+                    Top 5 Clientes - Este Mes
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopClientes.Any())
+                {
+                    <div class="table-responsive-sm">
+                        <table class="table table-centered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th class="text-end">Facturas</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var cliente in Model.TopClientes)
+                                {
+                                    <tr>
+                                        <td>
+                                            @cliente.Nombre
+                                            @if (!string.IsNullOrEmpty(cliente.RNC))
+                                            {
+                                                <br /><small class="text-muted">RNC: @cliente.RNC</small>
+                                            }
+                                        </td>
+                                        <td class="text-end">@cliente.CantidadFacturas</td>
+                                        <td class="text-end">@cliente.TotalCompras.ToString("C", cultura)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="ri-user-star-line text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2 mb-0">No hay ventas este mes</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Gráfico de Ventas - Últimos 7 días
+        @if (Model.VentasUltimos7Dias.Any())
+        {
+            <text>
+            const ventasCtx = document.getElementById('ventasCanvas').getContext('2d');
+            new Chart(ventasCtx, {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.VentasUltimos7Dias.Select(v => v.DiaSemana.ToUpper()))),
+                    datasets: [{
+                        label: 'Ventas (RD$)',
+                        data: @Html.Raw(Json.Serialize(Model.VentasUltimos7Dias.Select(v => v.Total))),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'RD$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+
+        // Gráfico de Facturas por Estado (Doughnut)
+        @if (Model.FacturasPorEstado.Any())
+        {
+            <text>
+            const estadoCtx = document.getElementById('estadoCanvas').getContext('2d');
+            new Chart(estadoCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: @Html.Raw(Json.Serialize(Model.FacturasPorEstado.Select(e => e.Estado))),
+                    datasets: [{
+                        data: @Html.Raw(Json.Serialize(Model.FacturasPorEstado.Select(e => e.Cantidad))),
+                        backgroundColor: @Html.Raw(Json.Serialize(Model.FacturasPorEstado.Select(e => e.Color))),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { boxWidth: 12 }
+                        }
+                    }
+                }
+            });
+            </text>
+        }
+    </script>
+}

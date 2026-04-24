@@ -1,0 +1,265 @@
+@model Facturapro.Models.Entities.Categoria
+
+@{
+    ViewData["Title"] = "Nueva Categoría";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-price-tag-3-line me-1"></i>
+                Nueva Categoría
+            </h4>
+            <p class="text-muted mb-0">Crea una nueva categoría para organizar tus productos</p>
+        </div>
+        <div>
+            <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                Por favor corrige los errores marcados en el formulario.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Formulario -->
+    <div class="col-xl-8">
+        <form asp-action="Create" method="post" id="categoriaForm">
+            @Html.AntiForgeryToken()
+
+            <!-- Sección 1: Información Básica -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información Básica</h5>
+                            <p class="text-muted mb-0 small">Datos principales de la categoría</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Nombre" class="form-label">
+                                Nombre <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Ej: Electrónica, Ropa, Hogar..." />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Nombre único para identificar la categoría</small>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Descripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="4" placeholder="Descripción opcional de la categoría. Ej: Productos electrónicos de consumo, incluyendo smartphones, tablets y accesorios..."></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Útil para describir el propósito o contenido de la categoría</small>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch form-switch-lg">
+                                <input asp-for="Activo" class="form-check-input" id="activoToggle" checked />
+                                <label class="form-check-label fw-semibold" for="activoToggle">
+                                    <i class="ri-toggle-line me-1"></i>
+                                    <span id="activoLabel">Categoría Activa</span>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ri-information-line me-1"></i>
+                                <span id="activoDescripcion">Las categorías activas aparecen en listados y filtros</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-light" onclick="history.back()">
+                    <i class="ri-arrow-left-line me-1"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Categoría
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Ayuda y Resumen -->
+    <div class="col-xl-4">
+        <!-- Campos Requeridos -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-list-check me-1 text-primary"></i>
+                    Campos Requeridos
+                </h6>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-price-tag-line me-2"></i>Nombre</span>
+                        <span class="badge bg-danger-soft text-danger">Obligatorio</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-text-wrap me-2"></i>Descripción</span>
+                        <span class="badge bg-warning-soft text-warning">Opcional</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-toggle-line me-2"></i>Estado</span>
+                        <span class="badge bg-info-soft text-info">Activo por defecto</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Información Importante -->
+        <div class="card bg-soft-primary border-0">
+            <div class="card-body">
+                <h6 class="card-title text-primary mb-2">
+                    <i class="ri-information-line me-1"></i>
+                    Información Importante
+                </h6>
+                <p class="small text-muted mb-2">
+                    Las categorías te permiten organizar y filtrar tus productos de manera eficiente.
+                </p>
+                <ul class="small text-muted mb-0" style="padding-left: 1.2rem;">
+                    <li>El nombre debe ser único</li>
+                    <li>Puedes desactivar categorías sin eliminarlas</li>
+                    <li>Las categorías inactivas no se eliminan si tienen productos</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Ejemplos de Categorías -->
+        <div class="card bg-soft-success border-0">
+            <div class="card-body">
+                <h6 class="card-title text-success mb-2">
+                    <i class="ri-lightbulb-line me-1"></i>
+                    Ejemplos de Categorías
+                </h6>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <span class="badge bg-success-soft text-success-emphasis border border-success-subtle">Electrónica</span>
+                    <span class="badge bg-success-soft text-success-emphasis border border-success-subtle">Ropa</span>
+                    <span class="badge bg-success-soft text-success-emphasis border border-success-subtle">Hogar</span>
+                    <span class="badge bg-success-soft text-success-emphasis border border-success-subtle">Alimentos</span>
+                    <span class="badge bg-success-soft text-success-emphasis border border-success-subtle">Servicios</span>
+                    <span class="badge bg-success-soft text-success-emphasis border border-success-subtle">Repuestos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consejos -->
+        <div class="card border-0">
+            <div class="card-body text-center p-4">
+                <div class="avatar-lg bg-info-soft rounded-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                    <i class="ri-tip-jar-line display-4 text-info"></i>
+                </div>
+                <h6 class="fw-semibold mb-1">Consejo UX</h6>
+                <p class="small text-muted mb-0">
+                    Usa nombres cortos y descriptivos. Evita crear demasiadas categorías para no confundir a los usuarios.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Actualizar etiqueta del toggle de estado
+        document.getElementById('activoToggle').addEventListener('change', function() {
+            const label = document.getElementById('activoLabel');
+            const descripcion = document.getElementById('activoDescripcion');
+
+            if (this.checked) {
+                label.textContent = 'Categoría Activa';
+                descripcion.textContent = 'Las categorías activas aparecen en listados y filtros';
+            } else {
+                label.textContent = 'Categoría Inactiva';
+                descripcion.textContent = 'Las categorías inactivas no aparecen en listados ni filtros';
+            }
+        });
+
+        // Validación de Nombre - Convertir a mayúsculas la primera letra
+        document.querySelector('input[name="Nombre"]').addEventListener('input', function(e) {
+            if (this.value.length > 0) {
+                this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+            }
+        });
+
+        // Validación del formulario antes de enviar
+        document.getElementById('categoriaForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            const nombreInput = document.querySelector('input[name="Nombre"]');
+
+            if (!nombreInput || !nombreInput.value.trim()) {
+                isValid = false;
+                if (nombreInput) {
+                    nombreInput.classList.add('is-invalid');
+                    nombreInput.classList.add('border-danger');
+                }
+            } else if (nombreInput) {
+                nombreInput.classList.remove('is-invalid');
+                nombreInput.classList.remove('border-danger');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+
+                // Mostrar alerta de error
+                const alerta = document.createElement('div');
+                alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
+                alerta.setAttribute('role', 'alert');
+                alerta.innerHTML = `
+                    <i class="ri-error-warning-line me-2"></i>
+                    El nombre de la categoría es obligatorio.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                const formContainer = document.querySelector('.page-header-title');
+                const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
+                if (alertaExistente) {
+                    alertaExistente.remove();
+                }
+                formContainer.after(alerta);
+
+                // Scroll al primer error
+                nombreInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // Remover clase de error al escribir
+        document.querySelectorAll('.form-control, textarea').forEach(function(input) {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                this.classList.remove('border-danger');
+            });
+        });
+    </script>
+}

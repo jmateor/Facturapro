@@ -1,0 +1,385 @@
+@model Facturapro.Models.Entities.ConfiguracionEmpresa
+
+@{
+    ViewData["Title"] = "Configura tu Negocio";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <h4 class="page-title">
+        <i class="ri-store-2-line me-1"></i>
+        Configura tu Negocio
+    </h4>
+    <p class="text-muted">Actualiza los datos de tu empresa que aparecerán en tus facturas</p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Datos Generales -->
+    <div class="col-xl-8">
+        <form asp-action="Empresa" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <!-- 1. Logo e Identidad -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Identidad Visual</h5>
+                            <p class="text-muted mb-0 small">Logo y datos principales de tu negocio</p>
+                        </div>
+                    </div>
+
+                    <!-- Logo Upload -->
+                    <div class="text-center mb-4">
+                        <div class="border border-2 border-dashed border-secondary rounded-3 p-4 d-inline-block" style="cursor: pointer;" onclick="document.getElementById('logoInput').click()">
+                            <div id="logoPreview">
+                                <i class="ri-image-add-line display-4 text-muted mb-2"></i>
+                                <div class="text-primary fw-semibold">Subir Logo</div>
+                                <small class="text-muted">170x52 píxeles recomendado</small>
+                            </div>
+                            <input type="file" id="logoInput" name="Logo" accept="image/*" style="display: none;" onchange="previewLogo(this)" />
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">RNC Emisor <span class="text-danger">*</span></label>
+                            <input type="text" name="RNCEmisor" class="form-control" placeholder="131703836" maxlength="11" value="@Model.RNCEmisor" />
+                            <small class="text-muted">11 dígitos sin guiones</small>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label">Razón Social <span class="text-danger">*</span></label>
+                            <input type="text" name="RazonSocialEmisor" class="form-control" placeholder="Nombre de tu negocio" value="@Model.RazonSocialEmisor" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Dirección <span class="text-danger">*</span></label>
+                            <input type="text" name="DireccionEmisor" class="form-control" placeholder="Calle, número, sector..." value="@Model.DireccionEmisor" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Municipio</label>
+                            <input type="text" name="Municipio" class="form-control" value="@Model.Municipio" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Provincia</label>
+                            <select name="Provincia" class="form-select">
+                                <option value="">Seleccionar</option>
+                                <option value="Santo Domingo" selected="@(Model.Provincia == "Santo Domingo")">Santo Domingo</option>
+                                <option value="Santiago" selected="@(Model.Provincia == "Santiago")">Santiago</option>
+                                <option value="La Romana" selected="@(Model.Provincia == "La Romana")">La Romana</option>
+                                <option value="San Pedro de Macorís" selected="@(Model.Provincia == "San Pedro de Macorís")">San Pedro de Macorís</option>
+                                <option value="La Vega" selected="@(Model.Provincia == "La Vega")">La Vega</option>
+                                <option value="Puerto Plata" selected="@(Model.Provincia == "Puerto Plata")">Puerto Plata</option>
+                                <option value="San Cristóbal" selected="@(Model.Provincia == "San Cristóbal")">San Cristóbal</option>
+                                <option value="Duarte" selected="@(Model.Provincia == "Duarte")">Duarte</option>
+                                <option value="Valverde" selected="@(Model.Provincia == "Valverde")">Valverde</option>
+                                <option value="Espaillat" selected="@(Model.Provincia == "Espaillat")">Espaillat</option>
+                                <option value="María Trinidad Sánchez" selected="@(Model.Provincia == "María Trinidad Sánchez")">María Trinidad Sánchez</option>
+                                <option value="Samaná" selected="@(Model.Provincia == "Samaná")">Samaná</option>
+                                <option value="Monte Plata" selected="@(Model.Provincia == "Monte Plata")">Monte Plata</option>
+                                <option value="Bayaguaná" selected="@(Model.Provincia == "Bayaguaná")">Bayaguaná</option>
+                                <option value="Hato Mayor" selected="@(Model.Provincia == "Hato Mayor")">Hato Mayor</option>
+                                <option value="San José de Ocoa" selected="@(Model.Provincia == "San José de Ocoa")">San José de Ocoa</option>
+                                <option value="Peravia" selected="@(Model.Provincia == "Peravia")">Peravia</option>
+                                <option value="Azua" selected="@(Model.Provincia == "Azua")">Azua</option>
+                                <option value="San Juan" selected="@(Model.Provincia == "San Juan")">San Juan</option>
+                                <option value="Elías Piña" selected="@(Model.Provincia == "Elías Piña")">Elías Piña</option>
+                                <option value="Independencia" selected="@(Model.Provincia == "Independencia")">Independencia</option>
+                                <option value="Bahoruco" selected="@(Model.Provincia == "Bahoruco")">Bahoruco</option>
+                                <option value="Barahona" selected="@(Model.Provincia == "Barahona")">Barahona</option>
+                                <option value="Pedernales" selected="@(Model.Provincia == "Pedernales")">Pedernales</option>
+                                <option value="Dajabón" selected="@(Model.Provincia == "Dajabón")">Dajabón</option>
+                                <option value="Santiago Rodríguez" selected="@(Model.Provincia == "Santiago Rodríguez")">Santiago Rodríguez</option>
+                                <option value="Monte Cristi" selected="@(Model.Provincia == "Monte Cristi")">Monte Cristi</option>
+                                <option value="Distrito Nacional" selected="@(Model.Provincia == "Distrito Nacional")">Distrito Nacional</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" name="TelefonoEmisor" class="form-control" placeholder="809-555-0000" value="@Model.TelefonoEmisor" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" name="CorreoEmisor" class="form-control" placeholder="contacto@empresa.com" value="@Model.CorreoEmisor" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Actividad Económica</label>
+                            <select name="ActividadEconomica" class="form-select">
+                                <option value="">Seleccionar</option>
+                                <option value="Ferretería" selected="@(Model.ActividadEconomica == "Ferretería")">🔧 Ferretería</option>
+                                <option value="Supermercado" selected="@(Model.ActividadEconomica == "Supermercado")">🛒 Supermercado</option>
+                                <option value="Farmacia" selected="@(Model.ActividadEconomica == "Farmacia")">💊 Farmacia</option>
+                                <option value="Tecnología" selected="@(Model.ActividadEconomica == "Tecnología")">💻 Tecnología</option>
+                                <option value="Ropa y Accesorios" selected="@(Model.ActividadEconomica == "Ropa y Accesorios")">👕 Ropa y Accesorios</option>
+                                <option value="Restaurante" selected="@(Model.ActividadEconomica == "Restaurante")">🍽️ Restaurante</option>
+                                <option value="Servicios" selected="@(Model.ActividadEconomica == "Servicios")">📋 Servicios</option>
+                                <option value="Salud" selected="@(Model.ActividadEconomica == "Salud")">🏥 Salud</option>
+                                <option value="Construcción" selected="@(Model.ActividadEconomica == "Construcción")">🏗️ Construcción</option>
+                                <option value="Educación" selected="@(Model.ActividadEconomica == "Educación")">📚 Educación</option>
+                                <option value="Otro" selected="@(Model.ActividadEconomica == "Otro")">📦 Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Configuración de Caja -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Control de Caja</h5>
+                            <p class="text-muted mb-0 small">Gestiona el flujo de dinero de tu negocio</p>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch form-switch-lg mb-4">
+                        <input type="checkbox" class="form-check-input" id="cajaToggle" name="UsarCaja" value="true" @(Model.UsarCaja ? "checked" : "") onchange="toggleCajaOptions()" />
+                        <label class="form-check-label fw-semibold" for="cajaToggle">
+                            <i class="ri-safe-2-line me-1"></i> Usar Control de Caja
+                        </label>
+                    </div>
+
+                    <div class="alert alert-info border-0 mb-4">
+                        <i class="ri-information-line me-2"></i>
+                        <span>Activa esta opción para utilizar apertura y cierre de caja en tu punto de venta</span>
+                    </div>
+
+                    <div id="cajaOptions">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Cuenta para Ingresos de Efectivo</label>
+                                <select name="CuentaIngresosEfectivo" class="form-select">
+                                    <option value="">Seleccionar</option>
+                                    <option value="1.01.01 - Caja" selected="@(Model.CuentaIngresosEfectivo == "1.01.01 - Caja")">1.01.01 - Caja</option>
+                                    <option value="1.01.02 - Bancos" selected="@(Model.CuentaIngresosEfectivo == "1.01.02 - Bancos")">1.01.02 - Bancos</option>
+                                    <option value="1.01.03 - Cajas Chicas" selected="@(Model.CuentaIngresosEfectivo == "1.01.03 - Cajas Chicas")">1.01.03 - Cajas Chicas</option>
+                                </select>
+                                <small class="text-muted">Cuenta donde se registran los ingresos</small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Cuenta para Salidas de Efectivo</label>
+                                <select name="CuentaSalidasEfectivo" class="form-select">
+                                    <option value="">Seleccionar</option>
+                                    <option value="5.01.01 - Gastos Administrativos" selected="@(Model.CuentaSalidasEfectivo == "5.01.01 - Gastos Administrativos")">5.01.01 - Gastos Administrativos</option>
+                                    <option value="5.01.02 - Gastos de Venta" selected="@(Model.CuentaSalidasEfectivo == "5.01.02 - Gastos de Venta")">5.01.02 - Gastos de Venta</option>
+                                    <option value="1.01.01 - Caja" selected="@(Model.CuentaSalidasEfectivo == "1.01.01 - Caja")">1.01.01 - Caja</option>
+                                </select>
+                                <small class="text-muted">Cuenta donde se registran los gastos</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Multimoneda -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-warning rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">4</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Multimoneda</h5>
+                            <p class="text-muted mb-0 small">Factura en diferentes monedas</p>
+                        </div>
+                    </div>
+
+                    <div class="form-check form-switch form-switch-lg">
+                        <input type="checkbox" class="form-check-input" id="multimonedaToggle" name="Multimoneda" value="true" @(Model.Multimoneda == true ? "checked" : "") />
+                        <label class="form-check-label fw-semibold" for="multimonedaToggle">
+                            <i class="ri-money-dollar-circle-line me-1"></i> Usar Multimoneda
+                        </label>
+                    </div>
+
+                    <div class="alert alert-warning border-0 mt-3 mb-0">
+                        <i class="ri-alert-line me-2"></i>
+                        <span>Activa esta opción si necesitas facturar en dólares u otras monedas extranjeras</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-light" onclick="history.back()">
+                    <i class="ri-arrow-left-line me-1"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Información y Ayuda -->
+    <div class="col-xl-4">
+        <!-- Resumen de Configuración -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-file-list-3-line me-1 text-primary"></i>
+                    Datos Requeridos
+                </h6>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-building-line me-2"></i>RNC Emisor</span>
+                        @if (!string.IsNullOrEmpty(Model.RNCEmisor))
+                        {
+                            <i class="ri-checkbox-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="ri-close-circle-fill text-danger"></i>
+                        }
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-user-line me-2"></i>Razón Social</span>
+                        @if (!string.IsNullOrEmpty(Model.RazonSocialEmisor))
+                        {
+                            <i class="ri-checkbox-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="ri-close-circle-fill text-danger"></i>
+                        }
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-map-pin-line me-2"></i>Dirección</span>
+                        @if (!string.IsNullOrEmpty(Model.DireccionEmisor))
+                        {
+                            <i class="ri-checkbox-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="ri-close-circle-fill text-danger"></i>
+                        }
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-phone-line me-2"></i>Teléfono</span>
+                        @if (!string.IsNullOrEmpty(Model.TelefonoEmisor))
+                        {
+                            <i class="ri-checkbox-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="ri-close-circle-fill text-warning"></i>
+                        }
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-mail-line me-2"></i>Correo</span>
+                        @if (!string.IsNullOrEmpty(Model.CorreoEmisor))
+                        {
+                            <i class="ri-checkbox-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="ri-close-circle-fill text-warning"></i>
+                        }
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Información Fiscal -->
+        <div class="card bg-soft-primary border-0">
+            <div class="card-body">
+                <h6 class="card-title text-primary mb-2">
+                    <i class="ri-book-open-line me-1"></i>
+                    Información Fiscal
+                </h6>
+                <p class="small text-muted mb-2">
+                    Los datos que configures aquí aparecerán en todos tus comprobantes fiscales electrónicos (e-CF).
+                </p>
+                <ul class="small text-muted mb-0" style="padding-left: 1.2rem;">
+                    <li>El RNC debe tener 11 dígitos</li>
+                    <li>La dirección es requerida por la DGII</li>
+                    <li>El logo es opcional pero recomendado</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Soporte -->
+        <div class="card bg-soft-success border-0">
+            <div class="card-body text-center">
+                <i class="ri-customer-service-2-line display-4 text-success mb-2"></i>
+                <h6 class="fw-semibold mb-1">¿Necesitas Ayuda?</h6>
+                <p class="small text-muted mb-2">
+                    Nuestro equipo de soporte está disponible para ayudarte.
+                </p>
+                <a href="#" class="btn btn-success btn-sm">
+                    <i class="ri-message-line me-1"></i> Contactar Soporte
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Preview de logo
+        function previewLogo(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('logoPreview').innerHTML =
+                        `<img src="${e.target.result}" style="max-width: 150px; max-height: 60px; object-fit: contain;" class="rounded" />`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Toggle opciones de caja
+        function toggleCajaOptions() {
+            const cajaToggle = document.getElementById('cajaToggle');
+            const cajaOptions = document.getElementById('cajaOptions');
+            if (cajaOptions) {
+                cajaOptions.style.display = cajaToggle.checked ? 'block' : 'none';
+            }
+        }
+
+        // Inicializar estado de opciones de caja
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleCajaOptions();
+        });
+    </script>
+}

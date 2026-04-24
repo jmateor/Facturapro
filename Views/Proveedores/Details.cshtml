@@ -1,0 +1,350 @@
+@model Facturapro.Models.Entities.Proveedor
+
+@{
+    ViewData["Title"] = "Detalles del Proveedor";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-truck-line me-1"></i>
+                @Model.Nombre
+            </h4>
+            <p class="text-muted mb-0">Información completa del proveedor</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-primary">
+                <i class="ri-edit-line me-1"></i> Editar
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Columna Izquierda - Información -->
+    <div class="col-xl-8">
+        <!-- Información Básica -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-primary rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">1</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Información General</h5>
+                        <p class="text-muted mb-0 small">Datos principales del proveedor</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Nombre / Razón Social</label>
+                        <div class="fw-semibold">
+                            <i class="ri-store-2-line me-1 text-primary"></i>
+                            @Model.Nombre
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">RNC / Cédula</label>
+                        <div class="fw-semibold">
+                            <i class="ri-id-card-line me-1 text-primary"></i>
+                            @(Model.Documento ?? "Sin documento")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Persona de Contacto</label>
+                        <div class="fw-semibold">
+                            <i class="ri-user-line me-1 text-primary"></i>
+                            @(Model.PersonaContacto ?? "Sin contacto asignado")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Estado</label>
+                        <div>
+                            @if (Model.Activo)
+                            {
+                                <span class="badge bg-success-soft text-success">
+                                    <i class="ri-checkbox-circle-fill me-1"></i>Activo
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-soft text-secondary">
+                                    <i class="ri-stop-circle-fill me-1"></i>Inactivo
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted small">Dirección</label>
+                        <div class="fw-semibold">
+                            <i class="ri-map-pin-line me-1 text-primary"></i>
+                            @(Model.Direccion ?? "Sin dirección registrada")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Teléfono</label>
+                        <div class="fw-semibold">
+                            <i class="ri-phone-line me-1 text-primary"></i>
+                            @(Model.Telefono ?? "Sin teléfono registrado")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Email</label>
+                        <div class="fw-semibold">
+                            <i class="ri-mail-line me-1 text-primary"></i>
+                            @(Model.Email ?? "Sin email registrado")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Fecha de Creación</label>
+                        <div class="fw-semibold">
+                            <i class="ri-calendar-line me-1 text-primary"></i>
+                            @Model.FechaCreacion.ToString("dd/MM/yyyy")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compras del Proveedor -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-success rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">2</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Compras Realizadas</h5>
+                        <p class="text-muted mb-0 small">Historial de compras a este proveedor</p>
+                    </div>
+                </div>
+
+                @if (Model.Compras != null && Model.Compras.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-centered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Factura</th>
+                                    <th>Fecha</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-end">Total</th>
+                                    <th class="text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var compra in Model.Compras.OrderByDescending(c => c.FechaCompra).Take(20))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-light text-dark fw-normal">@compra.NumeroFactura</span>
+                                        </td>
+                                        <td>
+                                            <i class="ri-calendar-line me-1 text-muted"></i>
+                                            @compra.FechaCompra.ToString("dd/MM/yyyy")
+                                        </td>
+                                        <td class="text-center">
+                                            @switch (compra.Estado)
+                                            {
+                                                case Facturapro.Models.Entities.EstadoCompra.Pendiente:
+                                                    <span class="badge bg-warning-soft text-warning">
+                                                        <i class="ri-time-line me-1"></i>Pendiente
+                                                    </span>
+                                                    break;
+                                                case Facturapro.Models.Entities.EstadoCompra.Recibida:
+                                                    <span class="badge bg-success-soft text-success">
+                                                        <i class="ri-checkbox-circle-line me-1"></i>Recibida
+                                                    </span>
+                                                    break;
+                                                case Facturapro.Models.Entities.EstadoCompra.Cancelada:
+                                                    <span class="badge bg-secondary-soft text-secondary">
+                                                        <i class="ri-close-circle-line me-1"></i>Cancelada
+                                                    </span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold text-success">@compra.Total.ToString("C", cultura)</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="@Url.Action("Details", "Compras", new { id = compra.Id })" class="btn btn-sm btn-soft-info">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (Model.Compras.Count > 20)
+                    {
+                        <div class="alert alert-info-soft mb-0">
+                            <i class="ri-information-line me-1"></i>
+                            Mostrando las primeras 20 compras de @(Model.Compras.Count) totales.
+                            <a href="@Url.Action("Index", "Compras", new { proveedorId = Model.Id })" class="alert-link">Ver todas</a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <div class="avatar-lg bg-soft-success rounded-circle mb-3 mx-auto d-inline-flex" style="width: 80px; height: 80px;">
+                            <i class="ri-shopping-bag-line display-4 text-success"></i>
+                        </div>
+                        <h6 class="fw-semibold">Sin compras registradas</h6>
+                        <p class="text-muted mb-3 small">Este proveedor aún no tiene compras asociadas</p>
+                        <a href="@Url.Action("Create", "Compras", new { proveedorId = Model.Id })" class="btn btn-success">
+                            <i class="ri-add-line me-1"></i> Registrar primera compra
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna Derecha - Resumen y Acciones -->
+    <div class="col-xl-4">
+        <!-- Tarjeta de Proveedor -->
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="avatar-lg bg-white text-primary rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="ri-truck-line display-4"></i>
+                </div>
+                <h5 class="mb-1">@Model.Nombre</h5>
+                <p class="text-white-50 small mb-2">
+                    @(Model.Documento ?? "Sin documento")
+                </p>
+                <span class="badge bg-white text-primary">
+                    @(Model.Activo ? "Activo" : "Inactivo")
+                </span>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-bar-chart-box-line me-1 text-primary"></i>
+                    Estadísticas
+                </h6>
+
+                <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                    <div>
+                        <p class="text-muted mb-0 small">Total Compras</p>
+                        <h4 class="mb-0 fw-bold">@(Model.Compras?.Count ?? 0)</h4>
+                    </div>
+                    <div class="text-end">
+                        <p class="text-muted mb-0 small">Monto Total</p>
+                        <h4 class="mb-0 fw-bold text-success">
+                            @(Model.Compras?.Sum(c => c.Total) ?? 0m).ToString("C", cultura)
+                        </h4>
+                    </div>
+                </div>
+
+                @if (Model.Compras != null && Model.Compras.Any())
+                {
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="p-3 bg-soft-success rounded-3 text-center">
+                                <i class="ri-checkbox-circle-line text-success fs-4"></i>
+                                <p class="text-muted small mb-0">Recibidas</p>
+                                <h5 class="mb-0 fw-bold">@Model.Compras.Count(c => c.Estado == Facturapro.Models.Entities.EstadoCompra.Recibida)</h5>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-soft-warning rounded-3 text-center">
+                                <i class="ri-time-line text-warning fs-4"></i>
+                                <p class="text-muted small mb-0">Pendientes</p>
+                                <h5 class="mb-0 fw-bold">@Model.Compras.Count(c => c.Estado == Facturapro.Models.Entities.EstadoCompra.Pendiente)</h5>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <div class="small mt-3">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="ri-mail-line me-2"></i>Email:</span>
+                        <span class="fw-medium text-break">@Model.Email</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="ri-phone-line me-2"></i>Teléfono:</span>
+                        <span class="fw-medium">@Model.Telefono</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="ri-user-line me-2"></i>Contacto:</span>
+                        <span class="fw-medium">@Model.PersonaContacto</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones Rápidas -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-flashlight-line me-1 text-warning"></i>
+                    Acciones Rápidas
+                </h6>
+
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-soft-primary">
+                        <i class="ri-edit-line me-1"></i> Editar Proveedor
+                    </a>
+                    <a href="@Url.Action("Create", "Compras", new { proveedorId = Model.Id })" class="btn btn-soft-success">
+                        <i class="ri-shopping-bag-line me-1"></i> Nueva Compra
+                    </a>
+                    <a href="@Url.Action("Index", "Compras", new { proveedorId = Model.Id })" class="btn btn-soft-info">
+                        <i class="ri-list-check me-1"></i> Ver Compras
+                    </a>
+                    @if (!string.IsNullOrEmpty(Model.Email))
+                    {
+                        <a href="mailto:@Model.Email" class="btn btn-soft-secondary">
+                            <i class="ri-mail-send-line me-1"></i> Enviar Email
+                        </a>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Telefono))
+                    {
+                        <a href="tel:@Model.Telefono" class="btn btn-soft-secondary">
+                            <i class="ri-phone-line me-1"></i> Llamar
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Zona de Peligro -->
+        <div class="card border-danger border-1">
+            <div class="card-body">
+                <h6 class="card-title text-danger mb-2">
+                    <i class="ri-delete-bin-2-line me-1"></i>
+                    Zona de Peligro
+                </h6>
+                @if (Model.Compras != null && Model.Compras.Any())
+                {
+                    <div class="alert alert-danger-soft mb-2">
+                        <i class="ri-error-warning-line me-1"></i>
+                        <strong>No se puede eliminar:</strong> Este proveedor tiene @(Model.Compras.Count) compra(s) asociada(s).
+                    </div>
+                }
+                else
+                {
+                    <p class="small text-muted mb-3">
+                        Este proveedor no tiene compras asociadas. Puedes eliminarlo de forma segura.
+                    </p>
+                    <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-outline-danger w-100"
+                       onclick="return confirm('¿Está completamente seguro? Esta acción es irreversible.')">
+                        <i class="ri-delete-bin-line me-1"></i> Eliminar Proveedor
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

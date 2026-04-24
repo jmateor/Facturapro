@@ -1,0 +1,368 @@
+@model Facturapro.Models.Entities.Producto
+
+@{
+    ViewData["Title"] = "Nuevo Producto";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-box-3-line me-1"></i>
+                Nuevo Producto
+            </h4>
+            <p class="text-muted mb-0">Añade un nuevo producto a tu catálogo</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Importar")" class="btn btn-soft-info">
+                <i class="ri-upload-cloud-line me-1"></i> Importar CSV
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                Por favor corrige los errores marcados en el formulario.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Formulario -->
+    <div class="col-xl-8">
+        <form asp-action="Create" method="post" id="productoForm">
+            @Html.AntiForgeryToken()
+
+            <!-- Sección 1: Información Básica -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información Básica</h5>
+                            <p class="text-muted mb-0 small">Datos de identificación del producto</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Codigo" class="form-label">
+                                Código <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Codigo" class="form-control" placeholder="Ej: PROD-001" />
+                            <span asp-validation-for="Codigo" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Código interno único</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Nombre" class="form-label">
+                                Nombre <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Nombre del producto" />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Nombre comercial del producto</small>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Descripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción detallada del producto, características, especificaciones..."></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Opcional pero recomendado para mejor identificación</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 2: Precios y Stock -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-success rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Precios y Stock</h5>
+                            <p class="text-muted mb-0 small">Información comercial y de inventario</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Precio" class="form-label">
+                                Precio de Venta <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-soft-primary text-primary fw-bold">$</span>
+                                <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="Precio" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Precio unitario antes de impuestos</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Stock" class="form-label">
+                                Stock Inicial
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-soft-info text-info">
+                                    <i class="ri-archive-line"></i>
+                                </span>
+                                <input asp-for="Stock" type="number" min="0" class="form-control" value="0" />
+                            </div>
+                            <span asp-validation-for="Stock" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Cantidad disponible en almacén</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 3: Clasificación -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Clasificación</h5>
+                            <p class="text-muted mb-0 small">Categorización del producto</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label asp-for="CategoriaId" class="form-label">Categoría</label>
+                            <select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.CategoriaId">
+                                <option value="">-- Sin categoría --</option>
+                            </select>
+                            <span asp-validation-for="CategoriaId" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ri-information-line me-1"></i>
+                                <a href="@Url.Action("Index", "Categorias")" target="_blank" class="text-decoration-none">Ver categorías disponibles</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-light" onclick="history.back()">
+                    <i class="ri-arrow-left-line me-1"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Producto
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Ayuda y Resumen -->
+    <div class="col-xl-4">
+        <!-- Campos Requeridos -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-list-check me-1 text-primary"></i>
+                    Campos Requeridos
+                </h6>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-barcode-box-line me-2"></i>Código</span>
+                        <span class="badge bg-danger-soft text-danger">Obligatorio</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-price-tag-line me-2"></i>Nombre</span>
+                        <span class="badge bg-danger-soft text-danger">Obligatorio</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-money-dollar-circle-line me-2"></i>Precio</span>
+                        <span class="badge bg-danger-soft text-danger">Obligatorio</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-archive-line me-2"></i>Stock</span>
+                        <span class="badge bg-warning-soft text-warning">Opcional</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-price-tag-3-line me-2"></i>Categoría</span>
+                        <span class="badge bg-warning-soft text-warning">Opcional</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Información Importante -->
+        <div class="card bg-soft-primary border-0">
+            <div class="card-body">
+                <h6 class="card-title text-primary mb-2">
+                    <i class="ri-information-line me-1"></i>
+                    Información Importante
+                </h6>
+                <p class="small text-muted mb-2">
+                    El código del producto debe ser único en todo el sistema. No se puede repetir.
+                </p>
+                <ul class="small text-muted mb-0" style="padding-left: 1.2rem;">
+                    <li>Usa un patrón consistente (Ej: PROD-001)</li>
+                    <li>El precio no incluye ITBIS automáticamente</li>
+                    <li>El stock puede ser cero para servicios</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Código de Barras -->
+        <div class="card bg-soft-success border-0">
+            <div class="card-body">
+                <h6 class="card-title text-success mb-2">
+                    <i class="ri-barcode-line me-1"></i>
+                    Código de Barras
+                </h6>
+                <p class="small text-muted mb-2">
+                    Al guardar el producto, se generará automáticamente un código de barras basado en el código interno.
+                </p>
+                <div class="alert alert-success-soft mb-0 small">
+                    <i class="ri-checkbox-circle-line me-1"></i>
+                    Generación automática al crear
+                </div>
+            </div>
+        </div>
+
+        <!-- Atajo de Importación -->
+        <div class="card border-0">
+            <div class="card-body text-center p-4">
+                <div class="avatar-lg bg-info-soft rounded-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                    <i class="ri-upload-cloud-2-line display-4 text-info"></i>
+                </div>
+                <h6 class="fw-semibold mb-1">Importar Múltiples</h6>
+                <p class="small text-muted mb-2">
+                    ¿Necesitas cargar muchos productos? Usa la importación CSV.
+                </p>
+                <a href="@Url.Action("Importar")" class="btn btn-info">
+                    <i class="ri-file-text-line me-1"></i> Importar desde CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Validación de Precio - Solo números con decimales
+        document.querySelector('input[name="Precio"]').addEventListener('input', function(e) {
+            let value = this.value.replace(/[^0-9.]/g, '');
+            // Asegurar máximo 2 decimales
+            const parts = value.split('.');
+            if (parts.length > 1 && parts[1].length > 2) {
+                value = parts[0] + '.' + parts[1].substring(0, 2);
+            }
+            this.value = value;
+        });
+
+        // Validación de Stock - Solo números enteros
+        document.querySelector('input[name="Stock"]').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            // No permitir negativos
+            if (parseInt(this.value) < 0) {
+                this.value = '0';
+            }
+        });
+
+        // Validación de Código - Convertir a mayúsculas y solo caracteres válidos
+        document.querySelector('input[name="Codigo"]').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase().replace(/[^A-Z0-9\-_]/g, '');
+        });
+
+        // Validación del formulario antes de enviar
+        document.getElementById('productoForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            const camposObligatorios = ['Codigo', 'Nombre', 'Precio'];
+
+            camposObligatorios.forEach(function(campo) {
+                const elemento = document.querySelector('input[name="' + campo + '"]');
+                if (elemento && !elemento.value.trim()) {
+                    isValid = false;
+                    elemento.classList.add('is-invalid');
+                    elemento.classList.add('border-danger');
+                } else if (elemento) {
+                    elemento.classList.remove('is-invalid');
+                    elemento.classList.remove('border-danger');
+                }
+            });
+
+            // Validar precio mayor a 0
+            const precioInput = document.querySelector('input[name="Precio"]');
+            if (precioInput && parseFloat(precioInput.value) <= 0) {
+                isValid = false;
+                precioInput.classList.add('is-invalid');
+                precioInput.classList.add('border-danger');
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+
+                // Mostrar alerta de error
+                const alerta = document.createElement('div');
+                alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
+                alerta.setAttribute('role', 'alert');
+                alerta.innerHTML = `
+                    <i class="ri-error-warning-line me-2"></i>
+                    Por favor completa los campos requeridos con valores válidos.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                const formContainer = document.querySelector('.page-header-title');
+                const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
+                if (alertaExistente) {
+                    alertaExistente.remove();
+                }
+                formContainer.after(alerta);
+
+                // Scroll al primer error
+                document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // Remover clase de error al escribir
+        document.querySelectorAll('.form-control, .form-select, textarea').forEach(function(input) {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                this.classList.remove('border-danger');
+            });
+        });
+
+        // Auto-formateo de precio al perder foco
+        document.querySelector('input[name="Precio"]').addEventListener('blur', function() {
+            if (this.value) {
+                const valor = parseFloat(this.value);
+                if (!isNaN(valor)) {
+                    this.value = valor.toFixed(2);
+                }
+            }
+        });
+    </script>
+}

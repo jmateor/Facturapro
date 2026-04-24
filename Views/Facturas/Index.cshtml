@@ -1,0 +1,192 @@
+@model IEnumerable<Facturapro.Models.Entities.Factura>
+
+@{
+    ViewData["Title"] = "Facturas";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <a href="@Url.Action("Create", "Facturas")" class="btn btn-primary">
+                    <i class="ri-file-add-line me-1"></i>
+                    Nueva Factura e-CF
+                </a>
+            </div>
+            <h4 class="page-title">
+                <i class="ri-file-list-3-line me-2"></i>
+                Facturas
+            </h4>
+            <p class="text-muted mb-0">Gestiona todas tus facturas electrónicas (e-CF)</p>
+        </div>
+    </div>
+</div>
+<!-- end page title -->
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-double-line me-1"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-1"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Filtros -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <select name="tipoECF" class="form-select">
+                    <option value="">Todos los tipos e-CF</option>
+                    <option value="31" selected='@(Context.Request.Query["tipoECF"] == "31" ? "selected" : "")'>E31 - Factura Crédito Fiscal</option>
+                    <option value="32" selected='@(Context.Request.Query["tipoECF"] == "32" ? "selected" : "")'>E32 - Factura Consumo</option>
+                    <option value="33" selected='@(Context.Request.Query["tipoECF"] == "33" ? "selected" : "")'>E33 - Nota Débito</option>
+                    <option value="34" selected='@(Context.Request.Query["tipoECF"] == "34" ? "selected" : "")'>E34 - Nota Crédito</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="estadoDGII" class="form-select">
+                    <option value="">Estado DGII</option>
+                    <option value="Pendiente" selected='@(Context.Request.Query["estadoDGII"] == "Pendiente" ? "selected" : "")'>Pendiente</option>
+                    <option value="Firmado" selected='@(Context.Request.Query["estadoDGII"] == "Firmado" ? "selected" : "")'>Firmado</option>
+                    <option value="Enviado" selected='@(Context.Request.Query["estadoDGII"] == "Enviado" ? "selected" : "")'>Enviado</option>
+                    <option value="EnProceso" selected='@(Context.Request.Query["estadoDGII"] == "EnProceso" ? "selected" : "")'>En Proceso</option>
+                    <option value="Aprobado" selected='@(Context.Request.Query["estadoDGII"] == "Aprobado" ? "selected" : "")'>Aprobado</option>
+                    <option value="Rechazado" selected='@(Context.Request.Query["estadoDGII"] == "Rechazado" ? "selected" : "")'>Rechazado</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-secondary w-100">
+                    <i class="ri-filter-search-line me-1"></i>
+                    Filtrar
+                </button>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="@Url.Action("ConsultarEstadoPendientes")" class="btn btn-soft-info">
+                    <i class="ri-refresh-line me-1"></i>
+                    Actualizar Estados
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive-sm">
+            <table class="table table-centered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>e-CF</th>
+                        <th>Tipo</th>
+                        <th>Cliente</th>
+                        <th>Fecha Emisión</th>
+                        <th>Total</th>
+                        <th>Estado DGII</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var estadoDGIIClass = item.EstadoDGII switch
+                        {
+                            "Aprobado" => "bg-success",
+                            "Firmado" => "bg-primary",
+                            "Enviado" => "bg-warning",
+                            "Rechazado" => "bg-danger",
+                            _ => "bg-secondary"
+                        };
+
+                        <tr>
+                            <td>
+                                <strong>@(item.eNCF ?? "-")</strong>
+                                <br />
+                                <small class="text-muted">@item.NumeroFactura</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">E@(item.TipoECF ?? "31")</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm rounded-circle bg-soft-primary text-primary d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 600;">
+                                        @(item.Cliente?.Nombre?.Substring(0, 1).ToUpper() ?? "?")
+                                    </div>
+                                    <span>@(item.Cliente?.Nombre ?? "-")</span>
+                                </div>
+                            </td>
+                            <td>@item.FechaEmision.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <span class="fw-bold text-primary">@item.Total.ToString("C", cultura)</span>
+                            </td>
+                            <td>
+                                <span class="badge @estadoDGIIClass">@(item.EstadoDGII ?? "Pendiente")</span>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1 flex-wrap">
+                                    @if (item.EstadoDGII == "Pendiente" || item.EstadoDGII == "Rechazado")
+                                    {
+                                        <a href="@Url.Action("Firmar", new { id = item.Id })" class="btn btn-sm btn-success" title="Firmar">
+                                            <i class="ri-signature-line"></i>
+                                        </a>
+                                    }
+                                    @if (item.EstadoDGII == "Firmado" || item.EstadoDGII == "Rechazado")
+                                    {
+                                        <a href="@Url.Action("EnviarDGII", new { id = item.Id })" class="btn btn-sm btn-primary" title="Enviar DGII">
+                                            <i class="ri-send-plane-line"></i>
+                                        </a>
+                                    }
+                                    @if (item.EstadoDGII == "Enviado" || item.EstadoDGII == "EnProceso")
+                                    {
+                                        <a href="@Url.Action("ConsultarEstado", new { id = item.Id })" class="btn btn-sm btn-warning" title="Consultar Estado">
+                                            <i class="ri-refresh-line"></i>
+                                        </a>
+                                    }
+                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-sm btn-soft-info" title="Ver detalles">
+                                        <i class="ri-eye-line"></i>
+                                    </a>
+                                    @if (!string.IsNullOrEmpty(item.XMLFirmado))
+                                    {
+                                        <a href="@Url.Action("DescargarXML", new { id = item.Id })" class="btn btn-sm btn-soft-secondary" title="Descargar XML">
+                                            XML
+                                        </a>
+                                    }
+                                    @if (item.EstadoDGII == "Firmado" || item.EstadoDGII == "Aprobado")
+                                    {
+                                        <a href="@Url.Action("DescargarPDF", new { id = item.Id })" class="btn btn-sm btn-soft-danger" title="Descargar PDF">
+                                            <i class="ri-file-pdf-line"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="ri-file-list-3-line text-muted" style="font-size: 4rem;"></i>
+                <h5 class="text-muted mt-3">No hay facturas registradas</h5>
+                <a href="@Url.Action("Create")" class="btn btn-primary mt-2">
+                    <i class="ri-file-add-line me-1"></i>
+                    Crear primera factura
+                </a>
+            </div>
+        }
+    </div>
+</div>

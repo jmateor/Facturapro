@@ -1,0 +1,412 @@
+@model Facturapro.Models.Entities.Producto
+
+@{
+    ViewData["Title"] = "Editar Producto";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-edit-2-line me-1"></i>
+                Editar Producto
+            </h4>
+            <p class="text-muted mb-0">Modifica la información de @Model.Nombre</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Details", new { id = Model.Id })" class="btn btn-soft-info">
+                <i class="ri-eye-line me-1"></i> Ver Detalles
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                Por favor corrige los errores marcados en el formulario.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Formulario -->
+    <div class="col-xl-8">
+        <form asp-action="Edit" method="post" id="productoForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="FechaCreacion" />
+            <input type="hidden" asp-for="CodigoBarras" />
+            <input type="hidden" asp-for="CodigoBarrasImagenUrl" />
+
+            <!-- Sección 1: Información Básica -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información Básica</h5>
+                            <p class="text-muted mb-0 small">Datos de identificación del producto</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Codigo" class="form-label">
+                                Código <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Codigo" class="form-control" placeholder="Ej: PROD-001" />
+                            <span asp-validation-for="Codigo" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Código interno único</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Nombre" class="form-label">
+                                Nombre <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Nombre del producto" />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Descripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción detallada del producto..."></textarea>
+                            <span asp-validation-for="Descripcion" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 2: Precios y Stock -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-success rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Precios y Stock</h5>
+                            <p class="text-muted mb-0 small">Información comercial y de inventario</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Precio" class="form-label">
+                                Precio de Venta <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-soft-primary text-primary fw-bold">$</span>
+                                <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Precio" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Stock" class="form-label">Stock Actual</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-soft-info text-info">
+                                    <i class="ri-archive-line"></i>
+                                </span>
+                                <input asp-for="Stock" type="number" min="0" class="form-control" />
+                            </div>
+                            <span asp-validation-for="Stock" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Deja en 0 para servicios</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 3: Clasificación y Estado -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Clasificación y Estado</h5>
+                            <p class="text-muted mb-0 small">Categoría y estado del producto</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CategoriaId" class="form-label">Categoría</label>
+                            <select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.CategoriaId">
+                                <option value="">-- Sin categoría --</option>
+                            </select>
+                            <span asp-validation-for="CategoriaId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Estado del Producto</label>
+                            <div class="form-check form-switch form-switch-lg mt-2">
+                                <input asp-for="Activo" class="form-check-input" id="activoToggle" />
+                                <label class="form-check-label fw-semibold" for="activoToggle">
+                                    <span id="activoLabel">@(Model.Activo ? "Producto Activo" : "Producto Inactivo")</span>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ri-information-line me-1"></i>
+                                <span id="activoDescripcion">@(Model.Activo ? "Visible en ventas y listados" : "Oculto en ventas y listados")</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 4: Código de Barras -->
+            @if (!string.IsNullOrEmpty(Model.CodigoBarras))
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="avatar-sm bg-success rounded-3 me-3">
+                                <span class="avatar-title text-white fw-bold">4</span>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">Código de Barras</h5>
+                                <p class="text-muted mb-0 small">Código de barras generado automáticamente</p>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            @if (!string.IsNullOrEmpty(Model.CodigoBarrasImagenUrl))
+                            {
+                                <img src="@Model.CodigoBarrasImagenUrl" alt="Código de Barras" class="img-fluid mb-3" style="max-height: 100px;" />
+                            }
+                            <div class="mb-3">
+                                <code class="fs-5">@Model.CodigoBarras</code>
+                            </div>
+                            <button type="button" class="btn btn-soft-success" onclick="document.getElementById('regenerarForm').submit()">
+                                <i class="ri-refresh-line me-1"></i> Regenerar Código de Barras
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="regenerarForm" asp-action="GenerarCodigoBarras" method="post" class="d-none">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                </form>
+            }
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-light" onclick="history.back()">
+                    <i class="ri-arrow-left-line me-1"></i> Cancelar
+                </button>
+                <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-danger"
+                   onclick="return confirm('¿Está seguro de eliminar este producto? Esta acción no se puede deshacer.')">
+                    <i class="ri-delete-bin-line me-1"></i> Eliminar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Resumen e Información -->
+    <div class="col-xl-4">
+        <!-- Resumen del Producto -->
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="avatar-lg bg-white text-primary rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="ri-box-3-line display-4"></i>
+                </div>
+                <h5 class="mb-1">@Model.Nombre</h5>
+                <p class="text-white-50 small mb-2">@Model.Codigo</p>
+                <span class="badge bg-white text-primary">
+                    @(Model.Activo ? "Activo" : "Inactivo")
+                </span>
+            </div>
+        </div>
+
+        <!-- Información Rápida -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-file-info-line me-1 text-primary"></i>
+                    Información Rápida
+                </h6>
+
+                <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                    <div>
+                        <p class="text-muted mb-0 small">Precio</p>
+                        <h5 class="mb-0 fw-bold text-success">@Model.Precio.ToString("C", new System.Globalization.CultureInfo("es-DO"))</h5>
+                    </div>
+                    <div class="text-end">
+                        <p class="text-muted mb-0 small">Stock</p>
+                        <h5 class="mb-0 fw-bold @(Model.Stock <= 5 ? "text-danger" : "text-primary")">@Model.Stock u.</h5>
+                    </div>
+                </div>
+
+                <div class="small">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="ri-price-tag-3-line me-2"></i>Categoría:</span>
+                        <span class="fw-medium">@(Model.Categoria?.Nombre ?? "Sin categoría")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="ri-calendar-line me-2"></i>Creado:</span>
+                        <span class="fw-medium">@Model.FechaCreacion.ToString("dd/MM/yyyy")</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.CodigoBarras))
+                    {
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="ri-barcode-line me-2"></i>Cód. Barras:</span>
+                            <span class="fw-medium">@Model.CodigoBarras</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerta de Stock -->
+        @if (Model.Stock <= 5)
+        {
+            <div class="card bg-soft-danger border-0">
+                <div class="card-body">
+                    <h6 class="card-title text-danger mb-2">
+                        <i class="ri-alarm-warning-line me-1"></i>
+                        Stock Bajo
+                    </h6>
+                    <p class="small text-muted mb-0">
+                        Este producto tiene @(Model.Stock) unidades disponibles. Considera realizar una compra para reponer el inventario.
+                    </p>
+                </div>
+            </div>
+        }
+
+        <!-- Acciones Rápidas -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-flashlight-line me-1 text-warning"></i>
+                    Acciones Rápidas
+                </h6>
+
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("Create", "Compras", new { productoId = Model.Id })" class="btn btn-soft-success">
+                        <i class="ri-shopping-cart-line me-1"></i> Comprar Producto
+                    </a>
+                    <a href="@Url.Action("Index", "Kalder", new { productoId = Model.Id })" class="btn btn-soft-info">
+                        <i class="ri-archive-line me-1"></i> Ver en Almacén
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Actualizar etiqueta del toggle de estado
+        document.getElementById('activoToggle').addEventListener('change', function() {
+            const label = document.getElementById('activoLabel');
+            const descripcion = document.getElementById('activoDescripcion');
+
+            if (this.checked) {
+                label.textContent = 'Producto Activo';
+                descripcion.textContent = 'Visible en ventas y listados';
+            } else {
+                label.textContent = 'Producto Inactivo';
+                descripcion.textContent = 'Oculto en ventas y listados';
+            }
+        });
+
+        // Validación de Precio - Solo números con decimales
+        document.querySelector('input[name="Precio"]').addEventListener('input', function(e) {
+            let value = this.value.replace(/[^0-9.]/g, '');
+            const parts = value.split('.');
+            if (parts.length > 1 && parts[1].length > 2) {
+                value = parts[0] + '.' + parts[1].substring(0, 2);
+            }
+            this.value = value;
+        });
+
+        // Validación de Stock - Solo números enteros
+        document.querySelector('input[name="Stock"]').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (parseInt(this.value) < 0) {
+                this.value = '0';
+            }
+        });
+
+        // Validación de Código - Convertir a mayúsculas
+        document.querySelector('input[name="Codigo"]').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase().replace(/[^A-Z0-9\-_]/g, '');
+        });
+
+        // Validación del formulario
+        document.getElementById('productoForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            const camposObligatorios = ['Codigo', 'Nombre', 'Precio'];
+
+            camposObligatorios.forEach(function(campo) {
+                const elemento = document.querySelector('input[name="' + campo + '"]');
+                if (elemento && !elemento.value.trim()) {
+                    isValid = false;
+                    elemento.classList.add('is-invalid');
+                    elemento.classList.add('border-danger');
+                } else if (elemento) {
+                    elemento.classList.remove('is-invalid');
+                    elemento.classList.remove('border-danger');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+
+                const alerta = document.createElement('div');
+                alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
+                alerta.setAttribute('role', 'alert');
+                alerta.innerHTML = `
+                    <i class="ri-error-warning-line me-2"></i>
+                    Por favor completa los campos requeridos.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                const formContainer = document.querySelector('.page-header-title');
+                const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
+                if (alertaExistente) {
+                    alertaExistente.remove();
+                }
+                formContainer.after(alerta);
+            }
+        });
+
+        // Remover clase de error al escribir
+        document.querySelectorAll('.form-control, .form-select, textarea').forEach(function(input) {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                this.classList.remove('border-danger');
+            });
+        });
+    </script>
+}

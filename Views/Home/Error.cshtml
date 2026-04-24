@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="color: var(--error-color)">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+        </svg>
+    </div>
+    <h3>Error</h3>
+    <p>Ha ocurrido un error al procesar su solicitud.</p>
+    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">Volver al inicio</a>
+</div>

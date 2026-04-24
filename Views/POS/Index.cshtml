@@ -1,0 +1,592 @@
+@model dynamic
+
+@{
+    ViewData["Title"] = "Punto de Venta (POS)";
+    var clientes = ViewData["Clientes"] as List<Facturapro.Models.Entities.Cliente> ?? new List<Facturapro.Models.Entities.Cliente>();
+    var productos = ViewData["Productos"] as List<Facturapro.Models.Entities.Producto> ?? new List<Facturapro.Models.Entities.Producto>();
+    var carrito = ViewData["Carrito"] as List<Facturapro.Controllers.CarritoItem> ?? new List<Facturapro.Controllers.CarritoItem>();
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+@section Styles {
+    <style>
+        /* Layout POS Velonic */
+        .pos-container {
+            height: calc(100vh - 180px);
+            min-height: 600px;
+        }
+
+        .pos-product-card {
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--ct-border-color);
+            height: 100%;
+        }
+
+        .pos-product-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+            border-color: var(--ct-primary);
+        }
+
+        .pos-product-card:active {
+            transform: translateY(0);
+        }
+
+        .pos-product-card .stock-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+        }
+
+        .pos-product-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.4rem;
+        }
+
+        .pos-product-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--ct-primary);
+        }
+
+        .pos-cart-item {
+            border-bottom: 1px solid var(--ct-border-color);
+            padding: 0.75rem 0;
+        }
+
+        .pos-cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .pos-cart-item-name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .pos-qty-btn {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pos-total-section {
+            background: var(--ct-tertiary-bg);
+            border-top: 2px solid var(--ct-primary);
+        }
+
+        .barcode-input:focus {
+            border-color: var(--ct-success) !important;
+            box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25) !important;
+        }
+
+        .quick-product-btn {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        /* Scrollbar personalizado */
+        .pos-scroll {
+            max-height: 100%;
+            overflow-y: auto;
+        }
+
+        .pos-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .pos-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .pos-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.1);
+            border-radius: 3px;
+        }
+
+        /* Responsive */
+        @@media (max-width: 991px) {
+            .pos-container {
+                height: auto;
+            }
+
+            .pos-products-area {
+                max-height: 500px;
+            }
+        }
+    </style>
+}
+
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <a href="@Url.Action("Index", "Facturas")" class="btn btn-soft-secondary">
+                    <i class="ri-file-list-3-line me-1"></i>
+                    Ver Facturas
+                </a>
+            </div>
+            <h4 class="page-title">
+                <i class="ri-shopping-cart-2-line me-2"></i>
+                Punto de Venta
+            </h4>
+            <p class="text-muted mb-0">Venta rápida de productos</p>
+        </div>
+    </div>
+</div>
+<!-- end page title -->
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-double-line me-1"></i>
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-1"></i>
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row pos-container">
+    <!-- Panel de Productos -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-light">
+                <!-- Escáner de Código de Barras -->
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-success text-white">
+                        <i class="ri-barcode-line"></i>
+                    </span>
+                    <input type="text" id="scanBarcode" class="form-control barcode-input"
+                           placeholder="Escaneé código de barras aquí..." autocomplete="off" />
+                </div>
+
+                <!-- Búsqueda Manual -->
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="ri-search-line"></i>
+                    </span>
+                    <input type="text" id="buscarProducto" class="form-control"
+                           placeholder="Buscar producto por nombre o código..." autocomplete="off" />
+                </div>
+
+                <!-- Productos Rápidos -->
+                @if (productos.Take(8).Any())
+                {
+                    <div class="d-flex gap-2 flex-wrap mt-2">
+                        @foreach (var prod in productos.Take(8))
+                        {
+                            <button class="btn btn-sm btn-outline-secondary quick-product-btn" onclick="agregarAlCarrito(@prod.Id, 1)">
+                                <i class="ri-add-circle-line me-1"></i>
+                                @prod.Nombre
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="card-body pos-scroll pos-products-area" style="max-height: calc(100vh - 350px);">
+                <div class="row g-3" id="productosGrid">
+                    @foreach (var producto in productos)
+                    {
+                        <div class="col-xl-3 col-lg-4 col-md-4 col-6">
+                            <div class="card pos-product-card position-relative" onclick="agregarAlCarrito(@producto.Id, 1)">
+                                @if (producto.Stock <= 5)
+                                {
+                                    <span class="badge bg-warning stock-badge">Stock Bajo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success stock-badge">@producto.Stock</span>
+                                }
+
+                                <div class="card-body text-center p-3">
+                                    <div class="avatar-lg bg-light rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center">
+                                        <i class="ri-box-3-line fs-2 text-muted"></i>
+                                    </div>
+                                    <h6 class="pos-product-name mb-1">@producto.Nombre</h6>
+                                    @if (producto.Categoria != null)
+                                    {
+                                        <span class="badge bg-light text-muted mb-2">@producto.Categoria.Nombre</span>
+                                    }
+                                    <div class="pos-product-price">
+                                        @producto.Precio.ToString("C", cultura)
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="ri-archive-line me-1"></i>
+                                        Stock: @producto.Stock
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- No results message -->
+                <div id="noResults" class="text-center py-5" style="display: none;">
+                    <i class="ri-search-2-line text-muted" style="font-size: 4rem;"></i>
+                    <h5 class="text-muted mt-3">No se encontraron productos</h5>
+                    <p class="text-muted">Intenta con otra búsqueda</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel del Carrito -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="ri-shopping-basket-line me-2"></i>
+                    Carrito
+                </h5>
+                <span class="badge bg-white text-primary fs-6" id="cartCount">@carrito.Count</span>
+            </div>
+
+            <div class="card-body pos-scroll" style="max-height: calc(100vh - 450px);">
+                @if (!carrito.Any())
+                {
+                    <div class="text-center py-5" id="emptyCartMessage">
+                        <i class="ri-shopping-basket-line text-muted" style="font-size: 4rem;"></i>
+                        <h5 class="text-muted mt-3">El carrito está vacío</h5>
+                        <p class="text-muted">Haz clic en un producto para agregarlo</p>
+                    </div>
+                }
+
+                <div id="cartItems">
+                    @foreach (var item in carrito)
+                    {
+                        <div class="pos-cart-item" data-producto-id="@item.ProductoId">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1 me-2">
+                                    <div class="pos-cart-item-name">@item.Nombre</div>
+                                    <small class="text-muted">
+                                        @item.Precio.ToString("C", cultura) c/u
+                                    </small>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-secondary pos-qty-btn" onclick="actualizarCantidad(@item.ProductoId, -1, event)">
+                                            <i class="ri-subtract-line"></i>
+                                        </button>
+                                        <span class="btn btn-light disabled" style="min-width: 40px;">
+                                            @item.Cantidad
+                                        </span>
+                                        <button class="btn btn-outline-secondary pos-qty-btn" onclick="actualizarCantidad(@item.ProductoId, 1, event)">
+                                            <i class="ri-add-line"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="text-end" style="min-width: 90px;">
+                                        <div class="fw-bold text-primary">
+                                            @item.Total.ToString("C", cultura)
+                                        </div>
+                                    </div>
+
+                                    <button class="btn btn-sm btn-soft-danger" onclick="eliminarDelCarrito(@item.ProductoId, event)">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card-footer p-0">
+                <!-- Totales -->
+                <div class="p-3 pos-total-section">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">SubTotal:</span>
+                        <span class="fw-medium">@carrito.Sum(i => i.SubTotal).ToString("C", cultura)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">ITBIS (18%):</span>
+                        <span class="fw-medium">@carrito.Sum(i => i.ITBIS).ToString("C", cultura)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2 pt-2 border-top">
+                        <span class="fs-5 fw-bold">TOTAL:</span>
+                        <span class="fs-4 fw-bold text-primary">
+                            @carrito.Sum(i => i.Total).ToString("C", cultura)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Formulario de Venta -->
+                <div class="p-3 bg-light">
+                    <form asp-action="ProcesarVenta" method="post" id="formVenta">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-2">
+                            <label class="form-label fw-bold">
+                                <i class="ri-user-3-line me-1"></i>
+                                Cliente <span class="text-danger">*</span>
+                            </label>
+                            <select name="ClienteId" class="form-select form-select-sm" required>
+                                <option value="">Seleccione un cliente</option>
+                                @foreach (var cliente in clientes)
+                                {
+                                    <option value="@cliente.Id">@cliente.Nombre</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-bold">
+                                <i class="ri-file-text-line me-1"></i>
+                                Tipo NCF
+                            </label>
+                            <select name="TipoNcf" class="form-select form-select-sm">
+                                <option value="NO_NCF">Sin NCF (No fiscal)</option>
+                                <option value="01">01 - Crédito Fiscal</option>
+                                <option value="02">02 - Consumo</option>
+                                <option value="03">03 - Débito Gastos Menores</option>
+                                <option value="14">14 - Regímenes Especiales</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="ri-sticky-note-line me-1"></i>
+                                Notas
+                            </label>
+                            <textarea name="Notas" class="form-control form-control-sm" rows="2"
+                                      placeholder="Comentarios opcionales..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg" @(carrito.Any() ? "" : "disabled") id="btnCompletar">
+                                <i class="ri-check-double-line me-2"></i>
+                                Completar Venta
+                            </button>
+                            <button type="button" class="btn btn-soft-danger" onclick="limpiarCarrito()">
+                                <i class="ri-delete-bin-line me-1"></i>
+                                Limpiar Carrito
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function agregarAlCarrito(productoId, cantidad) {
+            fetch('/POS/AgregarAlCarrito', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `productoId=${productoId}&cantidad=${cantidad}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    mostrarAlerta(data.message, 'danger');
+                }
+            });
+        }
+
+        function actualizarCantidad(productoId, cambio, event) {
+            if (event) event.stopPropagation();
+
+            const item = document.querySelector(`[data-producto-id="${productoId}"]`);
+            if (!item) return;
+
+            const qtyDisplay = item.querySelector('.btn-light');
+            let nuevaCantidad = parseInt(qtyDisplay.textContent) + cambio;
+
+            if (nuevaCantidad < 1) {
+                eliminarDelCarrito(productoId, event);
+                return;
+            }
+
+            fetch('/POS/ActualizarCantidad', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `productoId=${productoId}&cantidad=${nuevaCantidad}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    mostrarAlerta(data.message, 'danger');
+                }
+            });
+        }
+
+        function eliminarDelCarrito(productoId, event) {
+            if (event) event.stopPropagation();
+            if (!confirm('¿Eliminar este producto del carrito?')) return;
+
+            fetch('/POS/EliminarDelCarrito', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `productoId=${productoId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+
+        function limpiarCarrito() {
+            if (!confirm('¿Limpiar todo el carrito?')) return;
+
+            fetch('/POS/LimpiarCarrito', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            })
+            .then(() => location.reload());
+        }
+
+        function mostrarAlerta(mensaje, tipo) {
+            const alertHtml = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    <i class="ri-${tipo === 'danger' ? 'error-warning' : 'check-double'}-line me-1"></i>
+                    ${mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+
+            const container = document.querySelector('.container-fluid');
+            container.insertAdjacentHTML('afterbegin', alertHtml);
+        }
+
+        // Búsqueda en tiempo real
+        document.getElementById('buscarProducto')?.addEventListener('input', function(e) {
+            const termino = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('#productosGrid > div');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const texto = card.textContent.toLowerCase();
+                const visible = texto.includes(termino);
+                card.style.display = visible ? '' : 'none';
+                if (visible) visibleCount++;
+            });
+
+            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        });
+
+        // Prevenir envío si carrito vacío
+        document.getElementById('formVenta')?.addEventListener('submit', function(e) {
+            const cartCount = parseInt(document.getElementById('cartCount').textContent);
+            if (cartCount === 0) {
+                e.preventDefault();
+                mostrarAlerta('El carrito está vacío', 'danger');
+                return false;
+            }
+        });
+
+        // Foco en escáner al cargar
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('scanBarcode')?.focus();
+        });
+
+        // Manejar escaneo de código de barras
+        const barcodeInput = document.getElementById('scanBarcode');
+        let barcodeTimeout;
+
+        barcodeInput?.addEventListener('input', function(e) {
+            clearTimeout(barcodeTimeout);
+
+            barcodeTimeout = setTimeout(() => {
+                const codigo = e.target.value.trim();
+                if (codigo.length >= 3) {
+                    procesarCodigoBarras(codigo);
+                }
+            }, 100);
+        });
+
+        barcodeInput?.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(barcodeTimeout);
+                const codigo = e.target.value.trim();
+                if (codigo.length >= 3) {
+                    procesarCodigoBarras(codigo);
+                }
+            }
+        });
+
+        function procesarCodigoBarras(codigo) {
+            fetch('/POS/AgregarPorCodigoBarras', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `codigoBarras=${encodeURIComponent(codigo)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    barcodeInput.value = '';
+                    barcodeInput.focus();
+                    location.reload();
+                } else {
+                    mostrarAlerta(data.message, 'danger');
+                    barcodeInput.value = '';
+                    barcodeInput.focus();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                barcodeInput.value = '';
+                barcodeInput.focus();
+            });
+        }
+
+        // Permitir que cualquier tecla en el documento envíe foco al escáner
+        document.addEventListener('keydown', function(e) {
+            if (document.activeElement?.tagName === 'INPUT' ||
+                document.activeElement?.tagName === 'TEXTAREA' ||
+                document.activeElement?.tagName === 'SELECT') {
+                return;
+            }
+
+            if (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
+                barcodeInput?.focus();
+            }
+        });
+    </script>
+}

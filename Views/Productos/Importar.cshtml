@@ -1,0 +1,273 @@
+@{
+    ViewData["Title"] = "Importar Productos";
+}
+
+<style>
+    .import-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .upload-zone {
+        border: 2px dashed var(--gray-300);
+        border-radius: var(--radius-lg);
+        padding: var(--space-2xl);
+        text-align: center;
+        cursor: pointer;
+        transition: all var(--transition);
+        background: var(--gray-50);
+    }
+
+    .upload-zone:hover {
+        border-color: var(--primary-color);
+        background: rgb(99 102 241 / 0.05);
+    }
+
+    .upload-zone.dragover {
+        border-color: var(--primary-color);
+        background: rgb(99 102 241 / 0.1);
+        transform: scale(1.02);
+    }
+
+    .upload-zone svg {
+        width: 64px;
+        height: 64px;
+        color: var(--gray-400);
+        margin-bottom: var(--space-md);
+    }
+
+    .upload-zone h3 {
+        margin-bottom: var(--space-sm);
+        color: var(--text-primary);
+    }
+
+    .upload-zone p {
+        color: var(--text-secondary);
+        margin-bottom: var(--space-md);
+    }
+
+    .upload-zone .btn {
+        margin-top: var(--space-md);
+    }
+
+    .file-info {
+        display: none;
+        align-items: center;
+        gap: var(--space-md);
+        padding: var(--space-md);
+        background: var(--success-color);
+        color: white;
+        border-radius: var(--radius);
+        margin-top: var(--space-md);
+    }
+
+    .file-info.visible {
+        display: flex;
+    }
+
+    .instructions-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin-top: var(--space-xl);
+    }
+
+    .instructions-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: var(--space-md);
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+    }
+
+    .instructions-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .instructions-list li {
+        padding: var(--space-sm) 0;
+        padding-left: var(--space-lg);
+        position: relative;
+        color: var(--text-secondary);
+    }
+
+    .instructions-list li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--success-color);
+        font-weight: bold;
+    }
+
+    .required {
+        color: var(--error-color);
+    }
+</style>
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Importar Productos</h1>
+        <p>Cargue productos masivamente desde un archivo Excel</p>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Volver
+        </a>
+        <a href="@Url.Action("DescargarPlantilla")" class="btn btn-primary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            Descargar Plantilla
+        </a>
+    </div>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-error" style="margin-bottom: var(--space-lg);">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="import-container">
+    <form asp-action="Importar" method="post" enctype="multipart/form-data" id="importForm">
+        @Html.AntiForgeryToken()
+
+        <div class="config-section" style="background: var(--bg-primary); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: var(--space-xl); margin-bottom: var(--space-lg);">
+            <h3 class="config-section-title" style="margin-bottom: var(--space-lg);">Seleccione el archivo</h3>
+
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click();">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                </svg>
+                <h3>Arrastre su archivo CSV aquí</h3>
+                <p>o haga clic para seleccionar</p>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">Formato: .csv (valores separados por coma)</p>
+                <input type="file" id="fileInput" name="archivoExcel" accept=".csv" style="display: none;" required />
+
+                <div class="file-info" id="fileInfo">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span id="fileName"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="config-section" style="background: var(--bg-primary); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); padding: var(--space-xl); margin-bottom: var(--space-lg);">
+            <h3 class="config-section-title" style="margin-bottom: var(--space-md);">Configuración</h3>
+
+            <div class="form-group">
+                <label class="form-label">Categoría por defecto (opcional)</label>
+                <select name="categoriaIdPorDefecto" class="form-select" asp-items="ViewBag.CategoriaId">
+                    <option value="">-- Seleccione categoría por defecto --</option>
+                </select>
+                <span class="form-hint">Se usará si la columna 'Categoría' está vacía o no coincide</span>
+            </div>
+        </div>
+
+        <div class="form-actions" style="display: flex; justify-content: flex-end; gap: var(--space-md);">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary" id="btnImportar" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                Importar Productos
+            </button>
+        </div>
+    </form>
+
+    <div class="instructions-card">
+        <div class="instructions-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="color: var(--primary-color);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            Instrucciones
+        </div>
+        <ul class="instructions-list">
+            <li>Descargue la plantilla CSV haciendo clic en el botón superior</li>
+            <li>Complete los datos siguiendo el formato de ejemplo</li>
+            <li><strong class="required">Código y Nombre son obligatorios</strong></li>
+            <li>El código debe ser único - los duplicados serán ignorados</li>
+            <li>La categoría debe coincidir exactamente con una existente</li>
+            <li>El sistema detectará automáticamente productos ya existentes</li>
+            <li>Use comillas dobles si un campo contiene comas (ej: "Producto, especial")</li>
+        </ul>
+    </div>
+
+    <div class="instructions-card" style="margin-top: var(--space-lg);">
+        <div class="instructions-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="color: var(--warning-color);">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            Detección de Duplicados
+        </div>
+        <p style="color: var(--text-secondary); margin: 0;">
+            El sistema verifica automáticamente si un producto con el mismo código ya existe.
+            Los productos duplicados <strong>no se importarán</strong> y se mostrarán en el resumen final
+            para que puedas revisarlos.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const btnImportar = document.getElementById('btnImportar');
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                showFileInfo(files[0]);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                showFileInfo(fileInput.files[0]);
+            }
+        });
+
+        function showFileInfo(file) {
+            fileName.textContent = file.name + ' (' + formatFileSize(file.size) + ')';
+            fileInfo.classList.add('visible');
+            btnImportar.disabled = false;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
+}

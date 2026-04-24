@@ -1,0 +1,360 @@
+@model Facturapro.Models.Entities.Cliente
+
+@{
+    ViewData["Title"] = "Nuevo Cliente";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <h4 class="page-title">
+        <i class="ri-user-add-line me-1"></i>
+        Nuevo Cliente
+    </h4>
+    <p class="text-muted">Registra un nuevo cliente en el sistema</p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                Por favor corrige los errores marcados en el formulario.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Formulario -->
+    <div class="col-xl-8">
+        <form asp-action="Create" method="post" id="clienteForm">
+            @Html.AntiForgeryToken()
+
+            <!-- Sección 1: Información Básica -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información Básica</h5>
+                            <p class="text-muted mb-0 small">Datos principales del cliente</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Nombre" class="form-label">
+                                Nombre / Razón Social <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Nombre" class="form-control" placeholder="Ej: Juan Pérez o Distribuidora S.R.L." />
+                            <span asp-validation-for="Nombre" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Nombre completo o razón social de la empresa</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="RNC" class="form-label">
+                                RNC / Cédula <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="RNC" class="form-control" placeholder="Ej: 131703836" maxlength="11" inputmode="numeric" />
+                            <span asp-validation-for="RNC" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">9 dígitos (persona) u 11 (empresa)</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="NIF" class="form-label">NIF / CIF</label>
+                            <input asp-for="NIF" class="form-control" placeholder="Ej: B12345678" />
+                            <span asp-validation-for="NIF" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Opcional para clientes extranjeros</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 2: Información de Contacto -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-success rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información de Contacto</h5>
+                            <p class="text-muted mb-0 small">Teléfono y correo electrónico</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Telefono" class="form-label">Teléfono</label>
+                            <input asp-for="Telefono" class="form-control" placeholder="Ej: 809-555-0000" maxlength="20" />
+                            <span asp-validation-for="Telefono" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="cliente@empresa.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 3: Ubicación -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Ubicación</h5>
+                            <p class="text-muted mb-0 small">Dirección y datos de ubicación</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Direccion" class="form-label">Dirección</label>
+                            <input asp-for="Direccion" class="form-control" placeholder="Calle, número, sector, puntos de referencia..." />
+                            <span asp-validation-for="Direccion" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Ciudad" class="form-label">Ciudad / Municipio</label>
+                            <input asp-for="Ciudad" class="form-control" placeholder="Ej: Santiago" />
+                            <span asp-validation-for="Ciudad" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="CodigoPostal" class="form-label">Código Postal</label>
+                            <input asp-for="CodigoPostal" class="form-control" placeholder="Ej: 51000" maxlength="10" />
+                            <span asp-validation-for="CodigoPostal" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Pais" class="form-label">País</label>
+                            <select asp-for="Pais" class="form-select">
+                                <option value="">Seleccionar</option>
+                                <option value="República Dominicana" selected>República Dominicana</option>
+                                <option value="Estados Unidos">Estados Unidos</option>
+                                <option value="España">España</option>
+                                <option value="México">México</option>
+                                <option value="Colombia">Colombia</option>
+                                <option value="Argentina">Argentina</option>
+                                <option value="Chile">Chile</option>
+                                <option value="Perú">Perú</option>
+                                <option value="Venezuela">Venezuela</option>
+                                <option value="Panamá">Panamá</option>
+                                <option value="Costa Rica">Costa Rica</option>
+                                <option value="Puerto Rico">Puerto Rico</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                            <span asp-validation-for="Pais" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-light" onclick="history.back()">
+                    <i class="ri-arrow-left-line me-1"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Cliente
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Ayuda y Resumen -->
+    <div class="col-xl-4">
+        <!-- Campos Requeridos -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-list-check me-1 text-primary"></i>
+                    Campos Requeridos
+                </h6>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-user-line me-2"></i>Nombre / Razón Social</span>
+                        <span class="badge bg-danger-soft text-danger">Obligatorio</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-id-card-line me-2"></i>RNC / Cédula</span>
+                        <span class="badge bg-danger-soft text-danger">Obligatorio</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-mail-line me-2"></i>Email</span>
+                        <span class="badge bg-danger-soft text-danger">Obligatorio</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-phone-line me-2"></i>Teléfono</span>
+                        <span class="badge bg-warning-soft text-warning">Opcional</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="ri-map-pin-line me-2"></i>Dirección</span>
+                        <span class="badge bg-warning-soft text-warning">Opcional</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Información Importante -->
+        <div class="card bg-soft-primary border-0">
+            <div class="card-body">
+                <h6 class="card-title text-primary mb-2">
+                    <i class="ri-information-line me-1"></i>
+                    Información Importante
+                </h6>
+                <p class="small text-muted mb-2">
+                    El RNC es el identificador fiscal que requiere la DGII para todos los comprobantes electrónicos.
+                </p>
+                <ul class="small text-muted mb-0" style="padding-left: 1.2rem;">
+                    <li>Personas físicas: 9 dígitos</li>
+                    <li>Empresas: 11 dígitos</li>
+                    <li>Sin puntos ni guiones</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Tipos de Clientes -->
+        <div class="card bg-soft-success border-0">
+            <div class="card-body">
+                <h6 class="card-title text-success mb-2">
+                    <i class="ri-store-2-line me-1"></i>
+                    Tipos de Clientes
+                </h6>
+                <p class="small text-muted mb-2">
+                    Puedes registrar diferentes tipos de clientes:
+                </p>
+                <ul class="small text-muted mb-0" style="padding-left: 1.2rem;">
+                    <li>Personas físicas</li>
+                    <li>Empresas S.R.L.</li>
+                    <li>S.A.S.</li>
+                    <li>ONGs y Fundaciones</li>
+                    <li>Gobierno</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Soporte -->
+        <div class="card border-0">
+            <div class="card-body text-center p-4">
+                <div class="avatar-lg bg-success-soft rounded-circle mb-2 mx-auto d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                    <i class="ri-customer-service-2-line display-4 text-success"></i>
+                </div>
+                <h6 class="fw-semibold mb-1">¿Necesitas Ayuda?</h6>
+                <p class="small text-muted mb-2">
+                    Contacta con soporte si tienes dudas
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Validación de RNC - Solo números
+        document.querySelector('input[name="RNC"]').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        // Validación de Teléfono - Formato dominicano
+        document.querySelector('input[name="Telefono"]').addEventListener('input', function(e) {
+            let value = this.value.replace(/[^0-9]/g, '');
+            if (value.length > 3 && value.length <= 6) {
+                value = value.slice(0, 3) + '-' + value.slice(3);
+            } else if (value.length > 6) {
+                value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+            }
+            this.value = value;
+        });
+
+        // Validación de Email - Convertir a minúsculas
+        document.querySelector('input[name="Email"]').addEventListener('input', function(e) {
+            this.value = this.value.toLowerCase();
+        });
+
+        // Validación del formulario antes de enviar
+        document.getElementById('clienteForm').addEventListener('submit', function(e) {
+            let isValid = true;
+            const camposObligatorios = ['Nombre', 'RNC', 'Email'];
+
+            camposObligatorios.forEach(function(campo) {
+                const elemento = document.querySelector('input[name="' + campo + '"]');
+                if (elemento && !elemento.value.trim()) {
+                    isValid = false;
+                    elemento.classList.add('is-invalid');
+                    elemento.classList.add('border-danger');
+                } else if (elemento) {
+                    elemento.classList.remove('is-invalid');
+                    elemento.classList.remove('border-danger');
+                }
+            });
+
+            // Validar formato de RNC (9 o 11 dígitos)
+            const rncInput = document.querySelector('input[name="RNC"]');
+            if (rncInput && rncInput.value.trim()) {
+                const rncValor = rncInput.value.trim();
+                if (rncValor.length !== 9 && rncValor.length !== 11) {
+                    isValid = false;
+                    rncInput.classList.add('is-invalid');
+                    rncInput.classList.add('border-danger');
+                }
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+
+                // Mostrar alerta de error
+                const alerta = document.createElement('div');
+                alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
+                alerta.setAttribute('role', 'alert');
+                alerta.innerHTML = `
+                    <i class="ri-error-warning-line me-2"></i>
+                    Por favor completa los campos requeridos y verifica el formato del RNC.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                const formContainer = document.querySelector('.page-header-title');
+                const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
+                if (alertaExistente) {
+                    alertaExistente.remove();
+                }
+                formContainer.after(alerta);
+
+                // Scroll al primer error
+                document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        // Remover clase de error al escribir
+        document.querySelectorAll('.form-control').forEach(function(input) {
+            input.addEventListener('input', function() {
+                this.classList.remove('is-invalid');
+                this.classList.remove('border-danger');
+            });
+        });
+    </script>
+}

@@ -1,0 +1,384 @@
+@model Facturapro.Models.Entities.Compra
+
+@{
+    ViewData["Title"] = "Nueva Compra";
+    var productos = ViewData["Productos"] as List<Producto> ?? new List<Producto>();
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-shopping-bag-3-line me-1"></i>
+                Nueva Compra
+            </h4>
+            <p class="text-muted mb-0">Registra una nueva compra a proveedor</p>
+        </div>
+        <div>
+            <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                Por favor corrige los errores marcados en el formulario.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Formulario -->
+    <div class="col-xl-8">
+        <form asp-action="Create" method="post" id="formCompra">
+            @Html.AntiForgeryToken()
+
+            <!-- Sección 1: Información de la Compra -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información de la Compra</h5>
+                            <p class="text-muted mb-0 small">Datos principales del comprobante</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="NumeroFactura" class="form-label">
+                                Número de Factura <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="NumeroFactura" class="form-control" placeholder="Ej: FAC-001, B001-001-0001" />
+                            <span asp-validation-for="NumeroFactura" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Número de comprobante fiscal del proveedor</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ProveedorId" class="form-label">
+                                Proveedor <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="ProveedorId" class="form-select" asp-items="ViewBag.ProveedorId">
+                                <option value="">-- Seleccione un proveedor --</option>
+                            </select>
+                            <span asp-validation-for="ProveedorId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="FechaCompra" class="form-label">
+                                Fecha de Compra <span class="text-danger">*</span>
+                            </label>
+                            <input asp-for="FechaCompra" type="date" class="form-control" />
+                            <span asp-validation-for="FechaCompra" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="FechaRecepcion" class="form-label">Fecha de Recepción</label>
+                            <input asp-for="FechaRecepcion" type="date" class="form-control" />
+                            <span asp-validation-for="FechaRecepcion" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Fecha en que se recibió la mercadería</small>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label asp-for="Estado" class="form-label">Estado</label>
+                            <select asp-for="Estado" class="form-select">
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Recibida">Recibida</option>
+                                <option value="Cancelada">Cancelada</option>
+                            </select>
+                            <span asp-validation-for="Estado" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 2: Productos -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-success rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Productos</h5>
+                            <p class="text-muted mb-0 small">Agrega los productos de esta compra</p>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="tablaLineas">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 35%;">Producto</th>
+                                    <th style="width: 12%;" class="text-center">Cant.</th>
+                                    <th style="width: 15%;" class="text-end">Precio Unit.</th>
+                                    <th style="width: 12%;" class="text-end">Desc.</th>
+                                    <th style="width: 10%;" class="text-center">ITBIS %</th>
+                                    <th style="width: 12%;" class="text-end">Total</th>
+                                    <th style="width: 5%;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyLineas">
+                                <!-- Las líneas se agregan dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="button" class="btn btn-soft-success" onclick="agregarLinea()">
+                        <i class="ri-add-line me-1"></i> Agregar Producto
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sección 3: Notas Adicionales -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Notas Adicionales</h5>
+                            <p class="text-muted mb-0 small">Información complementaria</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Notas" class="form-label">Notas</label>
+                            <textarea asp-for="Notas" class="form-control" rows="3" placeholder="Notas adicionales sobre esta compra..."></textarea>
+                            <span asp-validation-for="Notas" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <a href="@Url.Action("Index")" class="btn btn-light">
+                    <i class="ri-close-line me-1"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Compra
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Resumen y Totales -->
+    <div class="col-xl-4">
+        <!-- Tarjeta de Resumen -->
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="avatar-lg bg-white text-primary rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="ri-shopping-bag-3-line display-4"></i>
+                </div>
+                <h5 class="mb-1">Nueva Compra</h5>
+                <p class="text-white-50 small mb-2">
+                    @DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-ES"))
+                </p>
+                <span class="badge bg-white text-primary">
+                    <i class="ri-time-line me-1"></i>Pendiente
+                </span>
+            </div>
+        </div>
+
+        <!-- Totales -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-calculator-line me-1 text-primary"></i>
+                    Resumen de Totales
+                </h6>
+
+                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                    <span class="text-muted">Subtotal:</span>
+                    <span class="fw-semibold" id="subtotalDisplay">RD$ 0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 pb-2">
+                    <span class="text-muted">ITBIS (18%):</span>
+                    <span class="fw-semibold text-success" id="itbisDisplay">RD$ 0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2 pb-2">
+                    <span class="text-muted">Descuentos:</span>
+                    <span class="fw-semibold text-danger" id="descuentoDisplay">RD$ 0.00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center p-3 bg-soft-primary rounded-3">
+                    <span class="fw-bold">Total:</span>
+                    <span class="fw-bold fs-4 text-primary" id="totalDisplay">RD$ 0.00</span>
+                </div>
+
+                <input type="hidden" asp-for="SubTotal" id="SubTotal" />
+                <input type="hidden" asp-for="ITBIS" id="ITBIS" />
+                <input type="hidden" asp-for="Descuento" id="Descuento" />
+                <input type="hidden" asp-for="Total" id="Total" />
+            </div>
+        </div>
+
+        <!-- Información Importante -->
+        <div class="card bg-soft-warning border-0">
+            <div class="card-body">
+                <h6 class="card-title text-warning mb-2">
+                    <i class="ri-information-line me-1"></i>
+                    Información Importante
+                </h6>
+                <p class="small text-muted mb-2">
+                    El NCF (Número de Comprobante Fiscal) debe ser proporcionado por tu proveedor y es requerido para fines fiscales.
+                </p>
+                <ul class="small text-muted mb-0" style="padding-left: 1.2rem;">
+                    <li>Verifica el NCF antes de guardar</li>
+                    <li>Revisa que los precios sean correctos</li>
+                    <li>Confirma las cantidades recibidas</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="card bg-soft-info border-0">
+            <div class="card-body">
+                <h6 class="card-title text-info mb-2">
+                    <i class="ri-lightbulb-line me-1"></i>
+                    Tips de Compra
+                </h6>
+                <p class="small text-muted mb-0">
+                    <i class="ri-check-line me-1 text-success"></i> Compara precios antes de comprar<br>
+                    <i class="ri-check-line me-1 text-success"></i> Verifica el stock actual<br>
+                    <i class="ri-check-line me-1 text-success"></i> Revisa fechas de vencimiento
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        var productos = @Html.Raw(Json.Serialize(productos.Select(p => new { p.Id, p.Nombre, p.Precio, p.Codigo })));
+        var lineaIndex = 0;
+
+        function agregarLinea() {
+            var tbody = document.getElementById('tbodyLineas');
+            var tr = document.createElement('tr');
+            tr.dataset.index = lineaIndex;
+
+            var options = '<option value="" data-precio="">-- Seleccione --</option>' +
+                productos.map(p => `<option value="${p.id}" data-precio="${p.precio}">${p.nombre}</option>`).join('');
+
+            tr.innerHTML = `
+                <td>
+                    <select name="lineas[${lineaIndex}].ProductoId" class="form-select producto-select" required onchange="actualizarPrecio(this)">
+                        ${options}
+                    </select>
+                    <input type="hidden" name="lineas[${lineaIndex}].Descripcion" class="desc-hidden" />
+                </td>
+                <td>
+                    <input type="number" name="lineas[${lineaIndex}].Cantidad" class="form-control cantidad text-center" value="1" min="1" required onchange="calcularTotales()" />
+                </td>
+                <td>
+                    <input type="number" name="lineas[${lineaIndex}].PrecioUnitario" class="form-control precio text-end" step="0.01" required onchange="calcularTotales()" />
+                </td>
+                <td>
+                    <input type="number" name="lineas[${lineaIndex}].Descuento" class="form-control descuento text-end" value="0" step="0.01" onchange="calcularTotales()" />
+                </td>
+                <td class="text-center">
+                    <input type="number" name="lineas[${lineaIndex}].ITBIS" class="form-control itbis text-center" value="18" step="0.01" onchange="calcularTotales()" />
+                </td>
+                <td class="text-end">
+                    <span class="fw-bold text-success total-linea">RD$ 0.00</span>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-soft-danger btn-sm" onclick="eliminarLinea(this)" title="Eliminar línea">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+            lineaIndex++;
+            calcularTotales();
+        }
+
+        function actualizarPrecio(select) {
+            var option = select.options[select.selectedIndex];
+            var precio = option.dataset.precio || 0;
+            var tr = select.closest('tr');
+            tr.querySelector('.precio').value = precio;
+            tr.querySelector('.desc-hidden').value = option.text;
+            calcularTotales();
+        }
+
+        function eliminarLinea(btn) {
+            var tbody = document.getElementById('tbodyLineas');
+            if (tbody.querySelectorAll('tr').length > 1) {
+                btn.closest('tr').remove();
+                calcularTotales();
+            } else {
+                alert('Debe haber al menos un producto en la compra');
+            }
+        }
+
+        function calcularTotales() {
+            var subtotal = 0;
+            var totalITBIS = 0;
+            var totalDescuento = 0;
+
+            document.querySelectorAll('#tbodyLineas tr').forEach(tr => {
+                var cantidad = parseFloat(tr.querySelector('.cantidad').value) || 0;
+                var precio = parseFloat(tr.querySelector('.precio').value) || 0;
+                var descuento = parseFloat(tr.querySelector('.descuento').value) || 0;
+                var itbisPorc = parseFloat(tr.querySelector('.itbis').value) || 0;
+
+                var subtotalLinea = cantidad * precio;
+                var descuentoLinea = cantidad * descuento;
+                var baseITBIS = subtotalLinea - descuentoLinea;
+                var itbisLinea = baseITBIS * (itbisPorc / 100);
+                var totalLinea = baseITBIS + itbisLinea;
+
+                subtotal += subtotalLinea;
+                totalDescuento += descuentoLinea;
+                totalITBIS += itbisLinea;
+
+                tr.querySelector('.total-linea').textContent = 'RD$ ' + totalLinea.toFixed(2);
+            });
+
+            var total = subtotal - totalDescuento + totalITBIS;
+
+            document.getElementById('subtotalDisplay').textContent = 'RD$ ' + subtotal.toFixed(2);
+            document.getElementById('itbisDisplay').textContent = 'RD$ ' + totalITBIS.toFixed(2);
+            document.getElementById('descuentoDisplay').textContent = 'RD$ ' + totalDescuento.toFixed(2);
+            document.getElementById('totalDisplay').textContent = 'RD$ ' + total.toFixed(2);
+
+            document.getElementById('SubTotal').value = subtotal.toFixed(2);
+            document.getElementById('ITBIS').value = totalITBIS.toFixed(2);
+            document.getElementById('Descuento').value = totalDescuento.toFixed(2);
+            document.getElementById('Total').value = total.toFixed(2);
+        }
+
+        // Validación de precio - máximo 2 decimales
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('precio') || e.target.classList.contains('descuento')) {
+                var value = e.target.value;
+                if (value.includes('.')) {
+                    var parts = value.split('.');
+                    if (parts[1].length > 2) {
+                        e.target.value = parts[0] + '.' + parts[1].substring(0, 2);
+                    }
+                }
+            }
+        });
+
+        // Agregar primera línea automáticamente
+        agregarLinea();
+    </script>
+}

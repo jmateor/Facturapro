@@ -1,0 +1,309 @@
+@model Facturapro.Models.Entities.Categoria
+
+@{
+    ViewData["Title"] = "Detalles de Categoría";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-price-tag-3-line me-1"></i>
+                @Model.Nombre
+            </h4>
+            <p class="text-muted mb-0">Información completa de la categoría</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-primary">
+                <i class="ri-edit-line me-1"></i> Editar
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Columna Izquierda - Información -->
+    <div class="col-xl-8">
+        <!-- Información Básica -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-primary rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">1</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Información Básica</h5>
+                        <p class="text-muted mb-0 small">Datos principales de la categoría</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Nombre</label>
+                        <div class="fw-semibold">
+                            <i class="ri-price-tag-line me-1 text-primary"></i>
+                            @Model.Nombre
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Estado</label>
+                        <div>
+                            @if (Model.Activo)
+                            {
+                                <span class="badge bg-success-soft text-success">
+                                    <i class="ri-checkbox-circle-fill me-1"></i>Activa
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-soft text-secondary">
+                                    <i class="ri-stop-circle-fill me-1"></i>Inactiva
+                                </span>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted small">Descripción</label>
+                        <div class="fw-semibold">
+                            @(Model.Descripcion ?? "Sin descripción")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Fecha de Creación</label>
+                        <div class="fw-semibold">
+                            <i class="ri-calendar-line me-1 text-primary"></i>
+                            @Model.FechaCreacion.ToString("dd/MM/yyyy")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Productos Asociados</label>
+                        <div class="fw-semibold">
+                            <i class="ri-box-3-line me-1 text-info"></i>
+                            @(Model.Productos?.Count ?? 0) producto(s)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Productos en esta Categoría -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-success rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">2</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Productos Asociados</h5>
+                        <p class="text-muted mb-0 small">Listado de productos en esta categoría</p>
+                    </div>
+                </div>
+
+                @if (Model.Productos != null && Model.Productos.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover table-centered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th class="text-end">Precio</th>
+                                    <th class="text-center">Stock</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var producto in Model.Productos.OrderByDescending(p => p.FechaCreacion).Take(20))
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-light text-dark fw-normal">@producto.Codigo</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                    <i class="ri-box-3-line"></i>
+                                                </div>
+                                                <span class="fw-semibold">@producto.Nombre</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold text-success">@producto.Precio.ToString("C", cultura)</span>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (producto.Stock <= 5)
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">
+                                                    @producto.Stock <i class="ri-alarm-warning-line ms-1"></i>
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+                                                    @producto.Stock
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (producto.Activo)
+                                            {
+                                                <span class="badge bg-success-soft text-success">
+                                                    <i class="ri-checkbox-circle-fill me-1"></i>Activo
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary-soft text-secondary">
+                                                    <i class="ri-stop-circle-fill me-1"></i>Inactivo
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="@Url.Action("Details", "Productos", new { id = producto.Id })" class="btn btn-sm btn-soft-info">
+                                                <i class="ri-eye-line"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (Model.Productos.Count > 20)
+                    {
+                        <div class="alert alert-info-soft mb-0">
+                            <i class="ri-information-line me-1"></i>
+                            Mostrando los primeros 20 productos de @(Model.Productos.Count) totales.
+                            <a href="@Url.Action("Index", "Productos", new { categoriaId = Model.Id })" class="alert-link">Ver todos</a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <div class="avatar-lg bg-soft-success rounded-circle mb-3 mx-auto d-inline-flex" style="width: 80px; height: 80px;">
+                            <i class="ri-box-3-line display-4 text-success"></i>
+                        </div>
+                        <h6 class="fw-semibold">Sin productos asociados</h6>
+                        <p class="text-muted mb-3 small">Esta categoría aún no tiene productos asignados</p>
+                        <a href="@Url.Action("Create", "Productos", new { categoriaId = Model.Id })" class="btn btn-success">
+                            <i class="ri-add-line me-1"></i> Agregar primer producto
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna Derecha - Resumen y Acciones -->
+    <div class="col-xl-4">
+        <!-- Tarjeta de Categoría -->
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <div class="avatar-lg bg-white text-primary rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="ri-price-tag-3-line display-4"></i>
+                </div>
+                <h5 class="mb-1">@Model.Nombre</h5>
+                <p class="text-white-50 small mb-2">
+                    Creada el @Model.FechaCreacion.ToString("MMMM yyyy")
+                </p>
+                <span class="badge bg-white text-primary">
+                    @(Model.Activo ? "Activa" : "Inactiva")
+                </span>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-bar-chart-box-line me-1 text-primary"></i>
+                    Estadísticas
+                </h6>
+
+                <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                    <div>
+                        <p class="text-muted mb-0 small">Total Productos</p>
+                        <h4 class="mb-0 fw-bold">@(Model.Productos?.Count ?? 0)</h4>
+                    </div>
+                    <div class="text-end">
+                        <p class="text-muted mb-0 small">Productos Activos</p>
+                        <h4 class="mb-0 fw-bold text-success">@(Model.Productos?.Count(p => p.Activo) ?? 0)</h4>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="p-3 bg-soft-success rounded-3 text-center">
+                            <i class="ri-checkbox-circle-line text-success fs-4"></i>
+                            <p class="text-muted small mb-0">Con Stock</p>
+                            <h5 class="mb-0 fw-bold">@(Model.Productos?.Count(p => p.Stock > 0) ?? 0)</h5>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-soft-danger rounded-3 text-center">
+                            <i class="ri-alarm-warning-line text-danger fs-4"></i>
+                            <p class="text-muted small mb-0">Stock Bajo</p>
+                            <h5 class="mb-0 fw-bold">@(Model.Productos?.Count(p => p.Stock <= 5 && p.Stock > 0) ?? 0)</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones Rápidas -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-flashlight-line me-1 text-warning"></i>
+                    Acciones Rápidas
+                </h6>
+
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-soft-primary">
+                        <i class="ri-edit-line me-1"></i> Editar Categoría
+                    </a>
+                    <a href="@Url.Action("Create", "Productos", new { categoriaId = Model.Id })" class="btn btn-soft-success">
+                        <i class="ri-add-line me-1"></i> Agregar Producto
+                    </a>
+                    <a href="@Url.Action("Index", "Productos", new { categoriaId = Model.Id })" class="btn btn-soft-info">
+                        <i class="ri-box-3-line me-1"></i> Ver Productos
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zona de Peligro -->
+        <div class="card border-danger border-1">
+            <div class="card-body">
+                <h6 class="card-title text-danger mb-2">
+                    <i class="ri-delete-bin-2-line me-1"></i>
+                    Zona de Peligro
+                </h6>
+                @if (Model.Productos.Any())
+                {
+                    <div class="alert alert-danger-soft mb-2">
+                        <i class="ri-error-warning-line me-1"></i>
+                        <strong>No se puede eliminar:</strong> Esta categoría tiene @(Model.Productos.Count) producto(s) asociado(s).
+                    </div>
+                }
+                else
+                {
+                    <p class="small text-muted mb-3">
+                        Esta categoría no tiene productos asociados. Puedes eliminarla de forma segura.
+                    </p>
+                    <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-outline-danger w-100"
+                       onclick="return confirm('¿Está completamente seguro? Esta acción es irreversible.')">
+                        <i class="ri-delete-bin-line me-1"></i> Eliminar Categoría
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

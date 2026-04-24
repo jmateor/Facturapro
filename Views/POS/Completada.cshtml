@@ -1,0 +1,208 @@
+@model Facturapro.Models.Entities.Factura
+
+@{
+    ViewData["Title"] = "Venta Completada";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<style>
+    .success-wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        padding: var(--space-xl) 0;
+    }
+
+    .success-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto var(--space-xl);
+        color: white;
+        box-shadow: 0 20px 40px -10px rgb(16 185 129 / 0.4);
+    }
+
+    .success-icon-wrapper svg {
+        width: 50px;
+        height: 50px;
+    }
+
+    .success-wrapper h1 {
+        font-size: 1.75rem;
+        margin-bottom: var(--space-sm);
+    }
+
+    .success-wrapper > p {
+        color: var(--text-secondary);
+        margin-bottom: var(--space-xl);
+    }
+
+    .factura-summary-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        padding: var(--space-xl);
+        margin: var(--space-lg) 0;
+        text-align: left;
+        box-shadow: var(--shadow);
+    }
+
+    .factura-summary-card h3 {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-lg);
+        padding-bottom: var(--space-md);
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    .factura-summary-card h3 svg {
+        width: 20px;
+        height: 20px;
+        color: var(--primary-color);
+    }
+
+    .factura-line {
+        display: flex;
+        justify-content: space-between;
+        padding: var(--space-sm) 0;
+        color: var(--text-secondary);
+        font-size: 0.9375rem;
+    }
+
+    .factura-line:not(:last-child) {
+        border-bottom: 1px dashed var(--gray-200);
+    }
+
+    .factura-line.total {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        border-top: 2px solid var(--gray-200);
+        border-bottom: none;
+        margin-top: var(--space-sm);
+        padding-top: var(--space-md);
+    }
+
+    .factura-line.total .value {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+    }
+
+    .factura-line .label {
+        font-weight: 500;
+    }
+
+    .factura-line .value {
+        font-weight: 600;
+    }
+
+    .factura-line .ncf-badge {
+        background: var(--success-color);
+        color: white;
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius);
+        font-size: 0.875rem;
+        font-family: var(--font-mono);
+    }
+
+    .success-actions {
+        display: flex;
+        gap: var(--space-md);
+        justify-content: center;
+        margin-top: var(--space-xl);
+    }
+
+    @@media (max-width: 640px) {
+        .success-actions {
+            flex-direction: column;
+        }
+
+        .success-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="success-wrapper">
+    <div class="success-icon-wrapper">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    </div>
+
+    <h1>¡Venta Completada!</h1>
+    <p>La transacción se ha procesado exitosamente.</p>
+
+    <div class="factura-summary-card">
+        <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            Resumen de Factura
+        </h3>
+
+        <div class="factura-line">
+            <span class="label">Número</span>
+            <span class="value">@Model.NumeroFactura</span>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.eNCF))
+        {
+            <div class="factura-line">
+                <span class="label">NCF</span>
+                <span class="ncf-badge">@Model.eNCF</span>
+            </div>
+        }
+
+        <div class="factura-line">
+            <span class="label">Cliente</span>
+            <span class="value">@(Model.Cliente?.Nombre ?? "N/A")</span>
+        </div>
+
+        <div class="factura-line">
+            <span class="label">Fecha</span>
+            <span class="value">@Model.FechaEmision.ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+
+        <div class="factura-line">
+            <span class="label">Productos</span>
+            <span class="value">@Model.Lineas.Count artículos</span>
+        </div>
+
+        <div class="factura-line">
+            <span class="label">SubTotal</span>
+            <span class="value">@Model.Subtotal.ToString("C", cultura)</span>
+        </div>
+
+        <div class="factura-line">
+            <span class="label">ITBIS (18%)</span>
+            <span class="value">@Model.MontoITBIS.ToString("C", cultura)</span>
+        </div>
+
+        <div class="factura-line total">
+            <span class="label">TOTAL</span>
+            <span class="value">@Model.Total.ToString("C", cultura)</span>
+        </div>
+    </div>
+
+    <div class="success-actions">
+        <a href="@Url.Action("Index", "POS")" class="btn btn-primary btn-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Nueva Venta
+        </a>
+
+        <a href="@Url.Action("Details", "Facturas", new { id = Model.Id })" class="btn btn-secondary btn-lg" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096a42.415 42.415 0 00-10.56 0m10.56 0L17.66 18M18 12a6 6 0 01-12 0 6 6 0 0112 0z" />
+            </svg>
+            Ver Factura
+        </a>
+    </div>
+</div>

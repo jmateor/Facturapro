@@ -1,0 +1,181 @@
+@model Facturapro.Models.Entities.Compra
+
+@{
+    ViewData["Title"] = "Detalles de Compra";
+}
+
+<div class="page-header">
+    <div class="page-title">
+        <h1>Detalles de Compra</h1>
+        <p>Información completa de la compra</p>
+    </div>
+    <div class="page-actions">
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Volver a la lista</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+        </svg>
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: var(--space-lg);">
+    <!-- Información de la Compra -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Información General</h3>
+        </div>
+        <div class="card-body">
+            <dl class="details-list">
+                <dt>Número de Factura</dt>
+                <dd><span class="badge badge-secondary">@Model.NumeroFactura</span></dd>
+
+                <dt>Proveedor</dt>
+                <dd>@Model.Proveedor?.Nombre</dd>
+
+                <dt>Fecha de Compra</dt>
+                <dd>@Model.FechaCompra.ToString("dd/MM/yyyy")</dd>
+
+                <dt>Fecha de Recepción</dt>
+                <dd>@(Model.FechaRecepcion?.ToString("dd/MM/yyyy") ?? "-")</dd>
+
+                <dt>Estado</dt>
+                <dd>
+                    @switch (Model.Estado)
+                    {
+                        case EstadoCompra.Pendiente:
+                            <span class="badge badge-warning">Pendiente</span>
+                            break;
+                        case EstadoCompra.Recibida:
+                            <span class="badge badge-success">Recibida</span>
+                            break;
+                        case EstadoCompra.Cancelada:
+                            <span class="badge badge-secondary">Cancelada</span>
+                            break;
+                    }
+                </dd>
+
+                <dt>Fecha de Registro</dt>
+                <dd>@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                @if (!string.IsNullOrEmpty(Model.Notas))
+                {
+                    <dt>Notas</dt>
+                    <dd>@Model.Notas</dd>
+                }
+            </dl>
+
+            @if (Model.Estado == EstadoCompra.Pendiente)
+            {
+                <div class="d-flex gap-1" style="margin-top: var(--space-lg);">
+                    <form asp-action="Recibir" method="post" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                            Marcar como Recibida
+                        </button>
+                    </form>
+
+                    <form asp-action="Cancelar" method="post" style="display: inline;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está seguro de cancelar esta compra?')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                            </svg>
+                            Cancelar Compra
+                        </button>
+                    </form>
+                </div>
+            }
+            else if (Model.Estado == EstadoCompra.Recibida)
+            {
+                <form asp-action="Cancelar" method="post" style="margin-top: var(--space-lg);">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está seguro de cancelar esta compra? Esto revertirá el inventario.')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                        Cancelar Compra
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Totales</h3>
+        </div>
+        <div class="card-body">
+            <dl class="details-list">
+                <dt>SubTotal</dt>
+                <dd style="font-size: 1.1rem;">@Model.SubTotal.ToString("C", new System.Globalization.CultureInfo("es-ES"))</dd>
+
+                <dt>ITBIS</dt>
+                <dd style="font-size: 1.1rem;">@Model.ITBIS.ToString("C", new System.Globalization.CultureInfo("es-ES"))</dd>
+
+                <dt>Descuento</dt>
+                <dd style="font-size: 1.1rem;">@Model.Descuento.ToString("C", new System.Globalization.CultureInfo("es-ES"))</dd>
+
+                <dt>Total</dt>
+                <dd style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">@Model.Total.ToString("C", new System.Globalization.CultureInfo("es-ES"))</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<!-- Líneas de Compra -->
+<div class="card" style="margin-top: var(--space-lg);">
+    <div class="card-header">
+        <h3 class="card-title">Productos Comprados</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Descripción</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unit.</th>
+                        <th>Descuento</th>
+                        <th>ITBIS</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var linea in Model.Lineas)
+                    {
+                        <tr>
+                            <td>@(linea.Producto?.Nombre ?? "-")</td>
+                            <td>@linea.Descripcion</td>
+                            <td>@linea.Cantidad</td>
+                            <td>@linea.PrecioUnitario.ToString("C", new System.Globalization.CultureInfo("es-ES"))</td>
+                            <td>@linea.DescuentoLinea.ToString("C", new System.Globalization.CultureInfo("es-ES"))</td>
+                            <td>@linea.PorcentajeITBIS.ToString("0.00")%</td>
+                            <td style="font-weight: 600;">@linea.TotalLinea.ToString("C", new System.Globalization.CultureInfo("es-ES"))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

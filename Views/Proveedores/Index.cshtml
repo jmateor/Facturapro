@@ -1,0 +1,236 @@
+@model IEnumerable<Facturapro.Models.Entities.Proveedor>
+
+@{
+    ViewData["Title"] = "Proveedores";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <h4 class="page-title mb-1">
+                <i class="ri-truck-line me-1"></i>
+                Proveedores
+            </h4>
+            <p class="text-muted mb-0">Gestiona tus proveedores de productos y servicios</p>
+        </div>
+        <div>
+            <a href="@Url.Action("Create")" class="btn btn-primary">
+                <i class="ri-add-line me-1"></i> Nuevo Proveedor
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Resumen de Proveedores -->
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-0 small">Total Proveedores</p>
+                        <h4 class="mb-0 fw-bold">@Model.Count()</h4>
+                    </div>
+                    <div class="avatar-md bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="ri-truck-line fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-0 small">Proveedores Activos</p>
+                        <h4 class="mb-0 fw-bold">@Model.Count(p => p.Activo)</h4>
+                    </div>
+                    <div class="avatar-md bg-success text-white rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="ri-checkbox-circle-line fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-0 small">Proveedores Inactivos</p>
+                        <h4 class="mb-0 fw-bold">@Model.Count(p => !p.Activo)</h4>
+                    </div>
+                    <div class="avatar-md bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="ri-stop-circle-line fs-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros y Búsqueda -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-9">
+                <div class="position-relative">
+                    <input type="text" name="buscar" class="form-control" placeholder="Buscar por nombre, email, documento..." value="@Context.Request.Query["buscar"]" />
+                    <i class="ri-search-line position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="ri-filter-search-line me-1"></i> Filtrar
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-soft-secondary" title="Limpiar filtros">
+                        <i class="ri-close-line"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-centered mb-0" id="tablaProveedores">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 30%;">Nombre / Razón Social</th>
+                        <th style="width: 20%;">RNC / Cédula</th>
+                        <th style="width: 20%;">Contacto</th>
+                        <th style="width: 15%;" class="text-center">Teléfono</th>
+                        <th style="width: 10%;" class="text-center">Estado</th>
+                        <th style="width: 15%;" class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr class="proveedor-row" data-nombre="@item.Nombre.ToLower()" data-documento="@item.Documento?.ToLower()" data-email="@item.Email?.ToLower()">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 42px; height: 42px;">
+                                        <i class="ri-truck-line"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold">@item.Nombre</h6>
+                                        @if (!string.IsNullOrEmpty(item.Email))
+                                        {
+                                            <small class="text-muted"><i class="ri-mail-line me-1"></i>@item.Email</small>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark fw-normal">
+                                    @(item.Documento ?? "Sin documento")
+                                </span>
+                            </td>
+                            <td>
+                                @(item.PersonaContacto ?? "-")
+                            </td>
+                            <td class="text-center">
+                                @(item.Telefono ?? "-")
+                            </td>
+                            <td class="text-center">
+                                @if (item.Activo)
+                                {
+                                    <span class="badge bg-success-soft text-success">
+                                        <i class="ri-checkbox-circle-fill me-1"></i>Activo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary-soft text-secondary">
+                                        <i class="ri-stop-circle-fill me-1"></i>Inactivo
+                                    </span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-sm btn-soft-info" title="Ver detalles">
+                                        <i class="ri-eye-line"></i>
+                                    </a>
+                                    <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-sm btn-soft-primary" title="Editar">
+                                        <i class="ri-edit-line"></i>
+                                    </a>
+                                    <a href="@Url.Action("Delete", new { id = item.Id })" class="btn btn-sm btn-soft-danger" title="Eliminar" onclick="return confirm('¿Está seguro de eliminar este proveedor?@(item.Compras?.Any() == true ? "\n\n¡ADVERTENCIA: Este proveedor tiene " + item.Compras.Count + " compra(s) asociada(s)!" : "")')">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <div class="avatar-lg bg-soft-primary rounded-circle mb-3 mx-auto d-inline-flex" style="width: 100px; height: 100px;">
+                    <i class="ri-truck-line display-4 text-primary"></i>
+                </div>
+                <h5 class="fw-semibold">No hay proveedores registrados</h5>
+                <p class="text-muted mb-3">Comienza agregando tu primer proveedor para gestionar compras</p>
+                <a href="@Url.Action("Create")" class="btn btn-primary">
+                    <i class="ri-add-line me-1"></i> Crear primer proveedor
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Búsqueda en tiempo real
+        document.querySelector('input[name="buscar"]').addEventListener('input', function() {
+            const filtro = this.value.toLowerCase();
+            const filas = document.querySelectorAll('.proveedor-row');
+
+            filas.forEach(function(fila) {
+                const nombre = fila.getAttribute('data-nombre');
+                const documento = fila.getAttribute('data-documento');
+                const email = fila.getAttribute('data-email');
+
+                if (nombre?.includes(filtro) || documento?.includes(filtro) || email?.includes(filtro)) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        });
+    </script>
+}

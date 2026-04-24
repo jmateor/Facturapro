@@ -1,0 +1,202 @@
+@model Facturapro.Controllers.HomeDashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <a href="@Url.Action("Create", "Facturas")" class="btn btn-primary">
+                    <i class="ri-add-line me-1"></i>
+                    Nueva Factura
+                </a>
+            </div>
+            <h4 class="page-title">Dashboard</h4>
+            <p class="text-muted mb-0">Resumen de tu negocio - @DateTime.Now.ToString("MMMM yyyy", cultura).ToUpperInvariant()</p>
+        </div>
+    </div>
+</div>
+<!-- end page title -->
+
+<!-- Stats Grid -->
+<div class="row">
+    <div class="col-xxl-3 col-md-6">
+        <div class="card widget-flat text-bg-primary">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-money-dollar-circle-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0" title="Ingresos">Ingresos del Mes</h6>
+                <h2 class="my-2">@Model.IngresosMes.ToString("C", cultura)</h2>
+                <p class="mb-0">
+                    <span class="badge bg-white bg-opacity-10 me-1">Ventas actuales</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+        <div class="card widget-flat text-bg-success">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-file-list-3-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0" title="Facturas">Facturas del Mes</h6>
+                <h2 class="my-2">@Model.FacturasMes</h2>
+                <p class="mb-0">
+                    <span class="badge bg-white bg-opacity-10 me-1">Este período</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+        <div class="card widget-flat text-bg-warning">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-time-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0" title="Pendientes">Facturas Pendientes</h6>
+                <h2 class="my-2">@Model.FacturasPendientes</h2>
+                <p class="mb-0">
+                    <a href="@Url.Action("Index", "Facturas")" class="text-white text-decoration-underline">Ver facturas →</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xxl-3 col-md-6">
+        <div class="card widget-flat text-bg-info">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-user-3-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0" title="Clientes">Clientes Registrados</h6>
+                <h2 class="my-2">@Model.TotalClientes</h2>
+                <p class="mb-0">
+                    <span class="badge bg-white bg-opacity-25 me-1">@Model.ClientesActivos con facturas</span>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats secundarios -->
+<div class="row mt-3">
+    <div class="col-md-4">
+        <div class="card widget-flat text-bg-purple">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-box-3-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0">Productos Activos</h6>
+                <h2 class="my-2">@Model.TotalProductos</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card widget-flat @(Model.StockBajo > 0 ? "text-bg-danger" : "text-bg-pink")">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-alarm-warning-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0">Stock Bajo</h6>
+                <h2 class="my-2">@Model.StockBajo</h2>
+                @if (Model.StockBajo > 0)
+                {
+                    <p class="mb-0">
+                        <a href="@Url.Action("ReporteStock", "Kalder", new { estado = "bajo" })" class="text-white text-decoration-underline">Ver alertas →</a>
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card widget-flat text-bg-secondary">
+            <div class="card-body">
+                <div class="float-end">
+                    <i class="ri-calendar-line widget-icon"></i>
+                </div>
+                <h6 class="text-uppercase mt-0">Fecha Actual</h6>
+                <h2 class="my-2 fs-5">@DateTime.Now.ToString("dd/MM/yyyy")</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="header-title mb-0">Facturas Recientes</h5>
+                <a href="@Url.Action("Index", "Facturas")" class="btn btn-sm btn-primary">Ver todas</a>
+            </div>
+            <div class="card-body">
+                @if (Model.FacturasRecientes.Any())
+                {
+                    <div class="table-responsive-sm">
+                        <table class="table table-centered mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Nº Factura</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var factura in Model.FacturasRecientes)
+                                {
+                                    <tr>
+                                        <td><span class="fw-bold">#@factura.NumeroFactura</span></td>
+                                        <td>@(factura.Cliente?.Nombre ?? "N/A")</td>
+                                        <td>@factura.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                        <td>@factura.Total.ToString("C", cultura)</td>
+                                        <td>
+                                            @switch (factura.Estado)
+                                            {
+                                                case "Pagada":
+                                                    <span class="badge bg-success">@factura.Estado</span>
+                                                    break;
+                                                case "Pendiente":
+                                                case "Emitida":
+                                                    <span class="badge bg-warning">@factura.Estado</span>
+                                                    break;
+                                                case "Cancelada":
+                                                    <span class="badge bg-secondary">@factura.Estado</span>
+                                                    break;
+                                                default:
+                                                    <span class="badge bg-secondary">@factura.Estado</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td>
+                                            <a href="@Url.Action("Details", "Facturas", new { id = factura.Id })" class="btn btn-sm btn-light">Ver</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="ri-file-list-3-line text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No hay facturas registradas</p>
+                        <a href="@Url.Action("Create", "Facturas")" class="btn btn-primary mt-2">Crear primera factura</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
