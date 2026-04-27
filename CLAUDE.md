@@ -292,15 +292,78 @@ El BOM (Byte Order Mark) es una secuencia de 3 bytes (`EF BB BF`) que le indica 
 ## Servicios DGII
 
 ### Archivos Clave
-- `Services/DGII/DGIIService.cs` - Cliente de API DGII
-- `Services/DGII/FacturacionElectronicaService.cs` - Generación de e-CF
+- `Services/DGII/DGIIService.cs` - Cliente de API DGII (autenticación, envío, consulta)
+- `Services/DGII/FacturacionElectronicaService.cs` - Generación de XML e-CF
+- `Services/DGII/FacturacionElectronicaAPIService.cs` - Orquestación de envío a DGII
 - `Services/DGII/RangoNumeracionService.cs` - Gestión de rangos DGII
+- `Services/PDF/PdfService.cs` - Generación de representación impresa (PDF + QR)
 
 ### Configuración DGII
 La configuración para conectar con DGII está en `ConfiguracionEmpresa`:
 - `RNCEmisor` - RNC de la empresa
-- `RutaCertificado` / `PasswordCertificado` - Certificado digital
+- `RutaCertificado` / `PasswordCertificado` - Certificado digital PFX
 - `ModoPruebas` - true = TesteCF, false = eCF producción
+
+### URLs de la API DGII
+
+| Ambiente | URL Base | URL Facturas Consumo |
+|----------|----------|---------------------|
+| **Test** (TesteCF) | `https://ecf.dgii.gov.do/testecf/` | `https://fc.dgii.gov.do/testecf/` |
+| **Certificación** (CerteCF) | `https://ecf.dgii.gov.do/certecf/` | `https://fc.dgii.gov.do/certecf/` |
+| **Producción** (eCF) | `https://ecf.dgii.gov.do/ecf/` | `https://fc.dgii.gov.do/ecf/` |
+
+### Tipos de Comprobantes (e-CF)
+
+| Código | Tipo | Descripción |
+|--------|------|-------------|
+| E31 | Factura de Crédito Fiscal | Para empresas con RNC |
+| E32 | Factura de Consumo | Para consumidores finales (< RD$250,000) |
+| E33 | Nota de Débito | Ajustes que aumentan el valor |
+| E34 | Nota de Crédito | Devoluciones o ajustes que disminuyen |
+| E41 | Comprobante de Compras | Compras a sujetos no obligados |
+| E43 | Gastos Menores | Gastos menores a proveedores |
+| E44 | Regímenes Especiales | Operaciones de regímenes especiales |
+| E45 | Gubernamental | Operaciones con el Estado |
+| E46 | Exportaciones | Ventas al exterior |
+| E47 | Pagos al Exterior | Pagos a proveedores extranjeros |
+
+### Flujo de Emisión de e-CF
+
+```
+1. Create → Crea la factura con número e-CF del rango disponible
+2. Edit → Agrega líneas de productos/servicios
+3. Firmar → Firma digitalmente el XML con certificado PFX
+4. EnviarDGII → Envía el comprobante firmado a la API DGII
+5. ConsultarEstado → Verifica si fue Aprobado/Rechazado
+```
+
+### Vistas del Módulo Facturas
+- `Views/Facturas/Index.cshtml` - Listado con filtros y acciones
+- `Views/Facturas/Create.cshtml` - Crear nueva factura
+- `Views/Facturas/Edit.cshtml` - Editar y agregar líneas (vista principal)
+- `Views/Facturas/Details.cshtml` - Ver detalles, descargar PDF/XML, compartir
+
+### Acciones del Controlador
+
+| Acción | Propósito |
+|--------|-----------|
+| `Create` | Crear factura con e-CF automático |
+| `Edit` | Editar encabezado y ver líneas |
+| `AgregarLinea` | Añadir producto/servicio |
+| `EliminarLinea` | Quitar línea de factura |
+| `Firmar` | Firmar XML con certificado digital |
+| `EnviarDGII` | Enviar comprobante a la DGII |
+| `ConsultarEstado` | Verificar estado de envío |
+| `DescargarXML` | Obtener XML firmado |
+| `DescargarPDF` | Obtener representación impresa |
+
+### Requisitos para Emitir e-CF
+
+1. **RNC Emisor** configurado en `ConfiguracionEmpresa`
+2. **Certificado Digital PFX** válido y vigente
+3. **Rangos de Numeración** activos en `RangoNumeracion`
+4. **Cliente** con RNC/Cédula válido
+5. **Al menos una línea** de detalle
 
 ---
 
@@ -361,6 +424,7 @@ dotnet ef migrations list --context ApplicationDbContext
 
 | Fecha | Cambio | Archivo(s) |
 |-------|--------|------------|
+| 2026-04-27 | Vista Edit.cshtml para módulo de Facturas (completar flujo e-CF) | `Views/Facturas/Edit.cshtml` (nuevo), `CLAUDE.md` (documentación facturación electrónica) |
 | 2026-04-25 | Módulo de Reportes reorganizado con exportación PDF | `Controllers/ReportesController.cs`, `Services/PDF/PdfService.cs` (GenerarReportePDF), `Views/Reportes/General.cshtml`, `Views/Reportes/ProductosMasVendidos.cshtml`, `Views/Reportes/VentasPorCategoria.cshtml`, `Views/Reportes/VentasPorCiudad.cshtml`, `Views/Reportes/VentasPorAnio.cshtml`, `Views/Reportes/Devoluciones.cshtml`, `Models/ViewModels/Reportes/ReporteGeneralViewModel.cs` |
 | 2026-04-24 | Rediseño UX/UI módulo Kalder - Historial | `Views/Kalder/Historial.cshtml` |
 | 2026-04-24 | Vista Details de Facturas con descarga PDF, WhatsApp y Email | `Views/Facturas/Details.cshtml` (nuevo) |
