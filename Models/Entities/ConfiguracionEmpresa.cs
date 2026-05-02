@@ -199,9 +199,68 @@ namespace Facturapro.Models.Entities
         [Display(Name = "Vencimiento Rangos (días)")]
         public int DiasVencimientoRango { get; set; } = 365;
 
-        [Display(Name = "Alerta Agotamiento (%)")]
+        // Configuración de Alertas y Notificaciones
+        [Display(Name = "Alerta de Stock Bajo (%)")]
         [Range(1, 100)]
         public int PorcentajeAlertaAgotamiento { get; set; } = 80;
+
+        [Display(Name = "Alerta Stock Mínimo (unidades)")]
+        [Range(1, 1000)]
+        public int StockMinimoAlerta { get; set; } = 5;
+
+        [Display(Name = "Alerta Productos Vencidos (días)")]
+        [Range(1, 365)]
+        public int DiasAlertaVencimiento { get; set; } = 30;
+
+        [Display(Name = "Alerta Crédito Máximo")]
+        public bool AlertaCreditoMaximo { get; set; } = true;
+
+        [Display(Name = "Alerta Venta Máxima")]
+        public bool AlertaVentaMaxima { get; set; } = true;
+
+        [Display(Name = "Notificar Sonido")]
+        public bool NotificacionSonido { get; set; } = true;
+
+        [Display(Name = "Notificar Popup")]
+        public bool NotificacionPopup { get; set; } = true;
+
+        [Display(Name = "Notificar Email")]
+        public bool NotificacionEmail { get; set; } = false;
+
+        // Configuración de Métodos de Pago
+        [Display(Name = "Aceptar Efectivo")]
+        public bool AceptarEfectivo { get; set; } = true;
+
+        [Display(Name = "Aceptar Tarjeta de Crédito/Débito")]
+        public bool AceptarTarjeta { get; set; } = true;
+
+        [Display(Name = "Aceptar Transferencia")]
+        public bool AceptarTransferencia { get; set; } = true;
+
+        [Display(Name = "Aceptar Sinpe Móvil")]
+        public bool AceptarSinpe { get; set; } = false;
+
+        [Display(Name = "Aceptar Crédito")]
+        public bool AceptarCredito { get; set; } = true;
+
+        [Display(Name = "Aceptar Mixto")]
+        public bool AceptarMixto { get; set; } = true;
+
+        [Display(Name = "Método de Pago por Defecto")]
+        public int MetodoPagoPorDefecto { get; set; } = 1; // 1=Efectivo, 2=Tarjeta, 3=Transferencia, 4=Sinpe, 5=Crédito, 6=Mixto
+
+        [Display(Name = "Mostrar Opciones de Pago")]
+        public bool MostrarOpcionesPago { get; set; } = true;
+
+        [Display(Name = "Permitir Cambio")]
+        public bool PermitirCambio { get; set; } = true;
+
+        [Display(Name = "Preguntar por Cambio")]
+        public bool PreguntarCambio { get; set; } = false;
+
+        [Display(Name = "Monto Máximo para Cambio")]
+        [Range(0, double.MaxValue)]
+        public decimal MontoMaximoCambio { get; set; } = 0;
 
         // Campos de control
         [Display(Name = "Última Actualización")]

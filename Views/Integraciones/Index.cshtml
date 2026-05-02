@@ -1,0 +1,171 @@
+@model Facturapro.Models.Entities.ConfiguracionIntegracion
+@{
+    ViewData["Title"] = "Centro de Integraciones";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title"><i class="ri-plug-2-line me-2"></i>Centro de Integraciones</h4>
+                <p class="text-muted">Conecta tu sistema con servicios externos para potenciar tu negocio.</p>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-check-line me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Save" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row g-4">
+            <!-- Email (SMTP) -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm border-0 overflow-hidden">
+                    <div class="card-header bg-primary text-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0 text-white"><i class="ri-mail-send-line me-2"></i>Correo Electrónico (SMTP)</h5>
+                            <span class="badge bg-soft-light text-white">Activo</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" asp-for="EmailHabilitado">
+                            <label class="form-check-label fw-bold">Habilitar envío de facturas por email</label>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label">Servidor SMTP</label>
+                                <input type="text" asp-for="SmtpServer" class="form-control" placeholder="smtp.ejemplo.com">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Puerto</label>
+                                <input type="number" asp-for="SmtpPort" class="form-control">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Usuario / Correo</label>
+                                <input type="text" asp-for="SmtpUser" class="form-control" placeholder="facturas@tuempresa.com">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label">Contraseña</label>
+                                <input type="password" asp-for="SmtpPassword" class="form-control" placeholder="••••••••">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" asp-for="SmtpUseSSL">
+                                    <label class="form-check-label">Usar SSL/TLS</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm border-0 overflow-hidden">
+                    <div class="card-header bg-success text-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0 text-white"><i class="ri-whatsapp-line me-2"></i>WhatsApp Business</h5>
+                            <span class="badge bg-soft-light text-white">Configurable</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" asp-for="WhatsAppHabilitado">
+                            <label class="form-check-label fw-bold">Notificaciones vía WhatsApp</label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">API Key (Twilio / Meta)</label>
+                            <input type="text" asp-for="WhatsAppApiKey" class="form-control" placeholder="Tu API Key secreta">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ID de Teléfono / Canal</label>
+                            <input type="text" asp-for="WhatsAppPhoneId" class="form-control" placeholder="Phone ID">
+                        </div>
+                        <div class="alert alert-soft-success border-0 small">
+                            <i class="ri-lightbulb-line me-1"></i> Recomendado: Usa <strong>Twilio</strong> para una integración rápida en República Dominicana.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DGII Real-time -->
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body text-center py-4">
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title bg-soft-info text-info rounded-circle fs-24">
+                                <i class="ri-government-line"></i>
+                            </div>
+                        </div>
+                        <h5 class="mb-2">Validación RNC DGII</h5>
+                        <p class="text-muted small mb-3">Valida automáticamente los RNC de tus clientes en tiempo real.</p>
+                        <div class="form-check form-switch d-flex justify-content-center p-0">
+                            <input class="form-check-input" type="checkbox" asp-for="DgiiValidacionHabilitada" style="margin-left: 0;">
+                            <label class="form-check-label ms-2 fw-bold">Habilitado</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Google Drive (Próximamente) -->
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 bg-light opacity-75">
+                    <div class="card-body text-center py-4">
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title bg-soft-secondary text-secondary rounded-circle fs-24">
+                                <i class="ri-google-fill"></i>
+                            </div>
+                        </div>
+                        <h5 class="mb-2 text-muted">Google Drive Backup</h5>
+                        <p class="text-muted small mb-3">Respaldo automático de tus XML y PDFs en la nube.</p>
+                        <span class="badge bg-warning rounded-pill">Próximamente</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pasarelas de Pago (Próximamente) -->
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 bg-light opacity-75">
+                    <div class="card-body text-center py-4">
+                        <div class="avatar-md mx-auto mb-3">
+                            <div class="avatar-title bg-soft-secondary text-secondary rounded-circle fs-24">
+                                <i class="ri-bank-card-line"></i>
+                            </div>
+                        </div>
+                        <h5 class="mb-2 text-muted">Pasarelas de Pago</h5>
+                        <p class="text-muted small mb-3">Integración con Azul y CardNet para cobros con tarjeta.</p>
+                        <span class="badge bg-warning rounded-pill">Próximamente</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5 mb-5">
+            <div class="col-12 text-center">
+                <button type="submit" class="btn btn-primary btn-lg px-5 shadow-lg rounded-pill">
+                    <i class="ri-save-3-line me-2"></i> Guardar Cambios en Integraciones
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Styles {
+    <style>
+        .bg-soft-info { background-color: rgba(41, 156, 219, 0.1); }
+        .bg-soft-light { background-color: rgba(255, 255, 255, 0.2); }
+        .alert-soft-success { background-color: rgba(5, 176, 133, 0.1); color: #05b085; }
+        .bg-soft-secondary { background-color: rgba(135, 138, 153, 0.1); }
+    </style>
+}

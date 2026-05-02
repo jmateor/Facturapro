@@ -1,0 +1,187 @@
+@model IEnumerable<Facturapro.Models.Entities.LogAuditoria>
+@{
+    ViewData["Title"] = "Registro de Auditoría";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+                <h4 class="mb-sm-0">Registro de Auditoría</h4>
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="javascript: void(0);">Sistema</a></li>
+                        <li class="breadcrumb-item active">Auditoría</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Módulo</label>
+                    <select name="modulo" class="form-select border-light shadow-sm">
+                        <option value="">Todos</option>
+                        @foreach (var m in ViewBag.Modulos)
+                        {
+                            <option value="@m">@m</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Nivel</label>
+                    <select name="nivel" class="form-select border-light shadow-sm">
+                        <option value="">Todos</option>
+                        @foreach (var n in ViewBag.Niveles)
+                        {
+                            <option value="@n">@n</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Usuario</label>
+                    <input type="text" name="usuario" class="form-control border-light shadow-sm" placeholder="Buscar usuario...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Desde</label>
+                    <input type="date" name="desde" class="form-control border-light shadow-sm">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <input type="date" name="hasta" class="form-control border-light shadow-sm">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                        <i class="ri-filter-3-line me-1"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabla de Logs -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle custom-table">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="border-0">Fecha y Hora</th>
+                            <th class="border-0">Usuario</th>
+                            <th class="border-0">Módulo</th>
+                            <th class="border-0">Acción</th>
+                            <th class="border-0">Descripción</th>
+                            <th class="border-0 text-center">Nivel</th>
+                            <th class="border-0 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var badgeClass = item.Nivel switch
+                            {
+                                "Info" => "bg-soft-info text-info",
+                                "Warning" => "bg-soft-warning text-warning",
+                                "Error" => "bg-soft-danger text-danger",
+                                "Critical" => "bg-danger text-white",
+                                _ => "bg-soft-secondary text-secondary"
+                            };
+
+                            var moduloIcon = item.Modulo switch
+                            {
+                                "POS" => "ri-shopping-cart-2-line",
+                                "Clientes" => "ri-user-3-line",
+                                "Productos" => "ri-box-3-line",
+                                "Configuración" => "ri-settings-3-line",
+                                "Facturación" => "ri-file-list-3-line",
+                                _ => "ri-notification-line"
+                            };
+
+                            <tr>
+                                <td class="fw-medium">@item.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-xs flex-shrink-0 me-2">
+                                            <div class="avatar-title bg-soft-primary text-primary rounded-circle">
+                                                @item.Usuario.Substring(0, 1).ToUpper()
+                                            </div>
+                                        </div>
+                                        @item.Usuario
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-muted"><i class="@moduloIcon me-1"></i> @item.Modulo</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@item.Accion</span>
+                                </td>
+                                <td>
+                                    <div class="text-truncate" style="max-width: 300px;" title="@item.Descripcion">
+                                        @item.Descripcion
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge rounded-pill @badgeClass">@item.Nivel</span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-soft-primary" onclick="verDetalles(@item.Id)">
+                                        <i class="ri-eye-line"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalles -->
+<div class="modal fade" id="modalDetalles" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="ri-information-line me-2"></i>Detalle de Auditoría</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detallesContent">
+                <div class="text-center p-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .bg-soft-primary { background-color: rgba(64, 81, 137, 0.1); }
+        .bg-soft-info { background-color: rgba(41, 156, 219, 0.1); }
+        .bg-soft-warning { background-color: rgba(247, 184, 75, 0.1); }
+        .bg-soft-danger { background-color: rgba(240, 101, 72, 0.1); }
+        .avatar-xs { width: 32px; height: 32px; }
+        .avatar-title { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .custom-table thead th { font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        function verDetalles(id) {
+            const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+            modal.show();
+            
+            fetch(`/Auditoria/Details/${id}`)
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('detallesContent').innerHTML = html;
+                });
+        }
+    </script>
+}

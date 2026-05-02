@@ -68,6 +68,7 @@
                 <thead>
                     <tr>
                         <th>Factura</th>
+                        <th>NCF</th>
                         <th>Proveedor</th>
                         <th>Fecha</th>
                         <th>Estado</th>
@@ -80,6 +81,7 @@
                     {
                         <tr>
                             <td><span class="badge badge-secondary">@item.NumeroFactura</span></td>
+                            <td><span class="text-info font-monospace">@(item.NCF ?? "-")</span></td>
                             <td>@item.Proveedor?.Nombre</td>
                             <td>@item.FechaCompra.ToString("dd/MM/yyyy")</td>
                             <td>

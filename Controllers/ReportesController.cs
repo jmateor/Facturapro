@@ -170,46 +170,99 @@ namespace Facturapro.Controllers
         // GET: Reportes/Inventario
         public async Task<IActionResult> Inventario(int? categoriaId = null, string? estadoStock = null)
         {
-            var query = _context.Productos
-                .Include(p => p.Categoria)
-                .AsQueryable();
-
-            if (categoriaId.HasValue)
-                query = query.Where(p => p.CategoriaId == categoriaId);
-
-            var productos = await query.ToListAsync();
-
-            // Filtrar por estado de stock (usando 10 como stock mínimo por defecto)
             const int STOCK_MINIMO = 10;
-            if (!string.IsNullOrEmpty(estadoStock))
+
+            // Obtener el almacén principal
+            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
+
+            List<ProductoInventarioViewModel> productosVm;
+            decimal valorInventarioTotal;
+            int productosBajoStockCount, productosSinStockCount;
+
+            if (almacen != null)
             {
-                productos = estadoStock.ToLower() switch
+                var stocksQuery = _context.StocksAlmacen
+                    .Include(s => s.Producto).ThenInclude(p => p.Categoria)
+                    .Where(s => s.AlmacenId == almacen.Id && s.Producto.Activo);
+
+                if (categoriaId.HasValue)
+                    stocksQuery = stocksQuery.Where(s => s.Producto.CategoriaId == categoriaId);
+
+                var stocks = await stocksQuery.ToListAsync();
+
+                if (!string.IsNullOrEmpty(estadoStock))
                 {
-                    "bajo" => productos.Where(p => p.Stock <= STOCK_MINIMO && p.Stock > 0).ToList(),
-                    "sin_stock" => productos.Where(p => p.Stock <= 0).ToList(),
-                    _ => productos
-                };
+                    stocks = estadoStock.ToLower() switch
+                    {
+                        "bajo"      => stocks.Where(s => s.Cantidad <= STOCK_MINIMO && s.Cantidad > 0).ToList(),
+                        "sin_stock" => stocks.Where(s => s.Cantidad <= 0).ToList(),
+                        _           => stocks
+                    };
+                }
+
+                valorInventarioTotal = stocks.Sum(s => s.Cantidad * s.Producto.Precio * 0.6m);
+                productosBajoStockCount = stocks.Count(s => s.Cantidad <= STOCK_MINIMO && s.Cantidad > 0);
+                productosSinStockCount  = stocks.Count(s => s.Cantidad <= 0);
+
+                productosVm = stocks.Select(s => new ProductoInventarioViewModel
+                {
+                    Id          = s.Producto.Id,
+                    Nombre      = s.Producto.Nombre,
+                    CodigoBarra = s.Producto.CodigoBarras,
+                    Categoria   = s.Producto.Categoria?.Nombre ?? "Sin categoría",
+                    StockActual = (int)s.Cantidad,
+                    StockMinimo = STOCK_MINIMO,
+                    Costo       = s.Producto.Precio * 0.6m,
+                    Precio      = s.Producto.Precio
+                }).ToList();
+
+                ViewBag.AlmacenNombre = almacen.Nombre;
+            }
+            else
+            {
+                // Fallback a stock global si no hay almacén
+                var query = _context.Productos.Include(p => p.Categoria).Where(p => p.Activo).AsQueryable();
+                if (categoriaId.HasValue) query = query.Where(p => p.CategoriaId == categoriaId);
+                var productos = await query.ToListAsync();
+
+                if (!string.IsNullOrEmpty(estadoStock))
+                {
+                    productos = estadoStock.ToLower() switch
+                    {
+                        "bajo"      => productos.Where(p => p.Stock <= STOCK_MINIMO && p.Stock > 0).ToList(),
+                        "sin_stock" => productos.Where(p => p.Stock <= 0).ToList(),
+                        _           => productos
+                    };
+                }
+
+                valorInventarioTotal    = productos.Sum(p => p.Stock * p.Precio * 0.6m);
+                productosBajoStockCount = productos.Count(p => p.Stock <= STOCK_MINIMO && p.Stock > 0);
+                productosSinStockCount  = productos.Count(p => p.Stock <= 0);
+
+                productosVm = productos.Select(p => new ProductoInventarioViewModel
+                {
+                    Id          = p.Id,
+                    Nombre      = p.Nombre,
+                    CodigoBarra = p.CodigoBarras,
+                    Categoria   = p.Categoria?.Nombre ?? "Sin categoría",
+                    StockActual = p.Stock,
+                    StockMinimo = STOCK_MINIMO,
+                    Costo       = p.Precio * 0.6m,
+                    Precio      = p.Precio
+                }).ToList();
+
+                ViewBag.AlmacenNombre = "Global";
             }
 
             var viewModel = new ReporteInventarioViewModel
             {
-                CategoriaId = categoriaId,
-                EstadoStock = estadoStock,
-                TotalProductos = productos.Count,
-                ValorInventarioTotal = productos.Sum(p => p.Stock * p.Precio * 0.6m), // Estimación del costo (60% del precio)
-                ProductosBajoStock = productos.Count(p => p.Stock <= STOCK_MINIMO && p.Stock > 0),
-                ProductosSinStock = productos.Count(p => p.Stock <= 0),
-                Productos = productos.Select(p => new ProductoInventarioViewModel
-                {
-                    Id = p.Id,
-                    Nombre = p.Nombre,
-                    CodigoBarra = p.CodigoBarras,
-                    Categoria = p.Categoria?.Nombre ?? "Sin categoría",
-                    StockActual = p.Stock,
-                    StockMinimo = STOCK_MINIMO,
-                    Costo = p.Precio * 0.6m, // Estimación del costo
-                    Precio = p.Precio
-                }).ToList()
+                CategoriaId          = categoriaId,
+                EstadoStock          = estadoStock,
+                TotalProductos       = productosVm.Count,
+                ValorInventarioTotal = valorInventarioTotal,
+                ProductosBajoStock   = productosBajoStockCount,
+                ProductosSinStock    = productosSinStockCount,
+                Productos            = productosVm
             };
 
             ViewBag.Categorias = new SelectList(

@@ -20,6 +20,8 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromHours(2);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // Add Entity Framework
@@ -67,7 +69,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
     options.ExpireTimeSpan = TimeSpan.FromHours(2);
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
@@ -77,11 +79,12 @@ builder.Services.AddHttpClient("DGII", client =>
     client.Timeout = TimeSpan.FromSeconds(60);
 });
 
-// Registrar servicios de DGII
-builder.Services.AddScoped<RangoNumeracionService>();
-
-// Registrar servicio de códigos de barra
+// Registrar servicios de Negocio y Utilidades
 builder.Services.AddScoped<IBarcodeService, BarcodeService>();
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IPdfService, PdfService>();
+builder.Services.AddScoped<Facturapro.Services.Notifications.IWhatsAppService, Facturapro.Services.Notifications.WhatsAppService>();
+builder.Services.AddScoped<Facturapro.Services.Intelligence.IOcrService, Facturapro.Services.Intelligence.OcrService>();
 
 // Configuración de API DGII
 builder.Services.AddScoped<ConfiguracionAPIDGII>(provider =>
@@ -98,9 +101,16 @@ builder.Services.AddScoped<ConfiguracionAPIDGII>(provider =>
     };
 });
 
-// Registrar servicios de API DGII
+// Registrar servicios de API DGII y Fiscal
+builder.Services.AddScoped<RangoNumeracionService>();
 builder.Services.AddScoped<IDGIIService, DGIIService>();
+builder.Services.AddScoped<IRncValidationService, RncValidationService>();
+builder.Services.AddScoped<Facturapro.Services.DGII.IFiscalService, Facturapro.Services.DGII.FiscalService>();
 builder.Services.AddScoped<IFacturacionElectronicaAPIService, FacturacionElectronicaAPIService>();
+
+// Registrar servicios Externos (Moneda/HttpClient)
+builder.Services.AddHttpClient<Facturapro.Services.Currency.IExchangeRateService, Facturapro.Services.Currency.ExchangeRateService>();
+builder.Services.AddScoped<Facturapro.Services.Currency.IExchangeRateService, Facturapro.Services.Currency.ExchangeRateService>();
 
 // Servicio en background para consultar estados DGII
 builder.Services.AddHostedService<DGIIBackgroundService>();
@@ -145,6 +155,15 @@ app.UseAuthorization();
 
 app.UseSession();
 
+// Configurar Localización Global (es-DO)
+var supportedCultures = new[] { "es-DO", "es-ES", "en-US" };
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture(supportedCultures[0])
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
+
 // Crear base de datos automáticamente si no existe (solo desarrollo)
 // y seed de usuario admin inicial
 try
@@ -178,7 +197,7 @@ try
             }
 
             // Seed admin user
-            var adminEmail = "jmateor@gmail.com";
+            var adminEmail = builder.Configuration["InitialSetup:AdminEmail"] ?? "admin@facturapro.com";
             var adminUser = await userManager.FindByEmailAsync(adminEmail);
             if (adminUser == null)
             {
@@ -194,11 +213,7 @@ try
                     EmailConfirmed = true
                 };
 
-                // Contraseña desde variable de entorno o appsettings para producción
-                var adminPassword = builder.Configuration["InitialAdminPassword"]
-                    ?? Environment.GetEnvironmentVariable("FACTURAPRO_ADMIN_PASSWORD")
-                    ?? "Jmateor11099"; // Solo para desarrollo local
-
+                var adminPassword = builder.Configuration["InitialSetup:AdminPassword"] ?? "Admin123!";
                 var userResult = await userManager.CreateAsync(adminUser, adminPassword);
                 if (userResult.Succeeded)
                 {
@@ -206,8 +221,8 @@ try
                 }
             }
 
-            // Seed super administrador - Usuario maestro para instalaciones del sistema
-            var superAdminEmail = "josemateo3148@gmail.com";
+            // Seed super administrador
+            var superAdminEmail = builder.Configuration["InitialSetup:SuperAdminEmail"] ?? "superadmin@facturapro.com";
             var superAdminUser = await userManager.FindByEmailAsync(superAdminEmail);
             if (superAdminUser == null)
             {
@@ -220,16 +235,45 @@ try
                     Rol = "Admin",
                     Activo = true,
                     FechaRegistro = DateTime.Now,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    PuedeFacturar = true,
+                    PuedeVerReportes = true,
+                    PuedeGestionarInventario = true,
+                    PuedeConfigurarSistema = true,
+                    PuedeAnularFacturas = true,
+                    PuedeVerCostos = true,
+                    PuedeGestionarClientes = true,
+                    PuedeGestionarUsuarios = true
                 };
 
-                // Contraseña fija para instalaciones nuevas - cambiar en producción
-                var superAdminPassword = "Jmateor11099@";
-
+                var superAdminPassword = builder.Configuration["InitialSetup:SuperAdminPassword"] ?? "SuperAdmin123!";
                 var superAdminResult = await userManager.CreateAsync(superAdminUser, superAdminPassword);
                 if (superAdminResult.Succeeded)
                 {
                     await userManager.AddToRoleAsync(superAdminUser, "Admin");
+                }
+            }
+            else
+            {
+                // Actualizar permisos del super admin si ya existe
+                bool needsUpdate = !superAdminUser.PuedeFacturar || !superAdminUser.PuedeVerReportes ||
+                                   !superAdminUser.PuedeGestionarInventario || !superAdminUser.PuedeConfigurarSistema ||
+                                   !superAdminUser.PuedeAnularFacturas || !superAdminUser.PuedeVerCostos ||
+                                   !superAdminUser.PuedeGestionarClientes || !superAdminUser.PuedeGestionarUsuarios;
+
+                if (needsUpdate)
+                {
+                    superAdminUser.PuedeFacturar = true;
+                    superAdminUser.PuedeVerReportes = true;
+                    superAdminUser.PuedeGestionarInventario = true;
+                    superAdminUser.PuedeConfigurarSistema = true;
+                    superAdminUser.PuedeAnularFacturas = true;
+                    superAdminUser.PuedeVerCostos = true;
+                    superAdminUser.PuedeGestionarClientes = true;
+                    superAdminUser.PuedeGestionarUsuarios = true;
+
+                    await userManager.UpdateAsync(superAdminUser);
+                    Console.WriteLine("Permisos del super admin actualizados correctamente.");
                 }
             }
         }

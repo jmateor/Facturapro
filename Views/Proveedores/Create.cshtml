@@ -81,9 +81,16 @@
                             <label asp-for="Documento" class="form-label">
                                 RNC / Cédula <span class="text-danger">*</span>
                             </label>
-                            <input asp-for="Documento" class="form-control" placeholder="Ej: 131703836" maxlength="20" inputmode="numeric" />
+                            <div class="input-group">
+                                <input asp-for="Documento" class="form-control" placeholder="Ej: 131703836" maxlength="20" inputmode="numeric" id="rncInput" />
+                                <button class="btn btn-outline-primary" type="button" id="btnValidarRNC" title="Validar en DGII">
+                                    <span id="spinnerRnc" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    <i id="iconRnc" class="ri-search-eye-line"></i>
+                                </button>
+                            </div>
                             <span asp-validation-for="Documento" class="text-danger small"></span>
                             <small class="text-muted d-block mt-1">9 dígitos (persona) u 11 (empresa)</small>
+                            <div id="rncFeedback" class="small mt-1 d-none"></div>
                         </div>
 
                         <div class="col-md-6">
@@ -278,9 +285,72 @@
             }
         });
 
+        // Validación Automática de RNC (DGII)
+        const rncInput = document.getElementById('rncInput');
+        const btnValidarRNC = document.getElementById('btnValidarRNC');
+        const spinnerRnc = document.getElementById('spinnerRnc');
+        const iconRnc = document.getElementById('iconRnc');
+        const rncFeedback = document.getElementById('rncFeedback');
+        const nombreInput = document.querySelector('input[name="Nombre"]');
+
+        async function validarRNC() {
+            const rnc = rncInput.value.trim();
+            if (rnc.length !== 9 && rnc.length !== 11) return;
+
+            // Mostrar cargando
+            spinnerRnc.classList.remove('d-none');
+            iconRnc.classList.add('d-none');
+            rncFeedback.classList.remove('d-none');
+            rncFeedback.className = 'small mt-1 text-muted';
+            rncFeedback.innerHTML = '<i class="ri-loader-4-line ri-spin me-1"></i> Consultando DGII...';
+
+            try {
+                const response = await fetch(`/api/validation/rnc/${rnc}`);
+                const data = await response.json();
+
+                if (data.esValido) {
+                    rncInput.classList.add('is-valid');
+                    rncInput.classList.remove('is-invalid');
+                    
+                    let feedbackMsg = `<i class="ri-checkbox-circle-line me-1"></i> ${data.mensaje}`;
+                    if (data.estado) feedbackMsg += ` | Estado: <strong>${data.estado}</strong>`;
+                    if (data.regimen) feedbackMsg += ` | Régimen: <strong>${data.regimen}</strong>`;
+                    
+                    rncFeedback.className = data.estado === 'SUSPENDIDO' ? 'small mt-1 text-danger fw-bold' : 'small mt-1 text-success fw-semibold';
+                    rncFeedback.innerHTML = feedbackMsg;
+                    
+                    if (data.nombre) {
+                        nombreInput.value = data.nombre;
+                        nombreInput.classList.add('is-valid');
+                        
+                        // Efecto de brillo para indicar que se actualizó
+                        nombreInput.style.backgroundColor = '#e8f5e9';
+                        setTimeout(() => nombreInput.style.backgroundColor = '', 1000);
+                    }
+                } else {
+                    rncInput.classList.add('is-invalid');
+                    rncInput.classList.remove('is-valid');
+                    rncFeedback.className = 'small mt-1 text-danger';
+                    rncFeedback.innerHTML = `<i class="ri-error-warning-line me-1"></i> ${data.mensaje}`;
+                }
+            } catch (error) {
+                console.error('Error validando RNC:', error);
+                rncFeedback.className = 'small mt-1 text-warning';
+                rncFeedback.innerHTML = '<i class="ri-alert-line me-1"></i> No se pudo conectar con el servicio de validación.';
+            } finally {
+                spinnerRnc.classList.add('d-none');
+                iconRnc.classList.remove('d-none');
+            }
+        }
+
+        rncInput.addEventListener('blur', validarRNC);
+        btnValidarRNC.addEventListener('click', validarRNC);
+
         // Validación de Documento/RNC - Solo números
-        document.querySelector('input[name="Documento"]').addEventListener('input', function(e) {
+        rncInput.addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '');
+            this.classList.remove('is-valid', 'is-invalid');
+            rncFeedback.classList.add('d-none');
         });
 
         // Validación de Teléfono - Formato dominicano

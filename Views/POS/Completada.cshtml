@@ -5,204 +5,457 @@
     var cultura = new System.Globalization.CultureInfo("es-DO");
 }
 
-<style>
-    .success-wrapper {
-        max-width: 600px;
-        margin: 0 auto;
-        text-align: center;
-        padding: var(--space-xl) 0;
-    }
-
-    .success-icon-wrapper {
-        width: 100px;
-        height: 100px;
-        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
-        border-radius: var(--radius-full);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto var(--space-xl);
-        color: white;
-        box-shadow: 0 20px 40px -10px rgb(16 185 129 / 0.4);
-    }
-
-    .success-icon-wrapper svg {
-        width: 50px;
-        height: 50px;
-    }
-
-    .success-wrapper h1 {
-        font-size: 1.75rem;
-        margin-bottom: var(--space-sm);
-    }
-
-    .success-wrapper > p {
-        color: var(--text-secondary);
-        margin-bottom: var(--space-xl);
-    }
-
-    .factura-summary-card {
-        background: var(--bg-primary);
-        border: 1px solid var(--gray-200);
-        border-radius: var(--radius-lg);
-        padding: var(--space-xl);
-        margin: var(--space-lg) 0;
-        text-align: left;
-        box-shadow: var(--shadow);
-    }
-
-    .factura-summary-card h3 {
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-        margin-bottom: var(--space-lg);
-        padding-bottom: var(--space-md);
-        border-bottom: 2px solid var(--primary-color);
-    }
-
-    .factura-summary-card h3 svg {
-        width: 20px;
-        height: 20px;
-        color: var(--primary-color);
-    }
-
-    .factura-line {
-        display: flex;
-        justify-content: space-between;
-        padding: var(--space-sm) 0;
-        color: var(--text-secondary);
-        font-size: 0.9375rem;
-    }
-
-    .factura-line:not(:last-child) {
-        border-bottom: 1px dashed var(--gray-200);
-    }
-
-    .factura-line.total {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        border-top: 2px solid var(--gray-200);
-        border-bottom: none;
-        margin-top: var(--space-sm);
-        padding-top: var(--space-md);
-    }
-
-    .factura-line.total .value {
-        color: var(--primary-color);
-        font-size: 1.5rem;
-    }
-
-    .factura-line .label {
-        font-weight: 500;
-    }
-
-    .factura-line .value {
-        font-weight: 600;
-    }
-
-    .factura-line .ncf-badge {
-        background: var(--success-color);
-        color: white;
-        padding: var(--space-xs) var(--space-sm);
-        border-radius: var(--radius);
-        font-size: 0.875rem;
-        font-family: var(--font-mono);
-    }
-
-    .success-actions {
-        display: flex;
-        gap: var(--space-md);
-        justify-content: center;
-        margin-top: var(--space-xl);
-    }
-
-    @@media (max-width: 640px) {
-        .success-actions {
-            flex-direction: column;
+@section Styles {
+    <style>
+        /* ========================================
+           VENTA COMPLETADA - Diseño Profesional
+           ======================================== */
+        .venta-completada-wrapper {
+            max-width: 700px;
+            margin: 0 auto;
         }
 
-        .success-actions .btn {
-            width: 100%;
+        /* Icono de éxito animado */
+        .success-animation {
+            text-align: center;
+            margin-bottom: 2rem;
         }
-    }
-</style>
 
-<div class="success-wrapper">
-    <div class="success-icon-wrapper">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+        .success-checkmark {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3);
+            animation: successPop 0.5s ease-out;
+        }
+
+        @@keyframes successPop {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-checkmark svg {
+            width: 50px;
+            height: 50px;
+            color: white;
+        }
+
+        .success-animation h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--ct-heading-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .success-animation p {
+            color: var(--ct-muted);
+            font-size: 1rem;
+        }
+
+        /* Tarjeta de Resumen */
+        .resumen-card {
+            background: var(--ct-card-bg);
+            border: 1px solid var(--ct-border-color);
+            border-radius: var(--ct-border-radius);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .resumen-header {
+            background: linear-gradient(135deg, var(--ct-primary) 0%, var(--ct-primary-dark) 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .resumen-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .resumen-header .fecha {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .resumen-body {
+            padding: 1.5rem;
+        }
+
+        .resumen-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed var(--ct-border-color);
+            font-size: 0.9375rem;
+        }
+
+        .resumen-row:last-child {
+            border-bottom: none;
+        }
+
+        .resumen-row .label {
+            color: var(--ct-muted);
+            font-weight: 500;
+        }
+
+        .resumen-row .value {
+            font-weight: 600;
+            color: var(--ct-heading-color);
+        }
+
+        .resumen-row.total {
+            background: var(--ct-tertiary-bg);
+            margin: 0 -1.5rem;
+            padding: 1rem 1.5rem;
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .resumen-row.total .value {
+            color: var(--ct-success);
+            font-size: 1.5rem;
+        }
+
+        .ncf-badge {
+            background: var(--ct-success);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8125rem;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        /* Lista de Productos */
+        .productos-lista {
+            margin-top: 1.5rem;
+        }
+
+        .productos-lista h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--ct-muted);
+            margin-bottom: 1rem;
+        }
+
+        .producto-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--ct-tertiary-bg);
+            border-radius: var(--ct-border-radius);
+            margin-bottom: 0.5rem;
+        }
+
+        .producto-item-info {
+            flex: 1;
+        }
+
+        .producto-item-nombre {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            color: var(--ct-heading-color);
+        }
+
+        .producto-item-detalle {
+            font-size: 0.8125rem;
+            color: var(--ct-muted);
+            margin-top: 0.25rem;
+        }
+
+        .producto-item-cantidad {
+            background: var(--ct-primary);
+            color: white;
+            padding: 0.25rem 0.625rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-right: 0.75rem;
+        }
+
+        .producto-item-precio {
+            font-weight: 700;
+            color: var(--ct-heading-color);
+            min-width: 100px;
+            text-align: right;
+        }
+
+        /* Acciones */
+        .acciones-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .accion-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-radius: var(--ct-border-radius);
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .accion-btn.primary {
+            background: linear-gradient(135deg, var(--ct-primary) 0%, var(--ct-primary-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .accion-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+            color: white;
+        }
+
+        .accion-btn.success {
+            background: linear-gradient(135deg, var(--ct-success) 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .accion-btn.success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            color: white;
+        }
+
+        .accion-btn.info {
+            background: var(--ct-secondary-bg);
+            color: var(--ct-heading-color);
+            border: 1px solid var(--ct-border-color);
+        }
+
+        .accion-btn.info:hover {
+            background: var(--ct-tertiary-bg);
+            color: var(--ct-heading-color);
+        }
+
+        .accion-btn.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Ticket Preview */
+        .ticket-preview {
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8125rem;
+            margin-top: 1rem;
+        }
+
+        .ticket-preview .line {
+            border-bottom: 1px dashed #000;
+            padding: 0.5rem 0;
+            margin: 0.5rem 0;
+        }
+
+        .ticket-preview .center {
+            text-align: center;
+        }
+
+        .ticket-preview .right {
+            text-align: right;
+        }
+
+        /* Responsive */
+        @@media (max-width: 640px) {
+            .acciones-container {
+                grid-template-columns: 1fr;
+            }
+
+            .resumen-row.total {
+                font-size: 1rem;
+            }
+
+            .resumen-row.total .value {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+}
+
+<div class="venta-completada-wrapper">
+    <!-- Animación de Éxito -->
+    <div class="success-animation">
+        <div class="success-checkmark">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <h1>¡Venta Completada!</h1>
+        <p>La transacción se ha procesado exitosamente</p>
     </div>
 
-    <h1>¡Venta Completada!</h1>
-    <p>La transacción se ha procesado exitosamente.</p>
-
-    <div class="factura-summary-card">
-        <h3>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-            </svg>
-            Resumen de Factura
-        </h3>
-
-        <div class="factura-line">
-            <span class="label">Número</span>
-            <span class="value">@Model.NumeroFactura</span>
+    <!-- Tarjeta de Resumen -->
+    <div class="resumen-card">
+        <div class="resumen-header">
+            <h3>
+                <i class="ri-file-text-line"></i>
+                Resumen de Factura
+            </h3>
+            <span class="fecha">@Model.FechaEmision.ToString("dd/MM/yyyy HH:mm")</span>
         </div>
-
-        @if (!string.IsNullOrEmpty(Model.eNCF))
-        {
-            <div class="factura-line">
-                <span class="label">NCF</span>
-                <span class="ncf-badge">@Model.eNCF</span>
+        <div class="resumen-body">
+            <div class="resumen-row">
+                <span class="label">Número de Factura</span>
+                <span class="value">@Model.NumeroFactura</span>
             </div>
-        }
 
-        <div class="factura-line">
-            <span class="label">Cliente</span>
-            <span class="value">@(Model.Cliente?.Nombre ?? "N/A")</span>
-        </div>
+            @if (!string.IsNullOrEmpty(Model.eNCF))
+            {
+                <div class="resumen-row">
+                    <span class="label">NCF Electrónico</span>
+                    <span class="ncf-badge">@Model.eNCF</span>
+                </div>
+            }
 
-        <div class="factura-line">
-            <span class="label">Fecha</span>
-            <span class="value">@Model.FechaEmision.ToString("dd/MM/yyyy HH:mm")</span>
-        </div>
+            <div class="resumen-row">
+                <span class="label">Cliente</span>
+                <span class="value">@(Model.Cliente?.Nombre ?? "Consumidor Final")</span>
+            </div>
 
-        <div class="factura-line">
-            <span class="label">Productos</span>
-            <span class="value">@Model.Lineas.Count artículos</span>
-        </div>
+            @if (!string.IsNullOrEmpty(Model.Cliente?.RNC))
+            {
+                <div class="resumen-row">
+                    <span class="label">RNC/Cédula</span>
+                    <span class="value">@Model.Cliente.RNC</span>
+                </div>
+            }
 
-        <div class="factura-line">
-            <span class="label">SubTotal</span>
-            <span class="value">@Model.Subtotal.ToString("C", cultura)</span>
-        </div>
+            <div class="resumen-row">
+                <span class="label">Productos</span>
+                <span class="value">@Model.Lineas?.Count ?? 0 artículos</span>
+            </div>
 
-        <div class="factura-line">
-            <span class="label">ITBIS (18%)</span>
-            <span class="value">@Model.MontoITBIS.ToString("C", cultura)</span>
-        </div>
+            <div class="resumen-row">
+                <span class="label">SubTotal</span>
+                <span class="value">@Model.Subtotal.ToString("C", cultura)</span>
+            </div>
 
-        <div class="factura-line total">
-            <span class="label">TOTAL</span>
-            <span class="value">@Model.Total.ToString("C", cultura)</span>
+            <div class="resumen-row">
+                <span class="label">ITBIS (18%)</span>
+                <span class="value">@Model.MontoITBIS.ToString("C", cultura)</span>
+            </div>
+
+            <div class="resumen-row total">
+                <span class="label">TOTAL (@Model.Moneda)</span>
+                <span class="value">@((Model.Moneda == "USD" ? "US$ " : "RD$ ") + Model.Total.ToString("N2"))</span>
+            </div>
+
+            @if (Model.Moneda == "USD")
+            {
+                <div class="resumen-row">
+                    <span class="label">Tasa de Cambio</span>
+                    <span class="value">1 USD = @Model.TasaCambio.ToString("C", cultura)</span>
+                </div>
+                <div class="resumen-row text-primary">
+                    <span class="label fw-bold">TOTAL FISCAL (DOP)</span>
+                    <span class="value fw-bold">@Model.TotalDOP.ToString("C", cultura)</span>
+                </div>
+            }
         </div>
     </div>
 
-    <div class="success-actions">
-        <a href="@Url.Action("Index", "POS")" class="btn btn-primary btn-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
+    <!-- Lista de Productos -->
+    @if (Model.Lineas != null && Model.Lineas.Any())
+    {
+        <div class="productos-lista">
+            <h4>
+                <i class="ri-shopping-bag-3-line me-2"></i>
+                Productos Vendidos
+            </h4>
+            @foreach (var linea in Model.Lineas.OrderBy(l => l.NumeroLinea))
+            {
+                <div class="producto-item">
+                    <div class="producto-item-info">
+                        <div class="producto-item-nombre">@linea.Descripcion</div>
+                        <div class="producto-item-detalle">
+                            @linea.PrecioUnitario.ToString("C", cultura) c/u
+                        </div>
+                    </div>
+                    <span class="producto-item-cantidad">x@linea.Cantidad</span>
+                    <span class="producto-item-precio">
+                        @(linea.Cantidad * linea.PrecioUnitario).ToString("C", cultura)
+                    </span>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Acciones -->
+    <div class="acciones-container">
+        <a href="@Url.Action("Index", "POS")" class="accion-btn primary full-width">
+            <i class="ri-add-circle-line"></i>
             Nueva Venta
         </a>
 
-        <a href="@Url.Action("Details", "Facturas", new { id = Model.Id })" class="btn btn-secondary btn-lg" target="_blank">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096a42.415 42.415 0 00-10.56 0m10.56 0L17.66 18M18 12a6 6 0 01-12 0 6 6 0 0112 0z" />
-            </svg>
-            Ver Factura
+        <a href="@Url.Action("Details", "Facturas", new { id = Model.Id })" class="accion-btn info">
+            <i class="ri-eye-line"></i>
+            Ver Detalles
+        </a>
+
+        <a href="@Url.Action("DescargarPDF", "Facturas", new { id = Model.Id })" class="accion-btn success" target="_blank">
+            <i class="ri-printer-line"></i>
+            Imprimir PDF
+        </a>
+
+        <a href="@Url.Action("EnviarWhatsApp", "Facturas", new { id = Model.Id })"
+           class="accion-btn success"
+           target="_blank">
+            <i class="ri-whatsapp-line"></i>
+            Enviar WhatsApp
+        </a>
+
+        <a href="mailto:?subject=Factura @Model.NumeroFactura&body=Adjunto encontrará su factura electrónica."
+           class="accion-btn info">
+            <i class="ri-mail-line"></i>
+            Enviar Email
         </a>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Auto-focus para imprimir (si el navegador lo permite)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mostrar notificación de éxito
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('Venta Completada', {
+                    body: 'Factura @(Model.NumeroFactura) - Total: @(Model.Total.ToString("C", cultura))',
+                    icon: '/images/success.png'
+                });
+            }
+        });
+    </script>
+}

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text;
+using ClosedXML.Excel;
 
 namespace Facturapro.Controllers
 {
@@ -77,13 +78,14 @@ namespace Facturapro.Controllers
         public async Task<IActionResult> Create()
         {
             await CargarCategoriasAsync();
+            await CargarProveedoresAsync();
             return View();
         }
 
         // POST: Productos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Codigo,Nombre,Descripcion,Precio,Stock,CategoriaId")] Producto producto)
+        public async Task<IActionResult> Create([Bind("Codigo,Nombre,Descripcion,Precio,PrecioCompra,Stock,StockMinimo,CategoriaId,ProveedorId,TipoProducto,ControlaStock,Ubicacion,NumeroLote,UnidadMedida,PesoPorUnidad,FechaVencimiento,CodigoBarras,Activo")] Producto producto)
         {
             // Validar que el código no exista
             if (await _context.Productos.AnyAsync(p => p.Codigo == producto.Codigo))
@@ -94,18 +96,30 @@ namespace Facturapro.Controllers
             if (ModelState.IsValid)
             {
                 producto.FechaCreacion = DateTime.Now;
+
+                // Si es servicio, no controlar stock
+                if (producto.TipoProducto == 2)
+                {
+                    producto.ControlaStock = false;
+                    producto.Stock = 0;
+                }
+
                 _context.Add(producto);
                 await _context.SaveChangesAsync();
 
-                // Generar código de barras
-                producto.CodigoBarras = _barcodeService.GenerarCodigoBarras(producto.Codigo, producto.Id);
-                await _context.SaveChangesAsync();
+                // Generar código de barras si no se proporcionó
+                if (string.IsNullOrEmpty(producto.CodigoBarras))
+                {
+                    producto.CodigoBarras = _barcodeService.GenerarCodigoBarras(producto.Codigo, producto.Id);
+                    await _context.SaveChangesAsync();
+                }
 
                 TempData["SuccessMessage"] = "Producto creado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
 
             await CargarCategoriasAsync(producto.CategoriaId);
+            await CargarProveedoresAsync(producto.ProveedorId);
             return View(producto);
         }
 
@@ -124,13 +138,14 @@ namespace Facturapro.Controllers
             }
 
             await CargarCategoriasAsync(producto.CategoriaId);
+            await CargarProveedoresAsync(producto.ProveedorId);
             return View(producto);
         }
 
         // POST: Productos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Codigo,Nombre,Descripcion,Precio,Stock,CategoriaId,Activo")] Producto producto)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Codigo,Nombre,Descripcion,Precio,PrecioCompra,Stock,StockMinimo,CategoriaId,ProveedorId,TipoProducto,ControlaStock,Ubicacion,NumeroLote,UnidadMedida,PesoPorUnidad,FechaVencimiento,CodigoBarras,Activo")] Producto producto)
         {
             if (id != producto.Id)
             {
@@ -147,6 +162,13 @@ namespace Facturapro.Controllers
             {
                 try
                 {
+                    // Si es servicio, no controlar stock
+                    if (producto.TipoProducto == 2)
+                    {
+                        producto.ControlaStock = false;
+                        producto.Stock = 0;
+                    }
+
                     _context.Update(producto);
                     await _context.SaveChangesAsync();
                     TempData["SuccessMessage"] = "Producto actualizado correctamente.";
@@ -166,6 +188,7 @@ namespace Facturapro.Controllers
             }
 
             await CargarCategoriasAsync(producto.CategoriaId);
+            await CargarProveedoresAsync(producto.ProveedorId);
             return View(producto);
         }
 
@@ -225,7 +248,7 @@ namespace Facturapro.Controllers
         {
             if (archivoExcel == null || archivoExcel.Length == 0)
             {
-                TempData["ErrorMessage"] = "Por favor seleccione un archivo CSV";
+                TempData["ErrorMessage"] = "Por favor seleccione un archivo Excel (.xlsx)";
                 await CargarCategoriasAsync(categoriaIdPorDefecto);
                 return View();
             }
@@ -241,125 +264,83 @@ namespace Facturapro.Controllers
 
             try
             {
-                // Obtener códigos existentes para detectar duplicados
                 var codigosExistentes = await _context.Productos
                     .Select(p => p.Codigo.ToLower())
                     .ToListAsync();
 
                 var productosNuevos = new List<Producto>();
-                int rowNumber = 1;
-
+                
                 using (var stream = archivoExcel.OpenReadStream())
-                using (var reader = new StreamReader(stream, Encoding.UTF8))
                 {
-                    // Leer encabezados
-                    var headerLine = await reader.ReadLineAsync();
-                    if (string.IsNullOrEmpty(headerLine))
+                    using (var workbook = new XLWorkbook(stream))
                     {
-                        TempData["ErrorMessage"] = "El archivo no contiene datos";
-                        await CargarCategoriasAsync(categoriaIdPorDefecto);
-                        return View();
-                    }
+                        var worksheet = workbook.Worksheet(1);
+                        var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Saltar encabezado
 
-                    string? line;
-                    while ((line = await reader.ReadLineAsync()) != null)
-                    {
-                        rowNumber++;
-
-                        if (string.IsNullOrWhiteSpace(line))
-                            continue;
-
-                        try
+                        foreach (var row in rows)
                         {
-                            var campos = ParseCsvLine(line);
-
-                            // Validar mínimo de columnas
-                            if (campos.Count < 2)
+                            try
                             {
-                                resultado.ProductosConError++;
-                                resultado.Errores.Add($"Fila {rowNumber}: Formato CSV inválido");
-                                continue;
-                            }
+                                var codigo = row.Cell(1).GetValue<string>()?.Trim();
+                                var nombre = row.Cell(2).GetValue<string>()?.Trim();
+                                var descripcion = row.Cell(3).GetValue<string>()?.Trim();
+                                var precio = row.Cell(4).GetValue<decimal>();
+                                var stock = row.Cell(5).GetValue<int>();
+                                var categoriaTexto = row.Cell(6).GetValue<string>()?.Trim();
 
-                            var codigo = campos[0]?.Trim() ?? "";
-                            var nombre = campos[1]?.Trim() ?? "";
-                            var descripcion = campos.Count > 2 ? campos[2]?.Trim() : null;
-                            var precioTexto = campos.Count > 3 ? campos[3]?.Trim() ?? "0" : "0";
-                            var stockTexto = campos.Count > 4 ? campos[4]?.Trim() ?? "0" : "0";
-                            var categoriaTexto = campos.Count > 5 ? campos[5]?.Trim() : null;
-
-                            // Validaciones básicas
-                            if (string.IsNullOrEmpty(codigo) || string.IsNullOrEmpty(nombre))
-                            {
-                                resultado.ProductosConError++;
-                                resultado.Errores.Add($"Fila {rowNumber}: Código y nombre son obligatorios");
-                                continue;
-                            }
-
-                            // Verificar duplicado
-                            if (codigosExistentes.Contains(codigo.ToLower()) ||
-                                productosNuevos.Any(p => p.Codigo.ToLower() == codigo.ToLower()))
-                            {
-                                resultado.ProductosDuplicados++;
-                                resultado.CodigosDuplicados.Add(codigo);
-                                continue;
-                            }
-
-                            // Parsear precio y stock
-                            if (!decimal.TryParse(precioTexto.Replace("$", "").Replace(",", ""), NumberStyles.Any, CultureInfo.InvariantCulture, out var precio))
-                            {
-                                precio = 0;
-                            }
-
-                            if (!int.TryParse(stockTexto, out var stock))
-                            {
-                                stock = 0;
-                            }
-
-                            // Determinar categoría
-                            int? categoriaId = categoriaIdPorDefecto;
-                            if (!string.IsNullOrEmpty(categoriaTexto))
-                            {
-                                var categoria = await _context.Categorias
-                                    .FirstOrDefaultAsync(c => c.Nombre.ToLower() == categoriaTexto.ToLower());
-                                if (categoria != null)
+                                if (string.IsNullOrEmpty(codigo) || string.IsNullOrEmpty(nombre))
                                 {
-                                    categoriaId = categoria.Id;
+                                    resultado.ProductosConError++;
+                                    resultado.Errores.Add($"Fila {row.RowNumber()}: Código y nombre son obligatorios");
+                                    continue;
                                 }
+
+                                if (codigosExistentes.Contains(codigo.ToLower()) ||
+                                    productosNuevos.Any(p => p.Codigo.ToLower() == codigo.ToLower()))
+                                {
+                                    resultado.ProductosDuplicados++;
+                                    resultado.CodigosDuplicados.Add(codigo);
+                                    continue;
+                                }
+
+                                int? categoriaId = categoriaIdPorDefecto;
+                                if (!string.IsNullOrEmpty(categoriaTexto))
+                                {
+                                    var categoria = await _context.Categorias
+                                        .FirstOrDefaultAsync(c => c.Nombre.ToLower() == categoriaTexto.ToLower());
+                                    if (categoria != null)
+                                    {
+                                        categoriaId = categoria.Id;
+                                    }
+                                }
+
+                                productosNuevos.Add(new Producto
+                                {
+                                    Codigo = codigo,
+                                    Nombre = nombre,
+                                    Descripcion = descripcion,
+                                    Precio = precio,
+                                    Stock = stock,
+                                    CategoriaId = categoriaId,
+                                    Activo = true,
+                                    FechaCreacion = DateTime.Now
+                                });
+                                resultado.ProductosImportados++;
                             }
-
-                            var producto = new Producto
+                            catch (Exception ex)
                             {
-                                Codigo = codigo,
-                                Nombre = nombre,
-                                Descripcion = descripcion,
-                                Precio = precio,
-                                Stock = stock,
-                                CategoriaId = categoriaId,
-                                Activo = true,
-                                FechaCreacion = DateTime.Now
-                            };
-
-                            productosNuevos.Add(producto);
-                            resultado.ProductosImportados++;
-                        }
-                        catch (Exception ex)
-                        {
-                            resultado.ProductosConError++;
-                            resultado.Errores.Add($"Fila {rowNumber}: {ex.Message}");
+                                resultado.ProductosConError++;
+                                resultado.Errores.Add($"Fila {row.RowNumber()}: {ex.Message}");
+                            }
                         }
                     }
-
-                    resultado.TotalFilas = rowNumber - 1;
                 }
 
-                // Guardar productos nuevos
                 if (productosNuevos.Any())
                 {
                     _context.Productos.AddRange(productosNuevos);
                     await _context.SaveChangesAsync();
 
-                    // Generar códigos de barras para productos importados
                     foreach (var producto in productosNuevos)
                     {
                         producto.CodigoBarras = _barcodeService.GenerarCodigoBarras(producto.Codigo, producto.Id);
@@ -372,7 +353,7 @@ namespace Facturapro.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"Error al procesar el archivo: {ex.Message}";
+                TempData["ErrorMessage"] = $"Error al procesar el archivo Excel: {ex.Message}";
                 await CargarCategoriasAsync(categoriaIdPorDefecto);
                 return View();
             }
@@ -441,30 +422,50 @@ namespace Facturapro.Controllers
 
             var productos = await query.OrderBy(p => p.Nombre).ToListAsync();
 
-            var csv = new StringBuilder();
-            csv.AppendLine("Código,Nombre,Descripción,Precio,Stock,Categoría,Activo");
-
-            foreach (var producto in productos)
+            using (var workbook = new XLWorkbook())
             {
-                var line = string.Join(",",
-                    EscapeCsvField(producto.Codigo),
-                    EscapeCsvField(producto.Nombre),
-                    EscapeCsvField(producto.Descripcion),
-                    producto.Precio.ToString(CultureInfo.InvariantCulture),
-                    producto.Stock.ToString(),
-                    EscapeCsvField(producto.Categoria?.Nombre ?? "Sin categoría"),
-                    producto.Activo ? "Sí" : "No"
-                );
-                csv.AppendLine(line);
+                var worksheet = workbook.Worksheets.Add("Productos");
+                
+                // Encabezados con estilo
+                var headerRow = worksheet.Row(1);
+                headerRow.Cell(1).Value = "Código";
+                headerRow.Cell(2).Value = "Nombre";
+                headerRow.Cell(3).Value = "Descripción";
+                headerRow.Cell(4).Value = "Precio";
+                headerRow.Cell(5).Value = "Stock";
+                headerRow.Cell(6).Value = "Categoría";
+                headerRow.Cell(7).Value = "Activo";
+
+                var headerStyle = workbook.Style;
+                headerStyle.Font.Bold = true;
+                headerStyle.Fill.BackgroundColor = XLColor.FromHtml("#405189");
+                headerStyle.Font.FontColor = XLColor.White;
+                worksheet.Range("A1:G1").Style = headerStyle;
+
+                // Datos
+                int rowNum = 2;
+                foreach (var p in productos)
+                {
+                    worksheet.Cell(rowNum, 1).Value = p.Codigo;
+                    worksheet.Cell(rowNum, 2).Value = p.Nombre;
+                    worksheet.Cell(rowNum, 3).Value = p.Descripcion;
+                    worksheet.Cell(rowNum, 4).Value = p.Precio;
+                    worksheet.Cell(rowNum, 5).Value = p.Stock;
+                    worksheet.Cell(rowNum, 6).Value = p.Categoria?.Nombre ?? "Sin categoría";
+                    worksheet.Cell(rowNum, 7).Value = p.Activo ? "Sí" : "No";
+                    rowNum++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    var fileName = $"Productos_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
             }
-
-            // Agregar BOM para que Excel reconozca UTF-8 correctamente
-            var utf8WithBom = new UTF8Encoding(true);
-            var bytes = utf8WithBom.GetBytes(csv.ToString());
-            var stream = new MemoryStream(bytes);
-
-            var fileName = $"Productos_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            return File(stream, "text/csv", fileName);
         }
 
         private string EscapeCsvField(string? field)
@@ -483,29 +484,47 @@ namespace Facturapro.Controllers
         // GET: Productos/DescargarPlantilla
         public IActionResult DescargarPlantilla()
         {
-            var csv = new StringBuilder();
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Plantilla Importación");
 
-            // Encabezados
-            csv.AppendLine("Código,Nombre,Descripción,Precio,Stock,Categoría");
+                // Encabezados
+                worksheet.Cell(1, 1).Value = "Código";
+                worksheet.Cell(1, 2).Value = "Nombre";
+                worksheet.Cell(1, 3).Value = "Descripción";
+                worksheet.Cell(1, 4).Value = "Precio";
+                worksheet.Cell(1, 5).Value = "Stock";
+                worksheet.Cell(1, 6).Value = "Categoría";
 
-            // Ejemplo de datos
-            csv.AppendLine("PROD001,Producto de ejemplo,Descripción opcional,100.00,50,General");
-            csv.AppendLine("PROD002,Otro producto,,250.50,25,Electrónicos");
+                // Estilo encabezados
+                var headerRange = worksheet.Range("A1:F1");
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.LightGray;
 
-            // Instrucciones como comentarios (líneas que empiezan con # no se procesan)
-            csv.AppendLine("# INSTRUCCIONES:");
-            csv.AppendLine("# - Los campos Código y Nombre son obligatorios");
-            csv.AppendLine("# - El código debe ser único (no debe existir en el sistema)");
-            csv.AppendLine("# - La categoría debe coincidir exactamente con una existente o dejar en blanco");
-            csv.AppendLine("# - Precio y stock deben ser valores numéricos");
-            csv.AppendLine("# - Use comillas dobles si un campo contiene comas");
+                // Datos de ejemplo
+                worksheet.Cell(2, 1).Value = "PROD001";
+                worksheet.Cell(2, 2).Value = "Producto de Ejemplo";
+                worksheet.Cell(2, 3).Value = "Opcional";
+                worksheet.Cell(2, 4).Value = 100.00;
+                worksheet.Cell(2, 5).Value = 50;
+                worksheet.Cell(2, 6).Value = "General";
 
-            // Agregar BOM para que Excel reconozca UTF-8 correctamente
-            var utf8WithBom = new UTF8Encoding(true);
-            var bytes = utf8WithBom.GetBytes(csv.ToString());
-            var stream = new MemoryStream(bytes);
+                // Instrucciones en otra hoja o celdas distantes
+                worksheet.Cell(5, 1).Value = "INSTRUCCIONES:";
+                worksheet.Cell(5, 1).Style.Font.Bold = true;
+                worksheet.Cell(6, 1).Value = "- Código y Nombre son obligatorios.";
+                worksheet.Cell(7, 1).Value = "- El Código debe ser único.";
+                worksheet.Cell(8, 1).Value = "- El formato de archivo debe ser .xlsx";
 
-            return File(stream, "text/csv", "Plantilla_Productos.csv");
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    var content = stream.ToArray();
+                    return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Plantilla_Productos.xlsx");
+                }
+            }
         }
 
         private bool ProductoExists(int id)
@@ -539,6 +558,65 @@ namespace Facturapro.Controllers
                 .ToListAsync();
 
             ViewData["CategoriaId"] = new SelectList(categorias, "Id", "Nombre", categoriaSeleccionada);
+        }
+
+        private async Task CargarProveedoresAsync(int? proveedorSeleccionado = null)
+        {
+            var proveedores = await _context.Proveedores
+                .Where(p => p.Activo)
+                .OrderBy(p => p.Nombre)
+                .ToListAsync();
+
+            ViewData["ProveedorId"] = new SelectList(proveedores, "Id", "Nombre", proveedorSeleccionado);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetProductosJson(int? categoriaId, string? buscar, int page = 1, int pageSize = 10)
+        {
+            var query = _context.Productos
+                .Include(p => p.Categoria)
+                .AsQueryable();
+
+            if (categoriaId.HasValue)
+            {
+                query = query.Where(p => p.CategoriaId == categoriaId);
+            }
+
+            if (!string.IsNullOrEmpty(buscar))
+            {
+                query = query.Where(p => p.Nombre.Contains(buscar) ||
+                                       p.Codigo.Contains(buscar) ||
+                                       (p.Descripcion != null && p.Descripcion.Contains(buscar)));
+            }
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            var productos = await query
+                .OrderBy(p => p.Nombre)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Codigo,
+                    p.Nombre,
+                    p.Descripcion,
+                    p.Precio,
+                    p.Stock,
+                    p.Activo,
+                    CategoriaNombre = p.Categoria != null ? p.Categoria.Nombre : "Sin categoría"
+                })
+                .ToListAsync();
+
+            return Json(new
+            {
+                items = productos,
+                totalItems,
+                totalPages,
+                currentPage = page,
+                pageSize
+            });
         }
     }
 

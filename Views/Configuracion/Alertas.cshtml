@@ -1,0 +1,482 @@
+@model Facturapro.Models.Entities.ConfiguracionEmpresa
+
+@{
+    ViewData["Title"] = "Alertas y Avisos";
+}
+
+<!-- Page Header -->
+<div class="page-header-title">
+    <h4 class="page-title">
+        <i class="ri-notification-3-line me-1"></i>
+        Alertas y Avisos
+    </h4>
+    <p class="text-muted">Configura las notificaciones y alertas del sistema para mantener el control de tu negocio</p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-danger border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row">
+    <!-- Columna Izquierda - Configuración -->
+    <div class="col-xl-8">
+        <form asp-action="Alertas" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- 1. Alertas de Inventario -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-warning rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Alertas de Inventario</h5>
+                            <p class="text-muted mb-0 small">Recibe notificaciones cuando el stock esté bajo</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="ri-percent-line me-1 text-warning"></i>
+                                Porcentaje de Alerta por Agotamiento
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="PorcentajeAlertaAgotamiento"
+                                       value="@Model.PorcentajeAlertaAgotamiento" min="1" max="100"
+                                       id="porcentajeAlerta" onchange="actualizarSlider(this.value)" />
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <small class="text-muted">Alerta cuando el stock alcance este % de la capacidad máxima</small>
+
+                            <!-- Slider visual -->
+                            <div class="mt-2">
+                                <input type="range" class="form-range" min="1" max="100"
+                                       value="@Model.PorcentajeAlertaAgotamiento"
+                                       id="sliderPorcentaje" onchange="actualizarInput(this.value)">
+                                <div class="d-flex justify-content-between small text-muted">
+                                    <span>0%</span>
+                                    <span id="sliderValue">@Model.PorcentajeAlertaAgotamiento%</span>
+                                    <span>100%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                <i class="ri-stack-line me-1 text-info"></i>
+                                Stock Mínimo de Alerta
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="StockMinimoAlerta"
+                                       value="@Model.StockMinimoAlerta" min="1" max="1000" />
+                                <span class="input-group-text">unidades</span>
+                            </div>
+                            <small class="text-muted">Alerta cuando queden menos de esta cantidad</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning border-0 mt-3 mb-0">
+                        <i class="ri-alert-line me-2"></i>
+                        <span>Estas alertas aparecerán en el <strong>Dashboard</strong> y en el módulo de <strong>Productos</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Alertas de Ventas y Crédito -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-danger rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Alertas de Ventas y Crédito</h5>
+                            <p class="text-muted mb-0 small">Controla los límites de ventas y crédito a clientes</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-soft-light h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm bg-soft-danger text-danger rounded-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ri-wallet-3-line"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-6 fw-semibold">Límite de Crédito</h6>
+                                                <p class="mb-0 text-muted small">Alertar cuando cliente supere límite</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg mb-0">
+                                            <input type="checkbox" class="form-check-input" id="AlertaCreditoMaximo"
+                                                   name="AlertaCreditoMaximo" value="true" @(Model.AlertaCreditoMaximo ? "checked" : "") />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-0 bg-soft-light h-100">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm bg-soft-warning text-warning rounded-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="ri-hand-coin-line"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fs-6 fw-semibold">Monto Máximo de Venta</h6>
+                                                <p class="mb-0 text-muted small">Alertar antes de superar el límite</p>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch form-switch-lg mb-0">
+                                            <input type="checkbox" class="form-check-input" id="AlertaVentaMaxima"
+                                                   name="AlertaVentaMaxima" value="true" @(Model.AlertaVentaMaxima ? "checked" : "") />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Alertas de Vencimiento -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Alertas de Vencimiento</h5>
+                            <p class="text-muted mb-0 small">Notificaciones sobre productos próximos a vencer</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="ri-calendar-event-line me-1 text-info"></i>
+                            Días de Antelación para Alerta de Vencimiento
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="DiasAlertaVencimiento"
+                                   value="@Model.DiasAlertaVencimiento" min="1" max="365" />
+                            <span class="input-group-text">días</span>
+                        </div>
+                        <small class="text-muted">Se alertará sobre productos que venzan en los próximos <strong>@Model.DiasAlertaVencimiento días</strong></small>
+                    </div>
+
+                    <div class="alert alert-info border-0 mb-0">
+                        <i class="ri-information-line me-2"></i>
+                        <span>Esta alerta es útil para productos perecederos o con fecha de caducidad</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Métodos de Notificación -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-success rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">4</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Métodos de Notificación</h5>
+                            <p class="text-muted mb-0 small">Elige cómo deseas recibir las alertas</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-soft-light h-100 text-center p-3">
+                                <div class="card-body">
+                                    <i class="ri-volume-up-line display-4 text-success mb-2"></i>
+                                    <h6 class="fw-semibold mb-2">Sonido</h6>
+                                    <p class="small text-muted mb-3">Reproducir sonido al recibir alertas</p>
+                                    <div class="form-check form-switch form-switch-lg d-inline-block mb-0">
+                                        <input type="checkbox" class="form-check-input" id="NotificacionSonido"
+                                               name="NotificacionSonido" value="true" @(Model.NotificacionSonido ? "checked" : "") />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-soft-light h-100 text-center p-3">
+                                <div class="card-body">
+                                    <i class="ri-notification-badge-line display-4 text-primary mb-2"></i>
+                                    <h6 class="fw-semibold mb-2">Popup</h6>
+                                    <p class="small text-muted mb-3">Mostrar notificaciones emergentes</p>
+                                    <div class="form-check form-switch form-switch-lg d-inline-block mb-0">
+                                        <input type="checkbox" class="form-check-input" id="NotificacionPopup"
+                                               name="NotificacionPopup" value="true" @(Model.NotificacionPopup ? "checked" : "") />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 bg-soft-light h-100 text-center p-3">
+                                <div class="card-body">
+                                    <i class="ri-mail-send-line display-4 text-warning mb-2"></i>
+                                    <h6 class="fw-semibold mb-2">Email</h6>
+                                    <p class="small text-muted mb-3">Enviar resumen diario por correo</p>
+                                    <div class="form-check form-switch form-switch-lg d-inline-block mb-0">
+                                        <input type="checkbox" class="form-check-input" id="NotificacionEmail"
+                                               name="NotificacionEmail" value="true" @(Model.NotificacionEmail ? "checked" : "") />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-light" onclick="history.back()">
+                    <i class="ri-arrow-left-line me-1"></i> Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-line me-1"></i> Guardar Configuración
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Estado y Vista Previa -->
+    <div class="col-xl-4">
+
+        <!-- Estado de Alertas Activas -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-dashboard-line me-1 text-primary"></i>
+                    Estado de Alertas
+                </h6>
+
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="ri-stack-line text-warning"></i>
+                                <span class="small">Stock Bajo</span>
+                            </div>
+                            <span class="badge bg-soft-warning text-warning">
+                                @Model.PorcentajeAlertaAgotamiento%
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="ri-hand-coin-line text-danger"></i>
+                                <span class="small">Límite Crédito</span>
+                            </div>
+                            @if (Model.AlertaCreditoMaximo)
+                            {
+                                <span class="badge bg-soft-success text-success">Activado</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-soft-secondary text-secondary">Desactivado</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="ri-calendar-event-line text-info"></i>
+                                <span class="small">Vencimiento</span>
+                            </div>
+                            <span class="badge bg-soft-info text-info">
+                                @Model.DiasAlertaVencimiento días
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista Previa de Notificación -->
+        <div class="card bg-soft-warning border-0">
+            <div class="card-body">
+                <h6 class="card-title text-warning fw-semibold mb-3">
+                    <i class="ri-eye-line me-1"></i>
+                    Vista Previa de Alerta
+                </h6>
+
+                <div class="alert alert-warning border-0 mb-0">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="ri-alert-fill fs-5 text-warning"></i>
+                        <div class="flex-grow-1">
+                            <strong class="d-block mb-1">Stock Bajo Detectado</strong>
+                            <small class="text-muted">
+                                El producto "Paracetamol 500mg" ha alcanzado el 20% de su capacidad máxima.
+                                Quedan 5 unidades en stock.
+                            </small>
+                            <div class="mt-2">
+                                <span class="badge bg-warning text-dark">Inventario</span>
+                                <span class="badge bg-light text-dark">Hace 2 min</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resumen de Configuración -->
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title mb-3">
+                    <i class="ri-check-double-line me-1 text-success"></i>
+                    Configuración Actual
+                </h6>
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-volume-up-line me-2 text-success"></i>Notificación Sonora</span>
+                        @if (Model.NotificacionSonido)
+                        {
+                            <i class="ri-checkbox-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="ri-close-circle-fill text-muted"></i>
+                        }
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-notification-badge-line me-2 text-primary"></i>Notificación Popup</span>
+                        @if (Model.NotificacionPopup)
+                        {
+                            <i class="ri-checkbox-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="ri-close-circle-fill text-muted"></i>
+                        }
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-mail-send-line me-2 text-warning"></i>Notificación Email</span>
+                        @if (Model.NotificacionEmail)
+                        {
+                            <i class="ri-checkbox-circle-fill text-success"></i>
+                        }
+                        else
+                        {
+                            <i class="ri-close-circle-fill text-muted"></i>
+                        }
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Tarjeta de Soporte -->
+        <div class="card bg-soft-success border-0">
+            <div class="card-body text-center">
+                <i class="ri-customer-service-2-line display-4 text-success mb-2"></i>
+                <h6 class="fw-semibold mb-1">¿Necesitas Ayuda?</h6>
+                <p class="small text-muted mb-2">
+                    Configura alertas personalizadas según las necesidades de tu negocio.
+                </p>
+                <a href="#" class="btn btn-success btn-sm">
+                    <i class="ri-message-line me-1"></i> Contactar Soporte
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Actualizar slider e input
+        function actualizarSlider(valor) {
+            document.getElementById('sliderPorcentaje').value = valor;
+            document.getElementById('sliderValue').textContent = valor + '%';
+        }
+
+        function actualizarInput(valor) {
+            document.getElementById('porcentajeAlerta').value = valor;
+            document.getElementById('sliderValue').textContent = valor + '%';
+        }
+
+        // Test de notificación
+        function testNotificacion() {
+            // Test de sonido
+            if (@Model.NotificacionSonido.ToString().ToLower()) {
+                // Sonido de notificación simple
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            }
+
+            // Test de popup
+            if (@Model.NotificacionPopup.ToString().ToLower()) {
+                // Mostrar toast de Bootstrap
+                const toastHtml = `
+                    <div class="toast show position-fixed top-0 end-0 m-3" role="alert" aria-live="assertive" aria-atomic="true" style="z-index: 9999;">
+                        <div class="toast-header bg-warning text-dark">
+                            <i class="ri-alert-line me-2"></i>
+                            <strong class="me-auto">Test de Alerta</strong>
+                            <small class="text-muted">Ahora</small>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            Esta es una prueba de notificación.<br>
+                            <small class="text-muted">Las alertas reales mostrarán información específica.</small>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', toastHtml);
+                setTimeout(() => {
+                    document.querySelector('.toast')?.remove();
+                }, 5000);
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarSlider(document.getElementById('porcentajeAlerta').value);
+        });
+    </script>
+}

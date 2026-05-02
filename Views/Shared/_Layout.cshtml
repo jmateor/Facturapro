@@ -1,8 +1,10 @@
-<!DOCTYPE html>
-<html lang="es" data-bs-theme="light" data-layout="vertical" data-layout-mode="fluid" data-topbar-color="light" data-menu-color="dark" data-sidenav-size="default" data-layout-position="fixed">
+@using Facturapro.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext _context
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     var csrfToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+    var warehouseCount = await _context.Almacenes.CountAsync();
 }
 <!DOCTYPE html>
 <html lang="es" data-bs-theme="light" data-layout="vertical" data-layout-mode="fluid" data-topbar-color="light" data-menu-color="dark" data-sidenav-size="default" data-layout-position="fixed">
@@ -10,6 +12,45 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Facturapro</title>
+
+    <!-- Escudo de Consola contra Extensiones -->
+    <script>
+        (function() {
+            const originalError = console.error;
+            const originalWarn = console.warn;
+            const noiseFilters = [
+                'tabs:outgoing',
+                'message channel closed',
+                'No Listener:',
+                'chrome-extension',
+                'moz-extension',
+                'asynchronous response',
+                'Permisos denegados'
+            ];
+
+            console.error = function() {
+                const msg = Array.from(arguments).join(' ');
+                if (noiseFilters.some(filter => msg.includes(filter))) return;
+                originalError.apply(console, arguments);
+            };
+
+            console.warn = function() {
+                const msg = Array.from(arguments).join(' ');
+                if (noiseFilters.some(filter => msg.includes(filter))) return;
+                originalWarn.apply(console, arguments);
+            };
+
+            // Capturar promesas no capturadas (Unhandled Rejections) de extensiones
+            window.addEventListener('unhandledrejection', function(event) {
+                const reason = event.reason ? (event.reason.message || event.reason.toString()) : '';
+                if (noiseFilters.some(filter => reason.includes(filter))) {
+                    event.preventDefault();
+                    return;
+                }
+            });
+        })();
+    </script>
+
     <meta content="Sistema de facturación electrónica para República Dominicana" name="description" />
     <meta content="Facturapro" name="author" />
     <meta name="csrf-token" content="@csrfToken" />
@@ -28,10 +69,75 @@
 
     <!-- Custom css -->
     <link href="~/css/custom-velonic.css" rel="stylesheet" type="text/css" asp-append-version="true" />
+    <link href="~/css/validacion.css" rel="stylesheet" type="text/css" asp-append-version="true" />
+    <link href="~/css/skeleton.css" rel="stylesheet" type="text/css" asp-append-version="true" />
+    <link href="~/css/toasts.css" rel="stylesheet" type="text/css" asp-append-version="true" />
 
     @await RenderSectionAsync("Styles", required: false)
+
+    <style>
+        /* ===== TRANSICIONES ELEGANTES DE PÁGINA ===== */
+
+        /* Barra de progreso superior sutil */
+        #page-loader-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 2px;
+            width: 0%;
+            background: #6658dd;
+            z-index: 100000;
+            transition: width 0.3s ease-out;
+            border-radius: 0 2px 2px 0;
+        }
+        #page-loader-bar.loading { width: 60%; }
+        #page-loader-bar.done { width: 100%; opacity: 0; transition: width 0.2s ease, opacity 0.3s ease 0.1s; }
+
+        /* Contenido principal - transición sutil */
+        .content-page {
+            opacity: 1;
+            transition: opacity 0.15s ease-out;
+        }
+
+        /* Efecto de salida al navegar - muy sutil */
+        .page-exit {
+            opacity: 0.7 !important;
+        }
+
+        /* Overlay sutil */
+        #page-transition-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(102, 88, 221, 0.03);
+            z-index: 99998;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease-out;
+        }
+        #page-transition-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        [data-bs-theme='dark'] #page-transition-overlay {
+            background: rgba(102, 88, 221, 0.05);
+        }
+
+        /* Sidebar - hover suave */
+        .side-nav-link {
+            transition: all 0.2s ease !important;
+        }
+        .side-nav-link:hover {
+            padding-left: 18px !important;
+            background-color: rgba(102, 88, 221, 0.1);
+        }
+    </style>
 </head>
 <body>
+    <!-- Elementos de Transición Premium -->
+    <div id="page-loader-bar"></div>
+    <div id="page-transition-overlay"></div>
+
     <!-- Begin page -->
     <div class="wrapper">
 
@@ -79,6 +185,12 @@
                 </div>
 
                 <ul class="topbar-menu d-flex align-items-center gap-3">
+                    <li class="d-none d-sm-inline-block">
+                        <div class="nav-link" id="light-dark-mode" style="cursor: pointer;">
+                            <i class="ri-moon-line fs-22" id="theme-icon"></i>
+                        </div>
+                    </li>
+
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <li class="dropdown">
@@ -165,7 +277,7 @@
                     <li class="side-nav-title">Principal</li>
 
                     <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Home")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                        <a href="@Url.Action("Index", "Home")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")">
                             <i class="ri-dashboard-3-line"></i>
                             <span> Dashboard </span>
                         </a>
@@ -192,90 +304,125 @@
                         </a>
                     </li>
 
-                    <li class="side-nav-title">Catálogo</li>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Gerente") || User.IsInRole("Vendedor"))
+                    {
+                        <li class="side-nav-title">Catálogo</li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Productos")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Productos" ? "active" : "")">
-                            <i class="ri-box-3-line"></i>
-                            <span> Productos </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Productos")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Productos" ? "active" : "")">
+                                <i class="ri-box-3-line"></i>
+                                <span> Productos </span>
+                            </a>
+                        </li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Categorias")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Categorias" ? "active" : "")">
-                            <i class="ri-price-tag-3-line"></i>
-                            <span> Categorías </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Categorias")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Categorias" ? "active" : "")">
+                                <i class="ri-price-tag-3-line"></i>
+                                <span> Categorías </span>
+                            </a>
+                        </li>
+                    }
 
-                    <li class="side-nav-title">Inventario</li>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Gerente"))
+                    {
+                        <li class="side-nav-title mt-2">Configuración</li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Kalder")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Kalder" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
-                            <i class="ri-archive-line"></i>
-                            <span> Kalder - Almacén </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Kalder")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Kalder" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")">
+                                <i class="ri-archive-line"></i>
+                                <span> Kalder - Almacén </span>
+                            </a>
+                        </li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Proveedores")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Proveedores" ? "active" : "")">
-                            <i class="ri-truck-line"></i>
-                            <span> Proveedores </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Proveedores")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Proveedores" ? "active" : "")">
+                                <i class="ri-truck-line"></i>
+                                <span> Proveedores </span>
+                            </a>
+                        </li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Compras")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Compras" ? "active" : "")">
-                            <i class="ri-shopping-bag-line"></i>
-                            <span> Compras </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Compras")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Compras" ? "active" : "")">
+                                <i class="ri-shopping-bag-line"></i>
+                                <span> Compras </span>
+                            </a>
+                        </li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Historial", "Kalder")" class="side-nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Historial" ? "active" : "")">
-                            <i class="ri-history-line"></i>
-                            <span> Historial </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Historial", "Kalder")" class="side-nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Historial" ? "active" : "")">
+                                <i class="ri-history-line"></i>
+                                <span> Historial </span>
+                            </a>
+                        </li>
 
-                    <li class="side-nav-title">DGII - Facturación Electrónica</li>
+                        @if (warehouseCount > 1)
+                        {
+                            <li class="side-nav-item">
+                                <a href="@Url.Action("Transferencias", "Sucursales")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Sucursales" && ViewContext.RouteData.Values["Action"]?.ToString() == "Transferencias" ? "active" : "")">
+                                    <i class="ri-swap-box-line"></i>
+                                    <span> Transferencias </span>
+                                </a>
+                            </li>
+                        }
+                    }
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Rangos")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rangos" ? "active" : "")">
-                            <i class="ri-file-list-2-line"></i>
-                            <span> Rangos de Numeración </span>
-                        </a>
-                    </li>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="side-nav-title">DGII - Facturación Electrónica</li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Configuracion")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Configuracion" ? "active" : "")">
-                            <i class="ri-settings-3-line"></i>
-                            <span> Configuración </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Rangos")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Rangos" ? "active" : "")">
+                                <i class="ri-file-list-2-line"></i>
+                                <span> Rangos de Numeración </span>
+                            </a>
+                        </li>
 
-                    <li class="side-nav-title">Reportes</li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Fiscal")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Fiscal" ? "active" : "")">
+                                <i class="ri-article-line"></i>
+                                <span> Reportes Fiscales (606/607) </span>
+                            </a>
+                        </li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Dashboard", "Reportes")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reportes" && ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
-                            <i class="ri-bar-chart-box-line"></i>
-                            <span> Dashboard Completo </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Configuracion")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Configuracion" ? "active" : "")">
+                                <i class="ri-settings-3-line"></i>
+                                <span> Configuración </span>
+                            </a>
+                        </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Index", "Auditoria")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Auditoria" ? "active" : "")">
+                                <i class="ri-history-line"></i>
+                                <span> Auditoría del Sistema </span>
+                            </a>
+                        </li>
+                    }
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Ventas", "Reportes")" class="side-nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Ventas" ? "active" : "")">
-                            <i class="ri-line-chart-line"></i>
-                            <span> Reporte de Ventas </span>
-                        </a>
-                    </li>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Gerente"))
+                    {
+                        <li class="side-nav-title">Reportes</li>
 
-                    <li class="side-nav-item">
-                        <a href="@Url.Action("Inventario", "Reportes")" class="side-nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Inventario" ? "active" : "")">
-                            <i class="ri-pie-chart-line"></i>
-                            <span> Reporte de Inventario </span>
-                        </a>
-                    </li>
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Dashboard", "Reportes")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reportes" && ViewContext.RouteData.Values["Action"]?.ToString() == "Dashboard" ? "active" : "")">
+                                <i class="ri-bar-chart-box-line"></i>
+                                <span> Dashboard Completo </span>
+                            </a>
+                        </li>
+
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Ventas", "Reportes")" class="side-nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Ventas" ? "active" : "")">
+                                <i class="ri-line-chart-line"></i>
+                                <span> Reporte de Ventas </span>
+                            </a>
+                        </li>
+
+                        <li class="side-nav-item">
+                            <a href="@Url.Action("Inventario", "Reportes")" class="side-nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Inventario" ? "active" : "")">
+                                <i class="ri-pie-chart-line"></i>
+                                <span> Reporte de Inventario </span>
+                            </a>
+                        </li>
+                    }
 
                 </ul>
                 <!--- End Sidemenu -->
@@ -323,12 +470,73 @@
     </div>
     <!-- END wrapper -->
 
+    <!-- Buscador Global (Command Palette) -->
+    <partial name="_GlobalSearch" />
+
+    <!-- Notificaciones Toast -->
+    <partial name="_Toasts" />
+
+    <script>
+        // Filtro para silenciar errores ruidosos de extensiones del navegador
+        (function() {
+            const originalError = console.error;
+            console.error = function() {
+                const msg = arguments[0] ? arguments[0].toString() : "";
+                if (msg.includes("tabs:outgoing") || msg.includes("message channel closed") || msg.includes("No Listener")) {
+                    // Silenciar ruido de extensiones
+                    return;
+                }
+                originalError.apply(console, arguments);
+            };
+        })();
+    </script>
+
     <!-- Vendor js -->
     <script src="~/velonic/js/vendor.min.js"></script>
 
     <!-- App js -->
     <script src="~/velonic/js/app.min.js"></script>
 
+    <!-- Validación en Tiempo Real -->
+    <script src="~/js/validacion.js" asp-append-version="true"></script>
+
+    <!-- Buscador Global -->
+    <script src="~/js/search.js" asp-append-version="true"></script>
+
+    <!-- Skeleton Loaders -->
+    <script src="~/js/skeleton.js" asp-append-version="true"></script>
+
+    <!-- Toast Notifications -->
+    <script src="~/js/toasts.js" asp-append-version="true"></script>
+
+    <!-- UI Enhancements -->
+    <script src="~/js/ui-enhancements.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Form Guard (Prevent Data Loss) -->
+    <script src="~/js/form-guard.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
+
+
+    <script>
+    </script>
+    <script>
+        // Manejo Global de TempData con Toasts
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <text>window.Toast.success("¡Éxito!", "@TempData["SuccessMessage"]");</text>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <text>window.Toast.error("Error", "@TempData["ErrorMessage"]");</text>
+            }
+            @if (TempData["InfoMessage"] != null)
+            {
+                <text>window.Toast.info("Información", "@TempData["InfoMessage"]");</text>
+            }
+        });
+    </script>
 </body>
 </html>

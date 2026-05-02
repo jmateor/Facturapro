@@ -1,0 +1,445 @@
+@model Facturapro.Models.Entities.ConfiguracionEmpresa
+@{
+    ViewData["Title"] = "Métodos de Pago";
+}
+
+<!-- start page title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <h4 class="page-title">
+                <i class="ri-bank-card-line me-2"></i>
+                Métodos de Pago
+            </h4>
+            <p class="text-muted mb-0">Configure las formas de pago que acepta su negocio</p>
+        </div>
+    </div>
+</div>
+<!-- end page title -->
+
+<div class="row">
+    <!-- Columna Izquierda - Formulario -->
+    <div class="col-xl-8">
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="ri-check-double-line me-2"></i>@TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="ri-error-warning-line me-2"></i>@TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <form asp-action="MetodosPago" method="post">
+            @Html.AntiForgeryToken()
+
+            <!-- 1. Métodos de Pago Aceptados -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">1</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Métodos de Pago Aceptados</h5>
+                            <p class="text-muted mb-0 small">Active las formas de pago que su negocio acepta</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Efectivo -->
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm bg-soft-primary rounded-circle d-flex align-items-center justify-content-center">
+                                                <i class="ri-money-dollar-circle-line text-primary"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Efectivo</h6>
+                                            <p class="text-muted mb-0 small">Pagos en moneda nacional o extranjera</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="form-check form-switch form-switch-lg">
+                                                <input type="checkbox" class="form-check-input"
+                                                       asp-for="AceptarEfectivo" id="AceptarEfectivo">
+                                                <label class="form-check-label" for="AceptarEfectivo"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta -->
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm bg-soft-success rounded-circle d-flex align-items-center justify-content-center">
+                                                <i class="ri-bank-card-line text-success"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Tarjeta de Crédito/Débito</h6>
+                                            <p class="text-muted mb-0 small">Visa, MasterCard, American Express</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="form-check form-switch form-switch-lg">
+                                                <input type="checkbox" class="form-check-input"
+                                                       asp-for="AceptarTarjeta" id="AceptarTarjeta">
+                                                <label class="form-check-label" for="AceptarTarjeta"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transferencia -->
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm bg-soft-info rounded-circle d-flex align-items-center justify-content-center">
+                                                <i class="ri-exchange-dollar-line text-info"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Transferencia Bancaria</h6>
+                                            <p class="text-muted mb-0 small">Transferencias desde cuentas bancarias</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="form-check form-switch form-switch-lg">
+                                                <input type="checkbox" class="form-check-input"
+                                                       asp-for="AceptarTransferencia" id="AceptarTransferencia">
+                                                <label class="form-check-label" for="AceptarTransferencia"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sinpe Móvil -->
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm bg-soft-warning rounded-circle d-flex align-items-center justify-content-center">
+                                                <i class="ri-smartphone-line text-warning"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Sinpe Móvil</h6>
+                                            <p class="text-muted mb-0 small">Billetera móvil del Banco Central</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="form-check form-switch form-switch-lg">
+                                                <input type="checkbox" class="form-check-input"
+                                                       asp-for="AceptarSinpe" id="AceptarSinpe">
+                                                <label class="form-check-label" for="AceptarSinpe"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Crédito -->
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm bg-soft-danger rounded-circle d-flex align-items-center justify-content-center">
+                                                <i class="ri-hand-coin-line text-danger"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Crédito</h6>
+                                            <p class="text-muted mb-0 small">Ventas a crédito con plazo de pago</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="form-check form-switch form-switch-lg">
+                                                <input type="checkbox" class="form-check-input"
+                                                       asp-for="AceptarCredito" id="AceptarCredito">
+                                                <label class="form-check-label" for="AceptarCredito"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mixto -->
+                        <div class="col-md-6">
+                            <div class="card border">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm bg-soft-purple rounded-circle d-flex align-items-center justify-content-center">
+                                                <i class="ri-stack-line text-purple"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-1">Pago Mixto</h6>
+                                            <p class="text-muted mb-0 small">Combinación de dos o más métodos</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <div class="form-check form-switch form-switch-lg">
+                                                <input type="checkbox" class="form-check-input"
+                                                       asp-for="AceptarMixto" id="AceptarMixto">
+                                                <label class="form-check-label" for="AceptarMixto"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Configuración de Pagos -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-success rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Configuración de Pagos</h5>
+                            <p class="text-muted mb-0 small">Defina las preferencias y reglas para los pagos</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Método de Pago por Defecto -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="MetodoPagoPorDefecto" class="form-label"></label>
+                                <select asp-for="MetodoPagoPorDefecto" class="form-select">
+                                    <option value="1">Efectivo</option>
+                                    <option value="2">Tarjeta de Crédito/Débito</option>
+                                    <option value="3">Transferencia Bancaria</option>
+                                    <option value="4">Sinpe Móvil</option>
+                                    <option value="5">Crédito</option>
+                                    <option value="6">Pago Mixto</option>
+                                </select>
+                                <small class="text-muted">Método seleccionado automáticamente en el POS</small>
+                            </div>
+                        </div>
+
+                        <!-- Mostrar Opciones de Pago -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input type="checkbox" class="form-check-input"
+                                           asp-for="MostrarOpcionesPago" id="MostrarOpcionesPago">
+                                    <label class="form-check-label" for="MostrarOpcionesPago">
+                                        <strong>Mostrar Opciones de Pago</strong>
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-1">Desactive para ocultar las opciones de pago en el POS</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Configuración de Cambio -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Configuración de Cambio</h5>
+                            <p class="text-muted mb-0 small">Reglas para el manejo de cambio en pagos en efectivo</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Permitir Cambio -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input type="checkbox" class="form-check-input"
+                                           asp-for="PermitirCambio" id="PermitirCambio">
+                                    <label class="form-check-label" for="PermitirCambio">
+                                        <strong>Permitir Cambio</strong>
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-1">El sistema calculará el cambio a devolver</small>
+                            </div>
+                        </div>
+
+                        <!-- Preguntar por Cambio -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input type="checkbox" class="form-check-input"
+                                           asp-for="PreguntarCambio" id="PreguntarCambio">
+                                    <label class="form-check-label" for="PreguntarCambio">
+                                        <strong>Preguntar por Cambio</strong>
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-1">Mostrar modal para preguntar con cuánto paga el cliente</small>
+                            </div>
+                        </div>
+
+                        <!-- Monto Máximo para Cambio -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label asp-for="MontoMaximoCambio" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" class="form-control" asp-for="MontoMaximoCambio">
+                                </div>
+                                <small class="text-muted">Deje en 0 para sin límite</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="ri-save-3-line me-2"></i>Guardar Configuración
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="ri-arrow-left-line me-2"></i>Volver
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Columna Derecha - Info Cards -->
+    <div class="col-xl-4">
+        <!-- Métodos Activos -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="ri-checkbox-circle-line text-success me-2"></i>
+                    Métodos Activos
+                </h5>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-money-dollar-circle-line me-2 text-primary"></i>Efectivo</span>
+                        <span class="badge bg-soft-primary text-primary" id="badge-efectivo">Activo</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-bank-card-line me-2 text-success"></i>Tarjeta</span>
+                        <span class="badge bg-soft-success text-success" id="badge-tarjeta">Activo</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-exchange-dollar-line me-2 text-info"></i>Transferencia</span>
+                        <span class="badge bg-soft-info text-info" id="badge-transferencia">Activo</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-smartphone-line me-2 text-warning"></i>Sinpe Móvil</span>
+                        <span class="badge bg-soft-warning text-warning" id="badge-sinpe">Activo</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-hand-coin-line me-2 text-danger"></i>Crédito</span>
+                        <span class="badge bg-soft-danger text-danger" id="badge-credito">Activo</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="ri-stack-line me-2 text-purple"></i>Pago Mixto</span>
+                        <span class="badge bg-soft-purple text-purple" id="badge-mixto">Activo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Importante -->
+        <div class="card bg-soft-warning border-0">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="ri-information-fill text-warning me-2"></i>
+                    Información Importante
+                </h6>
+                <ul class="small mb-0 ps-3">
+                    <li class="mb-2">Los métodos marcados como activos se mostrarán en el punto de venta.</li>
+                    <li class="mb-2">El método por defecto se seleccionará automáticamente al crear una venta.</li>
+                    <li class="mb-2">El pago mixto permite combinar hasta 3 métodos diferentes.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Ayuda -->
+        <div class="card bg-soft-info border-0">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="ri-customer-service-2-line text-info me-2"></i>
+                    ¿Necesita Ayuda?
+                </h6>
+                <p class="small mb-2">
+                    Configure los métodos de pago según las necesidades de su negocio y las preferencias de sus clientes.
+                </p>
+                <a href="#" class="btn btn-sm btn-info">
+                    <i class="ri-book-open-line me-1"></i>Ver documentación
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Actualizar badges en tiempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            actualizarBadges();
+
+            // Agregar listeners a todos los checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
+                checkbox.addEventListener('change', actualizarBadges);
+            });
+        });
+
+        function actualizarBadges() {
+            // Efectivo
+            const efectivo = document.getElementById('AceptarEfectivo').checked;
+            document.getElementById('badge-efectivo').className = efectivo ? 'badge bg-soft-primary text-primary' : 'badge bg-soft-secondary text-secondary';
+            document.getElementById('badge-efectivo').textContent = efectivo ? 'Activo' : 'Inactivo';
+
+            // Tarjeta
+            const tarjeta = document.getElementById('AceptarTarjeta').checked;
+            document.getElementById('badge-tarjeta').className = tarjeta ? 'badge bg-soft-success text-success' : 'badge bg-soft-secondary text-secondary';
+            document.getElementById('badge-tarjeta').textContent = tarjeta ? 'Activo' : 'Inactivo';
+
+            // Transferencia
+            const transferencia = document.getElementById('AceptarTransferencia').checked;
+            document.getElementById('badge-transferencia').className = transferencia ? 'badge bg-soft-info text-info' : 'badge bg-soft-secondary text-secondary';
+            document.getElementById('badge-transferencia').textContent = transferencia ? 'Activo' : 'Inactivo';
+
+            // Sinpe
+            const sinpe = document.getElementById('AceptarSinpe').checked;
+            document.getElementById('badge-sinpe').className = sinpe ? 'badge bg-soft-warning text-warning' : 'badge bg-soft-secondary text-secondary';
+            document.getElementById('badge-sinpe').textContent = sinpe ? 'Activo' : 'Inactivo';
+
+            // Crédito
+            const credito = document.getElementById('AceptarCredito').checked;
+            document.getElementById('badge-credito').className = credito ? 'badge bg-soft-danger text-danger' : 'badge bg-soft-secondary text-secondary';
+            document.getElementById('badge-credito').textContent = credito ? 'Activo' : 'Inactivo';
+
+            // Mixto
+            const mixto = document.getElementById('AceptarMixto').checked;
+            document.getElementById('badge-mixto').className = mixto ? 'badge bg-soft-purple text-purple' : 'badge bg-soft-secondary text-secondary';
+            document.getElementById('badge-mixto').textContent = mixto ? 'Activo' : 'Inactivo';
+        }
+    </script>
+}

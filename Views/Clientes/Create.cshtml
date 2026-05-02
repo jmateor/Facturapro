@@ -42,7 +42,7 @@
 <div class="row">
     <!-- Columna Izquierda - Formulario -->
     <div class="col-xl-8">
-        <form asp-action="Create" method="post" id="clienteForm">
+        <form asp-action="Create" method="post" id="clienteForm" class="dirty-check">
             @Html.AntiForgeryToken()
 
             <!-- Sección 1: Información Básica -->
@@ -72,9 +72,16 @@
                             <label asp-for="RNC" class="form-label">
                                 RNC / Cédula <span class="text-danger">*</span>
                             </label>
-                            <input asp-for="RNC" class="form-control" placeholder="Ej: 131703836" maxlength="11" inputmode="numeric" />
+                            <div class="input-group">
+                                <input asp-for="RNC" class="form-control" placeholder="Ej: 131703836" maxlength="11" inputmode="numeric" id="rncInput" />
+                                <button class="btn btn-outline-primary" type="button" id="btnValidarRNC" title="Validar en DGII">
+                                    <span id="spinnerRnc" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    <i id="iconRnc" class="ri-search-eye-line"></i>
+                                </button>
+                            </div>
                             <span asp-validation-for="RNC" class="text-danger small"></span>
                             <small class="text-muted d-block mt-1">9 dígitos (persona) u 11 (empresa)</small>
+                            <div id="rncFeedback" class="small mt-1 d-none"></div>
                         </div>
 
                         <div class="col-md-6">
@@ -176,6 +183,9 @@
 
             <!-- Botones de Acción -->
             <div class="d-flex gap-2 justify-content-end mt-4">
+                <button type="button" class="btn btn-soft-info" id="btnEscanearCedula">
+                    <i class="ri-camera-lens-line me-1"></i> Escanear Cédula (OCR)
+                </button>
                 <button type="button" class="btn btn-light" onclick="history.back()">
                     <i class="ri-arrow-left-line me-1"></i> Cancelar
                 </button>
@@ -185,6 +195,44 @@
             </div>
         </form>
     </div>
+
+    <!-- Modal de Cámara para OCR -->
+    <div class="modal fade" id="modalCamera" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title text-white"><i class="ri-camera-line me-2"></i>Escanear Cédula Dominicana</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0 position-relative bg-black" style="min-height: 400px;">
+                    <video id="video" class="w-100 h-100" style="object-fit: cover;" autoplay playsinline></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    
+                    <!-- Guía visual para la cédula -->
+                    <div class="position-absolute top-50 start-50 translate-middle border border-2 border-primary rounded" 
+                         style="width: 85%; height: 60%; pointer-events: none; border-style: dashed !important; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);">
+                        <div class="position-absolute top-0 start-50 translate-middle-x bg-primary text-white px-2 py-1 small rounded-bottom">
+                            Coloque la cédula aquí
+                        </div>
+                    </div>
+
+                    <div id="ocrStatus" class="position-absolute bottom-0 start-0 end-0 p-3 bg-dark bg-opacity-75 text-white text-center d-none">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        <span id="ocrStatusText">Procesando imagen...</span>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-0 bg-light">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary btn-lg px-5 shadow" id="btnCapture">
+                        <i class="ri-camera-fill me-1"></i> Capturar y Leer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Tesseract.js -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <!-- Columna Derecha - Ayuda y Resumen -->
     <div class="col-xl-4">
@@ -273,88 +321,277 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // Validación de RNC - Solo números
-        document.querySelector('input[name="RNC"]').addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
-        });
+    <!-- Modal de Cámara para OCR -->
+    <div class="modal fade" id="modalCamera" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title text-white"><i class="ri-camera-line me-2"></i>Escanear Cédula Dominicana</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0 position-relative bg-black" style="min-height: 400px;">
+                    <video id="video" class="w-100 h-100" style="object-fit: cover;" autoplay playsinline></video>
+                    <canvas id="canvas" style="display:none;"></canvas>
+                    
+                    <div class="position-absolute top-50 start-50 translate-middle border border-2 border-primary rounded" 
+                         style="width: 85%; height: 60%; pointer-events: none; border-style: dashed !important; box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);">
+                        <div class="position-absolute top-0 start-50 translate-middle-x bg-primary text-white px-2 py-1 small rounded-bottom">
+                            Coloque la cédula aquí
+                        </div>
+                    </div>
 
-        // Validación de Teléfono - Formato dominicano
-        document.querySelector('input[name="Telefono"]').addEventListener('input', function(e) {
-            let value = this.value.replace(/[^0-9]/g, '');
-            if (value.length > 3 && value.length <= 6) {
-                value = value.slice(0, 3) + '-' + value.slice(3);
-            } else if (value.length > 6) {
-                value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                    <div id="ocrStatus" class="position-absolute bottom-0 start-0 end-0 p-3 bg-dark bg-opacity-75 text-white text-center d-none">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        <span id="ocrStatusText">Procesando imagen...</span>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center border-0 bg-light">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary btn-lg px-5 shadow" id="btnCapture">
+                        <i class="ri-camera-fill me-1"></i> Capturar y Leer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de Tesseract.js -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+    @section Scripts {
+        <script>
+            // Validación Automática de RNC (DGII)
+            const rncInput = document.getElementById('rncInput');
+            const btnValidarRNC = document.getElementById('btnValidarRNC');
+            const spinnerRnc = document.getElementById('spinnerRnc');
+            const iconRnc = document.getElementById('iconRnc');
+            const rncFeedback = document.getElementById('rncFeedback');
+            const nombreInput = document.querySelector('input[name="Nombre"]');
+
+            async function validarRNC() {
+                const rnc = rncInput.value.trim();
+                if (rnc.length !== 9 && rnc.length !== 11) return;
+
+                // Mostrar cargando
+                spinnerRnc.classList.remove('d-none');
+                iconRnc.classList.add('d-none');
+                rncFeedback.classList.remove('d-none');
+                rncFeedback.className = 'small mt-1 text-muted';
+                rncFeedback.innerHTML = '<i class="ri-loader-4-line ri-spin me-1"></i> Consultando DGII...';
+
+                try {
+                    const response = await fetch(`/api/validation/rnc/${rnc}`);
+                    const data = await response.json();
+
+                    if (data.esValido) {
+                        rncInput.classList.add('is-valid');
+                        rncInput.classList.remove('is-invalid');
+                        rncInput.classList.add('border-success');
+                        
+                        let feedbackMsg = `<i class="ri-checkbox-circle-line me-1"></i> ${data.mensaje}`;
+                        if (data.estado) feedbackMsg += ` | Estado: <strong>${data.estado}</strong>`;
+                        
+                        rncFeedback.className = data.estado === 'SUSPENDIDO' ? 'small mt-1 text-danger fw-bold' : 'small mt-1 text-success fw-semibold';
+                        rncFeedback.innerHTML = feedbackMsg;
+
+                        // Notificación flotante (usando el alert del sistema o toast si estuviera disponible)
+                        const toast = document.createElement('div');
+                        toast.className = 'alert alert-success position-fixed top-0 end-0 m-3 shadow-lg';
+                        toast.style.zIndex = '9999';
+                        toast.innerHTML = '<i class="ri-checkbox-circle-line me-2"></i> ¡Documento Válido!';
+                        document.body.appendChild(toast);
+                        setTimeout(() => toast.remove(), 3000);
+                        
+                        if (data.nombre) {
+                            nombreInput.value = data.nombre;
+                            nombreInput.classList.add('is-valid');
+                            
+                            // Efecto de brillo
+                            nombreInput.style.backgroundColor = '#e8f5e9';
+                            setTimeout(() => nombreInput.style.backgroundColor = '', 1000);
+                        }
+                    } else {
+                        rncInput.classList.add('is-invalid');
+                        rncInput.classList.remove('is-valid');
+                        rncFeedback.className = 'small mt-1 text-danger';
+                        rncFeedback.innerHTML = `<i class="ri-error-warning-line me-1"></i> ${data.mensaje}`;
+                    }
+                } catch (error) {
+                    console.error('Error validando RNC:', error);
+                    rncFeedback.className = 'small mt-1 text-warning';
+                    rncFeedback.innerHTML = '<i class="ri-alert-line me-1"></i> No se pudo conectar con el servicio.';
+                } finally {
+                    spinnerRnc.classList.add('d-none');
+                    iconRnc.classList.remove('d-none');
+                }
             }
-            this.value = value;
-        });
 
-        // Validación de Email - Convertir a minúsculas
-        document.querySelector('input[name="Email"]').addEventListener('input', function(e) {
-            this.value = this.value.toLowerCase();
-        });
+            rncInput.addEventListener('blur', validarRNC);
+            btnValidarRNC.addEventListener('click', validarRNC);
 
-        // Validación del formulario antes de enviar
-        document.getElementById('clienteForm').addEventListener('submit', function(e) {
-            let isValid = true;
-            const camposObligatorios = ['Nombre', 'RNC', 'Email'];
+            // Validación de RNC - Solo números
+            rncInput.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+                this.classList.remove('is-valid', 'is-invalid');
+                rncFeedback.classList.add('d-none');
+            });
 
-            camposObligatorios.forEach(function(campo) {
-                const elemento = document.querySelector('input[name="' + campo + '"]');
-                if (elemento && !elemento.value.trim()) {
-                    isValid = false;
-                    elemento.classList.add('is-invalid');
-                    elemento.classList.add('border-danger');
-                } else if (elemento) {
-                    elemento.classList.remove('is-invalid');
-                    elemento.classList.remove('border-danger');
+            // Validación de Teléfono - Formato dominicano
+            document.querySelector('input[name="Telefono"]').addEventListener('input', function(e) {
+                let value = this.value.replace(/[^0-9]/g, '');
+                if (value.length > 3 && value.length <= 6) {
+                    value = value.slice(0, 3) + '-' + value.slice(3);
+                } else if (value.length > 6) {
+                    value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                }
+                this.value = value;
+            });
+
+            // Validación de Email - Convertir a minúsculas
+            document.querySelector('input[name="Email"]').addEventListener('input', function(e) {
+                this.value = this.value.toLowerCase();
+            });
+
+            // Validación del formulario antes de enviar
+            document.getElementById('clienteForm').addEventListener('submit', function(e) {
+                let isValid = true;
+                const camposObligatorios = ['Nombre', 'RNC', 'Email'];
+
+                camposObligatorios.forEach(function(campo) {
+                    const elemento = document.querySelector('input[name="' + campo + '"]');
+                    if (elemento && !elemento.value.trim()) {
+                        isValid = false;
+                        elemento.classList.add('is-invalid');
+                        elemento.classList.add('border-danger');
+                    } else if (elemento) {
+                        elemento.classList.remove('is-invalid');
+                        elemento.classList.remove('border-danger');
+                    }
+                });
+
+                const rncInput = document.querySelector('input[name="RNC"]');
+                if (rncInput && rncInput.value.trim()) {
+                    const rncValor = rncInput.value.trim();
+                    if (rncValor.length !== 9 && rncValor.length !== 11) {
+                        isValid = false;
+                        rncInput.classList.add('is-invalid');
+                        rncInput.classList.add('border-danger');
+                    }
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    const alerta = document.createElement('div');
+                    alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
+                    alerta.setAttribute('role', 'alert');
+                    alerta.innerHTML = `
+                        <i class="ri-error-warning-line me-2"></i>
+                        Por favor completa los campos requeridos y verifica el formato del RNC.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+
+                    const formContainer = document.querySelector('.page-header-title');
+                    const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
+                    if (alertaExistente) {
+                        alertaExistente.remove();
+                    }
+                    formContainer.after(alerta);
+                    document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             });
 
-            // Validar formato de RNC (9 o 11 dígitos)
-            const rncInput = document.querySelector('input[name="RNC"]');
-            if (rncInput && rncInput.value.trim()) {
-                const rncValor = rncInput.value.trim();
-                if (rncValor.length !== 9 && rncValor.length !== 11) {
-                    isValid = false;
-                    rncInput.classList.add('is-invalid');
-                    rncInput.classList.add('border-danger');
-                }
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-
-                // Mostrar alerta de error
-                const alerta = document.createElement('div');
-                alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
-                alerta.setAttribute('role', 'alert');
-                alerta.innerHTML = `
-                    <i class="ri-error-warning-line me-2"></i>
-                    Por favor completa los campos requeridos y verifica el formato del RNC.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-
-                const formContainer = document.querySelector('.page-header-title');
-                const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
-                if (alertaExistente) {
-                    alertaExistente.remove();
-                }
-                formContainer.after(alerta);
-
-                // Scroll al primer error
-                document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
-
-        // Remover clase de error al escribir
-        document.querySelectorAll('.form-control').forEach(function(input) {
-            input.addEventListener('input', function() {
-                this.classList.remove('is-invalid');
-                this.classList.remove('border-danger');
+            document.querySelectorAll('.form-control').forEach(function(input) {
+                input.addEventListener('input', function() {
+                    this.classList.remove('is-invalid');
+                    this.classList.remove('border-danger');
+                });
             });
-        });
-    </script>
-}
+
+            // --- Lógica de OCR para Cédula Dominicana ---
+            const btnEscanear = document.getElementById('btnEscanearCedula');
+            const modalCameraElement = document.getElementById('modalCamera');
+            const modalCamera = new bootstrap.Modal(modalCameraElement);
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const btnCapture = document.getElementById('btnCapture');
+            const ocrStatus = document.getElementById('ocrStatus');
+            const ocrStatusText = document.getElementById('ocrStatusText');
+            let stream = null;
+
+            btnEscanear.addEventListener('click', async () => {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'environment' } 
+                    });
+                    video.srcObject = stream;
+                    modalCamera.show();
+                } catch (err) {
+                    alert('No se pudo acceder a la cámara: ' + err.message);
+                }
+            });
+
+            modalCameraElement.addEventListener('hidden.bs.modal', () => {
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            });
+
+            btnCapture.addEventListener('click', async () => {
+                const context = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                ocrStatus.classList.remove('d-none');
+                ocrStatusText.textContent = 'Iniciando reconocimiento...';
+                btnCapture.disabled = true;
+
+                try {
+                    const worker = await Tesseract.createWorker('spa');
+                    ocrStatusText.textContent = 'Analizando texto...';
+                    
+                    const { data: { text } } = await worker.recognize(canvas);
+                    console.log('Texto extraído:', text);
+
+                    const cedulaRegex = /(\d{3}-?\d{7}-?\d{1})/;
+                    const cedulaMatch = text.match(cedulaRegex);
+
+                    if (cedulaMatch) {
+                        const cedulaLimpia = cedulaMatch[0].replace(/-/g, '');
+                        document.querySelector('input[name="RNC"]').value = cedulaLimpia;
+                    }
+
+                    const lines = text.split('\n');
+                    let nombreEncontrado = "";
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i].toUpperCase();
+                        if (line.includes('NOMBRES') || line.includes('APELLIDOS')) {
+                            if (lines[i+1] && lines[i+1].length > 3) {
+                                nombreEncontrado = lines[i+1].trim();
+                                break;
+                            }
+                        }
+                    }
+
+                    if (nombreEncontrado) {
+                        document.querySelector('input[name="Nombre"]').value = nombreEncontrado;
+                    }
+
+                    await worker.terminate();
+                    
+                    if (cedulaMatch) {
+                        modalCamera.hide();
+                        document.querySelector('input[name="RNC"]').classList.add('is-valid');
+                        if (nombreEncontrado) document.querySelector('input[name="Nombre"]').classList.add('is-valid');
+                    } else {
+                        ocrStatusText.textContent = 'No se detectó una cédula. Intente de nuevo.';
+                        btnCapture.disabled = false;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    ocrStatusText.textContent = 'Error en el proceso.';
+                    btnCapture.disabled = false;
+                }
+            });
+        </script>
+    }

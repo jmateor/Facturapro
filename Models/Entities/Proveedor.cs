@@ -38,7 +38,8 @@ namespace Facturapro.Models.Entities
         [Display(Name = "Fecha de creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;
 
-        // Propiedad de navegación
+        // Propiedades de navegación
         public ICollection<Compra> Compras { get; set; } = new List<Compra>();
+        public ICollection<Producto> Productos { get; set; } = new List<Producto>();
     }
 }

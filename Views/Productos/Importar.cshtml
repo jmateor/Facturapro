@@ -111,7 +111,7 @@
 <div class="page-header">
     <div class="page-title">
         <h1>Importar Productos</h1>
-        <p>Cargue productos masivamente desde un archivo Excel</p>
+        <p>Cargue productos masivamente desde un archivo Excel (.xlsx)</p>
     </div>
     <div class="page-actions">
         <a href="@Url.Action("Index")" class="btn btn-secondary">
@@ -150,10 +150,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
                 </svg>
-                <h3>Arrastre su archivo CSV aquí</h3>
+                <h3>Arrastre su archivo Excel aquí</h3>
                 <p>o haga clic para seleccionar</p>
-                <p style="font-size: 0.75rem; color: var(--text-muted);">Formato: .csv (valores separados por coma)</p>
-                <input type="file" id="fileInput" name="archivoExcel" accept=".csv" style="display: none;" required />
+                <p style="font-size: 0.75rem; color: var(--text-muted);">Formato: .xlsx (Libro de Excel)</p>
+                <input type="file" id="fileInput" name="archivoExcel" accept=".xlsx" style="display: none;" required />
 
                 <div class="file-info" id="fileInfo">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -195,7 +195,7 @@
             Instrucciones
         </div>
         <ul class="instructions-list">
-            <li>Descargue la plantilla CSV haciendo clic en el botón superior</li>
+            <li>Descargue la plantilla Excel haciendo clic en el botón superior</li>
             <li>Complete los datos siguiendo el formato de ejemplo</li>
             <li><strong class="required">Código y Nombre son obligatorios</strong></li>
             <li>El código debe ser único - los duplicados serán ignorados</li>

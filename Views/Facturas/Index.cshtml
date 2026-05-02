@@ -25,23 +25,6 @@
 </div>
 <!-- end page title -->
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="ri-check-double-line me-1"></i>
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="ri-error-warning-line me-1"></i>
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
 
 <!-- Filtros -->
 <div class="card mb-3">
@@ -86,7 +69,7 @@
 <div class="card">
     <div class="card-body">
         <div class="table-responsive-sm">
-            <table class="table table-centered mb-0">
+            <table class="table table-centered mb-0" id="tablaFacturas">
                 <thead class="table-light">
                     <tr>
                         <th>e-CF</th>
@@ -98,7 +81,7 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tablaFacturasBody">
                     @foreach (var item in Model)
                     {
                         var estadoDGIIClass = item.EstadoDGII switch
@@ -136,39 +119,7 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-1 flex-wrap">
-                                    @if (item.EstadoDGII == "Pendiente" || item.EstadoDGII == "Rechazado")
-                                    {
-                                        <a href="@Url.Action("Firmar", new { id = item.Id })" class="btn btn-sm btn-success" title="Firmar">
-                                            <i class="ri-signature-line"></i>
-                                        </a>
-                                    }
-                                    @if (item.EstadoDGII == "Firmado" || item.EstadoDGII == "Rechazado")
-                                    {
-                                        <a href="@Url.Action("EnviarDGII", new { id = item.Id })" class="btn btn-sm btn-primary" title="Enviar DGII">
-                                            <i class="ri-send-plane-line"></i>
-                                        </a>
-                                    }
-                                    @if (item.EstadoDGII == "Enviado" || item.EstadoDGII == "EnProceso")
-                                    {
-                                        <a href="@Url.Action("ConsultarEstado", new { id = item.Id })" class="btn btn-sm btn-warning" title="Consultar Estado">
-                                            <i class="ri-refresh-line"></i>
-                                        </a>
-                                    }
-                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-sm btn-soft-info" title="Ver detalles">
-                                        <i class="ri-eye-line"></i>
-                                    </a>
-                                    @if (!string.IsNullOrEmpty(item.XMLFirmado))
-                                    {
-                                        <a href="@Url.Action("DescargarXML", new { id = item.Id })" class="btn btn-sm btn-soft-secondary" title="Descargar XML">
-                                            XML
-                                        </a>
-                                    }
-                                    @if (item.EstadoDGII == "Firmado" || item.EstadoDGII == "Aprobado")
-                                    {
-                                        <a href="@Url.Action("DescargarPDF", new { id = item.Id })" class="btn btn-sm btn-soft-danger" title="Descargar PDF">
-                                            <i class="ri-file-pdf-line"></i>
-                                        </a>
-                                    }
+                                    <a href="/Facturas/Details/${item.id}" class="btn btn-sm btn-soft-info"><i class="ri-eye-line"></i></a>
                                 </div>
                             </td>
                         </tr>
@@ -177,16 +128,179 @@
             </table>
         </div>
 
-        @if (!Model.Any())
-        {
+        <div id="noResults" style="display: none;">
             <div class="text-center py-5">
-                <i class="ri-file-list-3-line text-muted" style="font-size: 4rem;"></i>
-                <h5 class="text-muted mt-3">No hay facturas registradas</h5>
-                <a href="@Url.Action("Create")" class="btn btn-primary mt-2">
-                    <i class="ri-file-add-line me-1"></i>
-                    Crear primera factura
-                </a>
+                <i class="ri-file-search-line display-4 text-muted"></i>
+                <h5 class="fw-semibold mt-3">No se encontraron facturas</h5>
+                <p class="text-muted">Prueba cambiando los filtros</p>
             </div>
-        }
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3 gap-3">
+            <div class="text-muted small">
+                Mostrando <span id="spanStart">0</span> a <span id="spanEnd">0</span> de <span id="spanTotal">0</span> facturas
+            </div>
+            <nav aria-label="Navegación de facturas">
+                <ul class="pagination pagination-rounded mb-0" id="paginationContainer">
+                    <!-- Dinámico -->
+                </ul>
+            </nav>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        document.addEventListener('DOMContentLoaded', function() {
+             cargarFacturas();
+        });
+
+        // Manejo de filtros AJAX
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            cargarFacturas();
+        });
+
+        function cargarFacturas(page = 1) {
+            currentPage = page;
+            const tipoECF = document.querySelector('select[name="tipoECF"]').value;
+            const estadoDGII = document.querySelector('select[name="estadoDGII"]').value;
+            const body = document.getElementById('tablaFacturasBody');
+            const noResults = document.getElementById('noResults');
+
+            window.Skeleton.show('#tablaFacturasBody', 'tableRow', 8);
+
+            fetch(`/Facturas/GetFacturasJson?tipoECF=${tipoECF}&estadoDGII=${estadoDGII}&page=${currentPage}&pageSize=${pageSize}`)
+                .then(r => r.json())
+                .then(data => {
+                    const facturas = data.items;
+                    if (facturas.length === 0) {
+                        body.innerHTML = '';
+                        noResults.style.display = 'block';
+                        updatePaginationInfo(0, 0, 0);
+                        renderPagination(0);
+                        return;
+                    }
+
+                    noResults.style.display = 'none';
+                    const html = facturas.map(item => {
+                        const estadoClass = getEstadoDGIIClass(item.estadoDGII);
+                        return `
+                            <tr>
+                                <td>
+                                    <strong>${item.eNCF || '-'}</strong>
+                                    <br />
+                                    <small class="text-muted">${item.numeroFactura}</small>
+                                </td>
+                                <td><span class="badge bg-info">E${item.tipoECF || '31'}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm rounded-circle bg-soft-primary text-primary d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 0.8rem; font-weight: 600;">
+                                            ${(item.clienteNombre || "C").substring(0, 1).toUpperCase()}
+                                        </div>
+                                        <span>${item.clienteNombre}</span>
+                                    </div>
+                                </td>
+                                <td>${item.fechaEmision}</td>
+                                <td><span class="fw-bold text-primary">${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.total)}</span></td>
+                                <td><span class="badge ${estadoClass}">${item.estadoDGII || 'Pendiente'}</span></td>
+                                <td>
+                                    <div class="d-flex gap-1 flex-wrap">
+                                        ${getAccionesHtml(item)}
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    window.Skeleton.hide('#tablaFacturasBody', html);
+                    
+                    const start = ((currentPage - 1) * pageSize) + 1;
+                    const end = Math.min(currentPage * pageSize, data.totalItems);
+                    updatePaginationInfo(start, end, data.totalItems);
+                    renderPagination(data.totalPages);
+                });
+        }
+
+        function updatePaginationInfo(start, end, total) {
+            document.getElementById('spanStart').textContent = start;
+            document.getElementById('spanEnd').textContent = end;
+            document.getElementById('spanTotal').textContent = total;
+        }
+
+        function renderPagination(totalPages) {
+            const container = document.getElementById('paginationContainer');
+            container.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Botón Anterior
+            container.innerHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="cargarFacturas(${currentPage - 1})">
+                        <i class="ri-arrow-left-s-line"></i>
+                    </a>
+                </li>
+            `;
+
+            // Páginas (Lógica simplificada para mostrar hasta 5 páginas)
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    container.innerHTML += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="javascript:void(0)" onclick="cargarFacturas(${i})">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    container.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+
+            // Botón Siguiente
+            container.innerHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="cargarFacturas(${currentPage + 1})">
+                        <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                </li>
+            `;
+        }
+
+        function getEstadoDGIIClass(estado) {
+            switch (estado) {
+                case "Aprobado": return "bg-success";
+                case "Firmado": return "bg-primary";
+                case "Enviado": return "bg-warning";
+                case "Rechazado": return "bg-danger";
+                default: return "bg-secondary";
+            }
+        }
+
+        function getAccionesHtml(item) {
+            let html = '';
+            
+            // Botón WhatsApp si tiene teléfono
+            if (item.clienteTelefono) {
+                html += `<a href="/Facturas/EnviarWhatsApp/${item.id}" class="btn btn-sm btn-success" target="_blank" title="Enviar por WhatsApp">
+                            <i class="ri-whatsapp-line"></i>
+                         </a>`;
+            }
+
+            if (item.estadoDGII === "Pendiente" || item.estadoDGII === "Rechazado") {
+                html += `<a href="/Facturas/Firmar/${item.id}" class="btn btn-sm btn-soft-primary" title="Firmar"><i class="ri-signature-line"></i></a>`;
+            }
+            
+            html += `<a href="/Facturas/Details/${item.id}" class="btn btn-sm btn-soft-info" title="Ver detalles"><i class="ri-eye-line"></i></a>`;
+            
+            // Link a PDF si existe
+            html += `<a href="/Facturas/DescargarPDF/${item.id}" class="btn btn-sm btn-soft-secondary" target="_blank" title="PDF"><i class="ri-file-pdf-line"></i></a>`;
+            
+            return html;
+        }
+    </script>
+}

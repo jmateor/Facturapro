@@ -1,0 +1,138 @@
+@model Facturapro.Models.Entities.ConfiguracionDispositivo
+@{
+    ViewData["Title"] = "Configuración de Dispositivos";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <h4 class="page-title"><i class="ri-printer-cloud-line me-2"></i>Configuración de Dispositivos</h4>
+                <p class="text-muted">Administra el hardware conectado a tu punto de venta.</p>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ri-check-line me-1"></i> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Save" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row">
+            <!-- Impresora Térmica -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-soft-primary border-0 py-3">
+                        <h5 class="card-title mb-0 text-primary"><i class="ri-printer-line me-2"></i>Impresora de Tickets</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-4 p-3 bg-light rounded border">
+                            <input class="form-check-input" type="checkbox" asp-for="HabilitarImpresora" id="chkImpresora">
+                            <label class="form-check-label fw-bold ms-2" for="chkImpresora">Habilitar Impresora Térmica</label>
+                            <small class="d-block text-muted ms-4">Permite la impresión de tickets en formato de 58mm u 80mm.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Ancho de Papel</label>
+                            <select asp-for="AnchoPapel" class="form-select border-light shadow-sm">
+                                <option value="80mm">80mm (Estándar POS)</option>
+                                <option value="58mm">58mm (Portátil / Mini)</option>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="CorteAutomatico">
+                                    <label class="form-check-label">Corte Automático</label>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="AbrirCajon">
+                                    <label class="form-check-label">Abrir Cajón Monedero</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mt-3 border-0">
+                            <i class="ri-information-line me-2"></i>
+                            <strong>Nota:</strong> Para impresoras locales, asegúrese de tener instalados los drivers correspondientes y configurar el tamaño de papel en las preferencias de impresión.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lector de Código -->
+            <div class="col-md-6">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-soft-warning border-0 py-3">
+                        <h5 class="card-title mb-0 text-warning"><i class="ri-barcode-box-line me-2"></i>Lector de Código de Barras</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch mb-4 p-3 bg-light rounded border">
+                            <input class="form-check-input" type="checkbox" asp-for="HabilitarLector" id="chkLector">
+                            <label class="form-check-label fw-bold ms-2" for="chkLector">Habilitar Lector Externo</label>
+                            <small class="d-block text-muted ms-4">Optimiza la entrada de productos mediante escáner USB o Bluetooth.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Acción después de Escaneo</label>
+                            <select asp-for="SufijoLectura" class="form-select border-light shadow-sm">
+                                <option value="Enter">Agregar automáticamente (Enter)</option>
+                                <option value="Tab">Ir al siguiente campo (Tab)</option>
+                                <option value="None">Permanecer en el campo</option>
+                            </select>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" asp-for="SonidoEscaneo">
+                            <label class="form-check-label">Notificación sonora en pantalla</label>
+                        </div>
+
+                        <div class="p-3 bg-soft-secondary rounded mt-4">
+                            <h6><i class="ri-test-tube-line me-2"></i>Prueba de Lector</h6>
+                            <input type="text" class="form-control" placeholder="Escanea un código aquí para probar..." id="testLector">
+                            <small class="text-muted" id="testResult"></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4 mb-5">
+            <div class="col-12 text-end">
+                <button type="submit" class="btn btn-primary btn-lg shadow-sm">
+                    <i class="ri-save-line me-1"></i> Guardar Configuración
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Styles {
+    <style>
+        .bg-soft-primary { background-color: rgba(64, 81, 137, 0.1); }
+        .bg-soft-warning { background-color: rgba(247, 184, 75, 0.1); }
+        .bg-soft-secondary { background-color: rgba(135, 138, 153, 0.1); }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById('testLector')?.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('testResult').innerHTML = '<span class="text-success">✓ Código detectado: ' + this.value + '</span>';
+                this.value = '';
+            }
+        });
+    </script>
+}

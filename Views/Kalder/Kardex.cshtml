@@ -1,0 +1,175 @@
+@model IEnumerable<Facturapro.Models.Entities.MovimientoInventario>
+@using Facturapro.Models.Entities
+@{
+    var producto = ViewData["Producto"] as Facturapro.Models.Entities.Producto;
+    ViewData["Title"] = $"Kardex - {producto?.Nombre}";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+    
+    // Calcular acumulados para el Kardex
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <form class="d-flex gap-2" method="get">
+                    <input type="hidden" name="id" value="@producto?.Id" />
+                    <input type="date" name="desde" class="form-control form-control-sm" value="@(ViewData["Desde"] as DateTime?)?.ToString("yyyy-MM-dd")" />
+                    <input type="date" name="hasta" class="form-control form-control-sm" value="@(ViewData["Hasta"] as DateTime?)?.ToString("yyyy-MM-dd")" />
+                    <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="window.print()">
+                        <i class="ri-printer-line"></i>
+                    </button>
+                </form>
+            </div>
+            <h4 class="page-title">Kardex de Inventario</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-4 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar-sm bg-soft-primary rounded-circle me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                        <i class="ri-box-3-line fs-3 text-primary"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1">@producto?.Nombre</h5>
+                        <p class="text-muted mb-0 small">Código: @producto?.Codigo</p>
+                    </div>
+                </div>
+                <div class="row text-center border-top pt-3">
+                    <div class="col-4 border-end">
+                        <h6 class="text-muted small text-uppercase">Stock Actual</h6>
+                        <h4 class="mb-0 @(producto?.Stock <= producto?.StockMinimo ? "text-danger" : "")">@producto?.Stock</h4>
+                    </div>
+                    <div class="col-4 border-end">
+                        <h6 class="text-muted small text-uppercase">Costo Prom.</h6>
+                        <h4 class="mb-0">@producto?.CostoPromedio.ToString("C", cultura)</h4>
+                    </div>
+                    <div class="col-4">
+                        <h6 class="text-muted small text-uppercase">Precio Venta</h6>
+                        <h4 class="mb-0">@producto?.Precio.ToString("C", cultura)</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-8 col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Rendimiento Estimado</h5>
+                <div class="row">
+                    <div class="col-6">
+                        <p class="text-muted mb-1">Margen de Ganancia Bruta</p>
+                        <h3 class="mb-3">@(((producto?.Precio - producto?.CostoPromedio) / (producto?.Precio > 0 ? producto.Precio : 1) * 100)?.ToString("N2"))%</h3>
+                        <div class="progress progress-sm">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: @(((producto?.Precio - producto?.CostoPromedio) / (producto?.Precio > 0 ? producto.Precio : 1) * 100)?.ToString("N0"))%"></div>
+                        </div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <p class="text-muted mb-1">Valor Total en Almacén</p>
+                        <h3 class="text-primary mb-0">@((producto?.Stock * producto?.CostoPromedio)?.ToString("C", cultura))</h3>
+                        <small class="text-muted">Basado en costo promedio</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="header-title mb-0">Historial de Movimientos (Kardex)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-centered table-bordered mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th rowspan="2" class="text-center align-middle">Fecha / Hora</th>
+                                <th rowspan="2" class="align-middle">Detalle / Motivo</th>
+                                <th colspan="3" class="text-center bg-success">Entradas</th>
+                                <th colspan="3" class="text-center bg-danger">Salidas</th>
+                                <th colspan="2" class="text-center bg-primary">Saldos</th>
+                                <th rowspan="2" class="align-middle text-center">Usuario</th>
+                            </tr>
+                            <tr>
+                                <th class="text-center bg-success bg-opacity-75">Cant.</th>
+                                <th class="text-center bg-success bg-opacity-75">Costo U.</th>
+                                <th class="text-center bg-success bg-opacity-75">Total</th>
+                                <th class="text-center bg-danger bg-opacity-75">Cant.</th>
+                                <th class="text-center bg-danger bg-opacity-75">Costo U.</th>
+                                <th class="text-center bg-danger bg-opacity-75">Total</th>
+                                <th class="text-center bg-primary bg-opacity-75">Cant.</th>
+                                <th class="text-center bg-primary bg-opacity-75">Costo Prom.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var mov in Model)
+                            {
+                                var esEntrada = mov.TipoMovimiento.ToString().StartsWith("Entrada");
+                                <tr>
+                                    <td class="text-center">
+                                        <small class="fw-bold">@mov.FechaMovimiento.ToString("dd/MM/yyyy")</small><br />
+                                        <small class="text-muted">@mov.FechaMovimiento.ToString("hh:mm tt")</small>
+                                    </td>
+                                    <td>
+                                        @if (mov.Factura != null)
+                                        {
+                                            <span class="badge bg-soft-info text-info">Venta #@mov.Factura.NumeroFactura</span>
+                                        }
+                                        else if (mov.Compra != null)
+                                        {
+                                            <span class="badge bg-soft-success text-success">Compra #@mov.Compra.Id</span>
+                                        }
+                                        <div class="small">@mov.Motivo</div>
+                                    </td>
+                                    
+                                    <!-- Entradas -->
+                                    <td class="text-center @(esEntrada ? "fw-bold text-success" : "text-muted")">
+                                        @(esEntrada ? mov.Cantidad.ToString() : "-")
+                                    </td>
+                                    <td class="text-end @(esEntrada ? "" : "text-muted")">
+                                        @(esEntrada && mov.CostoUnitario.HasValue ? mov.CostoUnitario.Value.ToString("C", cultura) : "-")
+                                    </td>
+                                    <td class="text-end @(esEntrada ? "fw-bold" : "text-muted")">
+                                        @(esEntrada && mov.CostoUnitario.HasValue ? (mov.Cantidad * mov.CostoUnitario.Value).ToString("C", cultura) : "-")
+                                    </td>
+
+                                    <!-- Salidas -->
+                                    <td class="text-center @(!esEntrada ? "fw-bold text-danger" : "text-muted")">
+                                        @(!esEntrada ? mov.Cantidad.ToString() : "-")
+                                    </td>
+                                    <td class="text-end @(!esEntrada ? "" : "text-muted")">
+                                        @(!esEntrada && mov.CostoUnitario.HasValue ? mov.CostoUnitario.Value.ToString("C", cultura) : "-")
+                                    </td>
+                                    <td class="text-end @(!esEntrada ? "fw-bold" : "text-muted")">
+                                        @(!esEntrada && mov.CostoUnitario.HasValue ? (mov.Cantidad * mov.CostoUnitario.Value).ToString("C", cultura) : "-")
+                                    </td>
+
+                                    <!-- Saldos -->
+                                    <td class="text-center fw-bold bg-light">
+                                        @mov.StockNuevo
+                                    </td>
+                                    <td class="text-end fw-bold bg-light">
+                                        @(mov.CostoUnitario?.ToString("C", cultura) ?? "-")
+                                    </td>
+
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark fw-normal">@mov.UsuarioRegistro</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

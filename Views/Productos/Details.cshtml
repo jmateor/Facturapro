@@ -5,6 +5,30 @@
     ViewData["Title"] = "Detalles del Producto";
     var cultura = new System.Globalization.CultureInfo("es-DO");
     var barcodeSvg = !string.IsNullOrEmpty(Model.CodigoBarras) ? BarcodeService.GenerarImagenBarcodeSvg(Model.CodigoBarras) : null;
+
+    string obtenerTipoProductoNombre() => Model.TipoProducto switch
+    {
+        1 => "Artículo",
+        2 => "Servicio",
+        3 => "Libra / Peso",
+        _ => "Desconocido"
+    };
+
+    string obtenerTipoProductoIcono() => Model.TipoProducto switch
+    {
+        1 => "ri-box-3-line",
+        2 => "ri-customer-service-2-line",
+        3 => "ri-weight-line",
+        _ => "ri-question-line"
+    };
+
+    string obtenerTipoProductoColor() => Model.TipoProducto switch
+    {
+        1 => "text-primary",
+        2 => "text-success",
+        3 => "text-info",
+        _ => "text-secondary"
+    };
 }
 
 <!-- Page Header -->
@@ -27,6 +51,19 @@
         </div>
     </div>
 </div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-success border-0 alert-dismissible fade show" role="alert">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
 
 <div class="row">
     <!-- Columna Izquierda - Información -->
@@ -54,7 +91,13 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted small">Nombre Comercial</label>
-                        <div class="fw-semibold">@Model.Nombre</div>
+                        <div class="fw-semibold">
+                            @if (!string.IsNullOrEmpty(Model.Icono))
+                            {
+                                <i class="@Model.Icono me-1 text-primary"></i>
+                            }
+                            @Model.Nombre
+                        </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label text-muted small">Descripción</label>
@@ -62,11 +105,27 @@
                             @(Model.Descripcion ?? "Sin descripción")
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Tipo de Producto</label>
+                        <div class="fw-semibold">
+                            <i class="@obtenerTipoProductoIcono() me-1 @obtenerTipoProductoColor()"></i>
+                            <span class="badge bg-soft-@(Model.TipoProducto == 1 ? "primary" : Model.TipoProducto == 2 ? "success" : "info") text-@(Model.TipoProducto == 1 ? "primary" : Model.TipoProducto == 2 ? "success" : "info")">
+                                @obtenerTipoProductoNombre()
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label text-muted small">Categoría</label>
                         <div class="fw-semibold">
                             <i class="ri-price-tag-3-line me-1 text-info"></i>
                             @(Model.Categoria?.Nombre ?? "Sin categoría")
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Proveedor</label>
+                        <div class="fw-semibold">
+                            <i class="ri-truck-line me-1 text-purple"></i>
+                            @(Model.Proveedor?.Nombre ?? "Sin proveedor")
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -97,7 +156,7 @@
             </div>
         </div>
 
-        <!-- Información Comercial -->
+        <!-- Precios y Ganancia -->
         <div class="card">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-4">
@@ -105,32 +164,87 @@
                         <span class="avatar-title text-white fw-bold">2</span>
                     </div>
                     <div>
-                        <h5 class="card-title mb-0">Información Comercial</h5>
-                        <p class="text-muted mb-0 small">Precios e inventario</p>
+                        <h5 class="card-title mb-0">Precios y Ganancia</h5>
+                        <p class="text-muted mb-0 small">Información comercial y rentabilidad</p>
                     </div>
                 </div>
 
                 <div class="row g-3">
                     <div class="col-md-6">
+                        <label class="form-label text-muted small">Precio de Compra</label>
+                        <div class="fs-5 fw-bold text-warning">
+                            <i class="ri-shopping-cart-2-line me-1"></i>
+                            @Model.PrecioCompra.ToString("C", cultura)
+                        </div>
+                        <small class="text-muted">Costo de adquisición</small>
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label text-muted small">Precio de Venta</label>
-                        <div class="fs-3 fw-bold text-success">
+                        <div class="fs-5 fw-bold text-success">
                             <i class="ri-money-dollar-circle-line me-1"></i>
                             @Model.Precio.ToString("C", cultura)
                         </div>
+                        <small class="text-muted">Precio al público</small>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label text-muted small">Stock Disponible</label>
-                        <div class="fs-3 fw-bold @(Model.Stock <= 5 ? "text-danger" : Model.Stock <= 15 ? "text-warning" : "text-success")">
-                            <i class="ri-archive-line me-1"></i>
-                            @Model.Stock <small class="fs-6 text-muted">unidades</small>
+
+                    <!-- Ganancia -->
+                    <div class="col-12">
+                        <div class="card bg-soft-success border-0">
+                            <div class="card-body py-3">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">Ganancia por Unidad</small>
+                                        <span class="fs-4 fw-bold text-success">
+                                            @(Model.Ganancia.ToString("C", cultura))
+                                        </span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block">Margen de Ganancia</span>
+                                        <span class="fs-4 fw-bold text-success">
+                                            @Model.MargenGanancia.ToString("N1")%
+                                        </span>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <span class="badge bg-success-soft text-success">
+                                            <i class="ri-line-chart-line me-1"></i> Rentabilidad
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        @if (Model.Stock <= 5)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock e Inventario -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-info rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">3</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Stock e Inventario</h5>
+                        <p class="text-muted mb-0 small">Control de existencias y ubicación</p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Stock Actual</label>
+                        <div class="fs-3 fw-bold @(Model.Stock <= Model.StockMinimo ? "text-danger" : Model.Stock <= Model.StockMinimo * 2 ? "text-warning" : "text-success")">
+                            <i class="ri-archive-line me-1"></i>
+                            @Model.Stock
+                            <small class="fs-6 text-muted">unidades</small>
+                        </div>
+                        @if (Model.Stock <= Model.StockMinimo)
                         {
                             <span class="badge bg-danger-soft text-danger mt-2">
-                                <i class="ri-alarm-warning-line me-1"></i>Stock bajo
+                                <i class="ri-alarm-warning-line me-1"></i>Stock bajo - Reordenar
                             </span>
                         }
-                        else if (Model.Stock <= 15)
+                        else if (Model.Stock <= Model.StockMinimo * 2)
                         {
                             <span class="badge bg-warning-soft text-warning mt-2">
                                 <i class="ri-time-line me-1"></i>Stock medio
@@ -143,25 +257,154 @@
                             </span>
                         }
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Stock Mínimo de Alerta</label>
+                        <div class="fs-5 fw-bold text-warning">
+                            <i class="ri-alert-line me-1"></i>
+                            @Model.StockMinimo unidades
+                        </div>
+                        <small class="text-muted">Nivel para activar alerta</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Controla Stock</label>
+                        <div>
+                            @if (Model.ControlaStock)
+                            {
+                                <span class="badge bg-success-soft text-success">
+                                    <i class="ri-checkbox-circle-line me-1"></i>Sí
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-soft text-secondary">
+                                    <i class="ri-close-circle-line me-1"></i>No
+                                </span>
+                            }
+                        </div>
+                        <small class="text-muted d-block mt-1">@(Model.ControlaStock ? "El inventario se actualiza con cada venta" : "No se descuenta stock en ventas")</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Ubicación en Almacén</label>
+                        <div class="fw-semibold">
+                            <i class="ri-map-pin-2-line me-1 text-info"></i>
+                            @(Model.Ubicacion ?? "No especificada")
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Código de Barras -->
-        @if (!string.IsNullOrEmpty(Model.CodigoBarras))
+        <!-- Lote y Vencimiento -->
+        @if (!string.IsNullOrEmpty(Model.NumeroLote) || Model.FechaVencimiento.HasValue)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-danger rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">4</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Lote y Vencimiento</h5>
+                            <p class="text-muted mb-0 small">Control de caducidad y trazabilidad</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Número de Lote</label>
+                            <div class="fw-semibold">
+                                <i class="ri-file-code-line me-1"></i>
+                                @(Model.NumeroLote ?? "No especificado")
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Fecha de Vencimiento</label>
+                            <div class="fw-semibold">
+                                @if (Model.FechaVencimiento.HasValue)
+                                {
+                                    var diasRestantes = (Model.FechaVencimiento.Value - DateTime.Now).Days;
+                                    <i class="ri-calendar-event-line me-1"></i>
+                                    @Model.FechaVencimiento.Value.ToString("dd/MM/yyyy")
+                                    if (diasRestantes < 0)
+                                    {
+                                        <span class="badge bg-danger-soft text-danger ms-2">
+                                            <i class="ri-time-line me-1"></i>Vencido (@Math.Abs(diasRestantes) días)
+                                        </span>
+                                    }
+                                    else if (diasRestantes < 30)
+                                    {
+                                        <span class="badge bg-warning-soft text-warning ms-2">
+                                            <i class="ri-alert-line me-1"></i>@diasRestantes días para vencer
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success-soft text-success ms-2">
+                                            <i class="ri-checkbox-circle-line me-1"></i>@diasRestantes días restantes
+                                        </span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No especificado</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Producto a Granel (Libra) -->
+        @if (Model.TipoProducto == 3)
         {
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-4">
                         <div class="avatar-sm bg-info rounded-3 me-3">
-                            <span class="avatar-title text-white fw-bold">3</span>
+                            <span class="avatar-title text-white fw-bold">5</span>
                         </div>
                         <div>
-                            <h5 class="card-title mb-0">Código de Barras</h5>
-                            <p class="text-muted mb-0 small">Generado automáticamente para este producto</p>
+                            <h5 class="card-title mb-0">Producto a Granel</h5>
+                            <p class="text-muted mb-0 small">Configuración para productos por peso</p>
                         </div>
                     </div>
 
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Peso por Unidad</label>
+                            <div class="fw-semibold">
+                                <i class="ri-weight-line me-1 text-info"></i>
+                                @(Model.PesoPorUnidad.HasValue ? $"{Model.PesoPorUnidad.Value:N2} lb" : "No especificado")
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Unidad de Medida</label>
+                            <div class="fw-semibold">
+                                <i class="ri-ruler-line me-1"></i>
+                                @Model.UnidadMedida
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Código de Barras -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="avatar-sm bg-dark rounded-3 me-3">
+                        <span class="avatar-title text-white fw-bold">6</span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Código de Barras</h5>
+                        <p class="text-muted mb-0 small">Identificación universal del producto</p>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.CodigoBarras))
+                {
                     <div class="text-center">
                         <div class="bg-white border rounded-3 p-4 d-inline-block mb-3">
                             @if (barcodeSvg != null)
@@ -192,28 +435,26 @@
                             </form>
                         </div>
                     </div>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="card border-dashed">
-                <div class="card-body text-center">
-                    <div class="avatar-lg bg-soft-warning rounded-circle mb-3 mx-auto d-inline-flex" style="width: 80px; height: 80px;">
-                        <i class="ri-barcode-line display-4 text-warning"></i>
+                }
+                else
+                {
+                    <div class="text-center">
+                        <div class="avatar-lg bg-soft-warning rounded-circle mb-3 mx-auto d-inline-flex" style="width: 80px; height: 80px;">
+                            <i class="ri-barcode-line display-4 text-warning"></i>
+                        </div>
+                        <h6 class="fw-semibold">Sin código de barras</h6>
+                        <p class="text-muted mb-3 small">Este producto aún no tiene un código de barras generado</p>
+                        <form asp-action="GenerarCodigoBarras" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-warning">
+                                <i class="ri-magic-line me-1"></i> Generar Código de Barras
+                            </button>
+                        </form>
                     </div>
-                    <h6 class="fw-semibold">Sin código de barras</h6>
-                    <p class="text-muted mb-3 small">Este producto aún no tiene un código de barras generado</p>
-                    <form asp-action="GenerarCodigoBarras" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="id" value="@Model.Id" />
-                        <button type="submit" class="btn btn-warning">
-                            <i class="ri-magic-line me-1"></i> Generar Código de Barras
-                        </button>
-                    </form>
-                </div>
+                }
             </div>
-        }
+        </div>
     </div>
 
     <!-- Columna Derecha - Resumen y Acciones -->
@@ -226,9 +467,14 @@
                 </div>
                 <h5 class="mb-1">@Model.Nombre</h5>
                 <p class="text-white-50 small mb-2">@Model.Codigo</p>
-                <span class="badge bg-white text-primary">
-                    @(Model.Activo ? "Activo" : "Inactivo")
-                </span>
+                <div class="d-flex gap-2 justify-content-center mb-2">
+                    <span class="badge bg-white text-primary">
+                        @(Model.Activo ? "Activo" : "Inactivo")
+                    </span>
+                    <span class="badge bg-white-50 text-dark">
+                        @obtenerTipoProductoNombre()
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -242,34 +488,80 @@
 
                 <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
                     <div>
-                        <p class="text-muted mb-0 small">Precio</p>
+                        <p class="text-muted mb-0 small">Precio Venta</p>
                         <h5 class="mb-0 fw-bold text-success">@Model.Precio.ToString("C0", cultura)</h5>
                     </div>
                     <div class="text-end">
                         <p class="text-muted mb-0 small">Stock</p>
-                        <h5 class="mb-0 fw-bold @(Model.Stock <= 5 ? "text-danger" : "text-primary")">@Model.Stock u.</h5>
+                        <h5 class="mb-0 fw-bold @(Model.Stock <= Model.StockMinimo ? "text-danger" : "text-primary")">@Model.Stock u.</h5>
                     </div>
                 </div>
 
                 <div class="small">
                     <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="ri-shopping-cart-2-line me-2"></i>Compra:</span>
+                        <span class="fw-medium">@Model.PrecioCompra.ToString("C0", cultura)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted"><i class="ri-line-chart-line me-2"></i>Ganancia:</span>
+                        <span class="fw-medium text-success">@Model.Ganancia.ToString("C0", cultura) (@Model.MargenGanancia.ToString("N1")%)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted"><i class="ri-price-tag-3-line me-2"></i>Categoría:</span>
                         <span class="fw-medium">@(Model.Categoria?.Nombre ?? "Sin categoría")</span>
                     </div>
+                    @if (Model.Proveedor != null)
+                    {
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="ri-truck-line me-2"></i>Proveedor:</span>
+                            <span class="fw-medium">@Model.Proveedor.Nombre</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Ubicacion))
+                    {
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted"><i class="ri-map-pin-2-line me-2"></i>Ubicación:</span>
+                            <span class="fw-medium">@Model.Ubicacion</span>
+                        </div>
+                    }
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted"><i class="ri-calendar-line me-2"></i>Creado:</span>
                         <span class="fw-medium">@Model.FechaCreacion.ToString("dd/MM/yyyy")</span>
                     </div>
-                    @if (!string.IsNullOrEmpty(Model.CodigoBarras))
-                    {
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted"><i class="ri-barcode-line me-2"></i>Cód. Barras:</span>
-                            <span class="fw-medium">@Model.CodigoBarras</span>
-                        </div>
-                    }
                 </div>
             </div>
         </div>
+
+        <!-- Alertas -->
+        @if (Model.Stock <= Model.StockMinimo)
+        {
+            <div class="card bg-soft-danger border-0">
+                <div class="card-body">
+                    <h6 class="card-title text-danger mb-2">
+                        <i class="ri-alarm-warning-line me-1"></i>
+                        Stock Bajo
+                    </h6>
+                    <p class="small text-muted mb-0">
+                        Este producto tiene @(Model.Stock) unidades (mínimo: @Model.StockMinimo). Considera realizar una compra para reponer el inventario.
+                    </p>
+                </div>
+            </div>
+        }
+
+        @if (Model.FechaVencimiento.HasValue && (Model.FechaVencimiento.Value - DateTime.Now).Days < 30 && (Model.FechaVencimiento.Value - DateTime.Now).Days >= 0)
+        {
+            <div class="card bg-soft-warning border-0">
+                <div class="card-body">
+                    <h6 class="card-title text-warning mb-2">
+                        <i class="ri-time-line me-1"></i>
+                        Próximo a Vencer
+                    </h6>
+                    <p class="small text-muted mb-0">
+                        Este producto vence el @Model.FechaVencimiento.Value.ToString("dd/MM/yyyy") (@((Model.FechaVencimiento.Value - DateTime.Now).Days) días).
+                    </p>
+                </div>
+            </div>
+        }
 
         <!-- Acciones Rápidas -->
         <div class="card">
@@ -289,13 +581,6 @@
                     <a href="@Url.Action("Index", "Kalder", new { productoId = Model.Id })" class="btn btn-soft-info">
                         <i class="ri-archive-line me-1"></i> Ver en Almacén
                     </a>
-                    @if (Model.Stock <= 5 && Model.Activo)
-                    {
-                        <div class="alert alert-danger-soft mb-0 small">
-                            <i class="ri-alarm-warning-line me-1"></i>
-                            Considera reponer el stock pronto
-                        </div>
-                    }
                 </div>
             </div>
         </div>

@@ -25,12 +25,29 @@ namespace Facturapro.Models.Entities
         [DataType(DataType.Date)]
         public DateTime? FechaRecepcion { get; set; }
 
+        [StringLength(13)]
+        [Display(Name = "NCF")]
+        public string? NCF { get; set; }
+
+        [StringLength(2)]
+        [Display(Name = "Tipo de Gasto")]
+        public string? TipoGasto { get; set; } = "01"; // 01=Gastos de Personal, 02=Gastos por Trabajos, etc.
+
+        [Display(Name = "Fecha de Pago")]
+        public DateTime? FechaPago { get; set; }
+
         [Display(Name = "Estado")]
         public EstadoCompra Estado { get; set; } = EstadoCompra.Pendiente;
 
         [Display(Name = "Subtotal")]
         [DataType(DataType.Currency)]
         public decimal SubTotal { get; set; }
+
+        [Display(Name = "Monto en Servicios")]
+        public decimal MontoServicios { get; set; }
+
+        [Display(Name = "Monto en Bienes")]
+        public decimal MontoBienes { get; set; }
 
         [Display(Name = "ITBIS")]
         [DataType(DataType.Currency)]
@@ -43,6 +60,44 @@ namespace Facturapro.Models.Entities
         [Display(Name = "Total")]
         [DataType(DataType.Currency)]
         public decimal Total { get; set; }
+
+        [Display(Name = "ITBIS Retenido")]
+        public decimal MontoITBISRetenido { get; set; }
+
+        [Display(Name = "ISR Retenido")]
+        public decimal MontoISRRetenido { get; set; }
+
+        [StringLength(13)]
+        [Display(Name = "NCF Modificado")]
+        public string? NCFModificado { get; set; }
+
+        [Display(Name = "ITBIS Proporcionalidad")]
+        public decimal ITBISProporcionalidad { get; set; }
+
+        [Display(Name = "ITBIS al Costo")]
+        public decimal ITBISCosto { get; set; }
+
+        [Display(Name = "ITBIS Percibido")]
+        public decimal ITBISPercibido { get; set; }
+
+        [Display(Name = "Tipo Retención ISR")]
+        public int? TipoRetencionISR { get; set; } // 1-9
+
+        [Display(Name = "ISR Percibido")]
+        public decimal ISRPercibido { get; set; }
+
+        [Display(Name = "ISC")]
+        public decimal ISC { get; set; }
+
+        [Display(Name = "Otros Impuestos")]
+        public decimal OtrosImpuestos { get; set; }
+
+        [Display(Name = "Propina Legal")]
+        public decimal PropinaLegal { get; set; }
+
+        [StringLength(2)]
+        [Display(Name = "Forma de Pago")]
+        public string FormaPago { get; set; } = "01"; // 01=Efectivo, 02=Cheques, etc.
 
         [StringLength(500)]
         [Display(Name = "Notas")]

@@ -13,7 +13,25 @@
       "PowerShell(Stop-Process *)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(git commit *)",
+      "Bash(dotnet run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5000/Account/Login)",
+      "Bash(curl -s -o /dev/null -w \"Login: %{http_code}\\\\n\" http://localhost:5000/Account/Login)",
+      "Bash(curl -s -o /dev/null -w \"Facturas Index: %{http_code}\\\\n\" http://localhost:5000/Facturas)",
+      "Bash(curl -s -o /dev/null -w \"Facturas Edit: %{http_code}\\\\n\" http://localhost:5000/Facturas/Edit/1)",
+      "Bash(curl -s http://localhost:5000/)",
+      "Bash(Select-Object -Last 30)",
+      "Bash(dotnet clean *)",
+      "Bash(findstr /C:\"error\" /C:\"dynamic\")",
+      "Bash(sqlcmd *)",
+      "Bash(Select-String -Pattern \"error|warning|Build\")",
+      "Bash(Select-Object -First 20)",
+      "PowerShell(Get-Process *)",
+      "Bash(dotnet sql-script *)",
+      "Bash(Start-Sleep -Seconds 3)",
+      "Bash(dotnet sql-query *)",
+      "Bash(Start-Sleep -Seconds 2)"
     ]
   }
 }

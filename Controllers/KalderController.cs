@@ -19,22 +19,46 @@ namespace Facturapro.Controllers
             _context = context;
         }
 
-        // GET: Kalder
         public async Task<IActionResult> Index()
         {
-            // Estadísticas para el dashboard
-            var totalProductos = await _context.Productos.CountAsync();
-            var productosBajoStock = await _context.Productos
-                .Where(p => p.Stock <= 5 && p.Activo)
-                .Include(p => p.Categoria)
-                .ToListAsync();
-            var stockTotal = await _context.Productos.SumAsync(p => (int?)p.Stock) ?? 0;
+            // Obtener el almacén principal
+            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
+
+            var totalProductos = await _context.Productos.CountAsync(p => p.Activo);
             var movimientosHoy = await _context.MovimientosInventario
                 .CountAsync(m => m.FechaMovimiento.Date == DateTime.Today);
 
-            // Valor del inventario
-            var valorInventario = await _context.Productos
-                .SumAsync(p => (decimal?)(p.Stock * p.Precio)) ?? 0;
+            List<Producto> productosBajoStock;
+            int stockTotal;
+            decimal valorInventario;
+
+            if (almacen != null)
+            {
+                // Usar datos del almacén
+                var stocksAlmacen = await _context.StocksAlmacen
+                    .Include(s => s.Producto).ThenInclude(p => p.Categoria)
+                    .Where(s => s.AlmacenId == almacen.Id && s.Producto.Activo)
+                    .ToListAsync();
+
+                productosBajoStock = stocksAlmacen
+                    .Where(s => s.Cantidad <= 5)
+                    .Select(s => s.Producto)
+                    .ToList();
+
+                stockTotal = (int)stocksAlmacen.Sum(s => s.Cantidad);
+                valorInventario = stocksAlmacen.Sum(s => s.Cantidad * s.Producto.Precio);
+            }
+            else
+            {
+                // Fallback a stock global
+                productosBajoStock = await _context.Productos
+                    .Where(p => p.Stock <= 5 && p.Activo)
+                    .Include(p => p.Categoria)
+                    .ToListAsync();
+                stockTotal = await _context.Productos.SumAsync(p => (int?)p.Stock) ?? 0;
+                valorInventario = await _context.Productos
+                    .SumAsync(p => (decimal?)(p.Stock * p.Precio)) ?? 0;
+            }
 
             // Movimientos recientes
             var movimientosRecientes = await _context.MovimientosInventario
@@ -49,38 +73,55 @@ namespace Facturapro.Controllers
             ViewData["MovimientosHoy"] = movimientosHoy;
             ViewData["ValorInventario"] = valorInventario;
             ViewData["MovimientosRecientes"] = movimientosRecientes;
+            ViewData["AlmacenNombre"] = almacen?.Nombre ?? "Global";
 
             return View();
         }
 
-        // GET: Kalder/Inventario
         public async Task<IActionResult> Inventario(int? categoriaId, string buscar)
         {
-            var query = _context.Productos
-                .Include(p => p.Categoria)
-                .AsQueryable();
+            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
 
-            if (categoriaId.HasValue)
+            List<Producto> productos;
+
+            if (almacen != null)
             {
-                query = query.Where(p => p.CategoriaId == categoriaId);
+                var stockQuery = _context.StocksAlmacen
+                    .Include(s => s.Producto).ThenInclude(p => p.Categoria)
+                    .Where(s => s.AlmacenId == almacen.Id && s.Producto.Activo);
+
+                if (categoriaId.HasValue)
+                    stockQuery = stockQuery.Where(s => s.Producto.CategoriaId == categoriaId);
+
+                if (!string.IsNullOrEmpty(buscar))
+                    stockQuery = stockQuery.Where(s =>
+                        s.Producto.Nombre.Contains(buscar) ||
+                        s.Producto.Codigo.Contains(buscar) ||
+                        (s.Producto.CodigoBarras != null && s.Producto.CodigoBarras.Contains(buscar)));
+
+                var stocks = await stockQuery
+                    .OrderBy(s => s.Cantidad <= 5 ? 0 : 1)
+                    .ThenBy(s => s.Producto.Nombre)
+                    .ToListAsync();
+
+                // Proyectar el stock del almacén al campo Stock del producto para compatibilidad con la vista
+                productos = stocks.Select(s => {
+                    s.Producto.Stock = (int)s.Cantidad;
+                    return s.Producto;
+                }).ToList();
             }
-
-            if (!string.IsNullOrEmpty(buscar))
+            else
             {
-                query = query.Where(p => p.Nombre.Contains(buscar) ||
-                                       p.Codigo.Contains(buscar) ||
-                                       (p.CodigoBarras != null && p.CodigoBarras.Contains(buscar)));
+                var query = _context.Productos.Include(p => p.Categoria).AsQueryable();
+                if (categoriaId.HasValue) query = query.Where(p => p.CategoriaId == categoriaId);
+                if (!string.IsNullOrEmpty(buscar))
+                    query = query.Where(p => p.Nombre.Contains(buscar) || p.Codigo.Contains(buscar));
+                productos = await query.OrderBy(p => p.Stock <= 5 ? 0 : 1).ThenBy(p => p.Nombre).ToListAsync();
             }
 
             ViewData["Categorias"] = await _context.Categorias
-                .Where(c => c.Activo)
-                .OrderBy(c => c.Nombre)
-                .ToListAsync();
-
-            var productos = await query
-                .OrderBy(p => p.Stock <= 5 ? 0 : 1)
-                .ThenBy(p => p.Nombre)
-                .ToListAsync();
+                .Where(c => c.Activo).OrderBy(c => c.Nombre).ToListAsync();
+            ViewData["AlmacenNombre"] = almacen?.Nombre ?? "Global";
 
             return View(productos);
         }
@@ -121,6 +162,29 @@ namespace Facturapro.Controllers
 
             var stockAnterior = producto.Stock;
             producto.Stock += cantidad;
+
+            // Sincronizar StockAlmacen
+            var almacenEntrada = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
+            if (almacenEntrada != null)
+            {
+                var stockAlmacen = await _context.StocksAlmacen
+                    .FirstOrDefaultAsync(s => s.ProductoId == id && s.AlmacenId == almacenEntrada.Id);
+                if (stockAlmacen != null)
+                {
+                    stockAlmacen.Cantidad += cantidad;
+                    stockAlmacen.UltimaActualizacion = DateTime.Now;
+                }
+                else
+                {
+                    _context.StocksAlmacen.Add(new StockAlmacen
+                    {
+                        ProductoId = id,
+                        AlmacenId = almacenEntrada.Id,
+                        Cantidad = producto.Stock,
+                        UltimaActualizacion = DateTime.Now
+                    });
+                }
+            }
 
             // Registrar movimiento
             var motivoCompleto = !string.IsNullOrEmpty(motivo) ? motivo : "Entrada de mercancía";
@@ -194,6 +258,19 @@ namespace Facturapro.Controllers
             var stockAnterior = producto.Stock;
             producto.Stock -= cantidad;
 
+            // Sincronizar StockAlmacen
+            var almacenSalida = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
+            if (almacenSalida != null)
+            {
+                var stockAlmacen = await _context.StocksAlmacen
+                    .FirstOrDefaultAsync(s => s.ProductoId == id && s.AlmacenId == almacenSalida.Id);
+                if (stockAlmacen != null)
+                {
+                    stockAlmacen.Cantidad = Math.Max(0, stockAlmacen.Cantidad - cantidad);
+                    stockAlmacen.UltimaActualizacion = DateTime.Now;
+                }
+            }
+
             // Registrar movimiento
             _context.MovimientosInventario.Add(new MovimientoInventario
             {
@@ -249,6 +326,29 @@ namespace Facturapro.Controllers
 
             var stockAnterior = producto.Stock;
             producto.Stock = nuevoStock;
+
+            // Sincronizar StockAlmacen
+            var almacenAjuste = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
+            if (almacenAjuste != null)
+            {
+                var stockAlmacen = await _context.StocksAlmacen
+                    .FirstOrDefaultAsync(s => s.ProductoId == id && s.AlmacenId == almacenAjuste.Id);
+                if (stockAlmacen != null)
+                {
+                    stockAlmacen.Cantidad = nuevoStock;
+                    stockAlmacen.UltimaActualizacion = DateTime.Now;
+                }
+                else
+                {
+                    _context.StocksAlmacen.Add(new StockAlmacen
+                    {
+                        ProductoId = id,
+                        AlmacenId = almacenAjuste.Id,
+                        Cantidad = nuevoStock,
+                        UltimaActualizacion = DateTime.Now
+                    });
+                }
+            }
 
             // Determinar tipo de movimiento
             var tipoMovimiento = nuevoStock > stockAnterior
@@ -339,6 +439,34 @@ namespace Facturapro.Controllers
             ViewData["Estado"] = estado;
 
             return View(productos);
+        }
+
+        // GET: Kalder/Kardex/5
+        public async Task<IActionResult> Kardex(int id, DateTime? desde, DateTime? hasta)
+        {
+            var producto = await _context.Productos
+                .Include(p => p.Categoria)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (producto == null) return NotFound();
+
+            var query = _context.MovimientosInventario
+                .Include(m => m.Factura)
+                .Include(m => m.Compra)
+                .Where(m => m.ProductoId == id);
+
+            if (desde.HasValue) query = query.Where(m => m.FechaMovimiento >= desde.Value);
+            if (hasta.HasValue) query = query.Where(m => m.FechaMovimiento <= hasta.Value.AddDays(1));
+
+            var movimientos = await query
+                .OrderBy(m => m.FechaMovimiento)
+                .ToListAsync();
+
+            ViewData["Producto"] = producto;
+            ViewData["Desde"] = desde;
+            ViewData["Hasta"] = hasta;
+
+            return View(movimientos);
         }
     }
 }

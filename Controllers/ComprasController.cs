@@ -11,10 +11,23 @@ namespace Facturapro.Controllers
     public class ComprasController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly Services.Intelligence.IOcrService _ocrService;
 
-        public ComprasController(ApplicationDbContext context)
+        public ComprasController(ApplicationDbContext context, Services.Intelligence.IOcrService ocrService)
         {
             _context = context;
+            _ocrService = ocrService;
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AnalizarFactura(IFormFile file)
+        {
+            if (file == null || file.Length == 0) return BadRequest("No se ha subido ningún archivo");
+
+            using var stream = file.OpenReadStream();
+            var result = await _ocrService.ProcessInvoiceAsync(stream);
+
+            return Json(result);
         }
 
         // GET: Compras
@@ -75,7 +88,7 @@ namespace Facturapro.Controllers
         // POST: Compras/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("NumeroFactura,ProveedorId,FechaCompra,Notas,SubTotal,ITBIS,Descuento,Total")] Compra compra, List<CompraLineaViewModel> lineas)
+        public async Task<IActionResult> Create([Bind("NumeroFactura,ProveedorId,FechaCompra,Notas,SubTotal,ITBIS,Descuento,Total,NCF,TipoGasto,FechaPago,MontoITBISRetenido,MontoISRRetenido,MontoServicios,MontoBienes,NCFModificado,ITBISProporcionalidad,ITBISCosto,ITBISPercibido,TipoRetencionISR,ISRPercibido,ISC,OtrosImpuestos,PropinaLegal,FormaPago")] Compra compra, List<CompraLineaViewModel> lineas)
         {
             if (await _context.Compras.AnyAsync(c => c.NumeroFactura == compra.NumeroFactura))
             {
@@ -147,12 +160,38 @@ namespace Facturapro.Controllers
             compra.Estado = EstadoCompra.Recibida;
             compra.FechaRecepcion = DateTime.Now;
 
+            // Obtener el almacén principal para acreditar stock
+            var almacen = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
+
             foreach (var linea in compra.Lineas)
             {
                 if (linea.Producto != null)
                 {
                     var stockAnterior = linea.Producto.Stock;
                     linea.Producto.Stock += linea.Cantidad;
+
+                    // Actualizar StockAlmacen si existe el almacén
+                    if (almacen != null)
+                    {
+                        var stockAlmacen = await _context.StocksAlmacen
+                            .FirstOrDefaultAsync(s => s.ProductoId == linea.ProductoId && s.AlmacenId == almacen.Id);
+                        if (stockAlmacen != null)
+                        {
+                            stockAlmacen.Cantidad += linea.Cantidad;
+                            stockAlmacen.UltimaActualizacion = DateTime.Now;
+                        }
+                        else
+                        {
+                            // Crear registro si no existe (nuevo producto)
+                            _context.StocksAlmacen.Add(new StockAlmacen
+                            {
+                                ProductoId = linea.ProductoId,
+                                AlmacenId = almacen.Id,
+                                Cantidad = linea.Cantidad,
+                                UltimaActualizacion = DateTime.Now
+                            });
+                        }
+                    }
 
                     // Registrar movimiento de inventario
                     var movimiento = new MovimientoInventario
@@ -162,7 +201,7 @@ namespace Facturapro.Controllers
                         Cantidad = linea.Cantidad,
                         StockAnterior = stockAnterior,
                         StockNuevo = linea.Producto.Stock,
-                        Motivo = $"Compra #{compra.NumeroFactura}",
+                        Motivo = $"Compra #{compra.NumeroFactura}" + (almacen != null ? $" - Almacén: {almacen.Nombre}" : ""),
                         CompraId = compra.Id,
                         CostoUnitario = linea.PrecioUnitario,
                         FechaMovimiento = DateTime.Now,

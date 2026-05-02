@@ -206,11 +206,294 @@ namespace Facturapro.Controllers
             return View();
         }
 
+        // GET: Configuracion/Alertas
+        public async Task<IActionResult> Alertas()
+        {
+            var config = await _context.ConfiguracionEmpresas
+                .OrderByDescending(c => c.Id)
+                .FirstOrDefaultAsync();
+
+            if (config == null)
+            {
+                config = new ConfiguracionEmpresa
+                {
+                    PorcentajeAlertaAgotamiento = 80,
+                    StockMinimoAlerta = 5,
+                    DiasAlertaVencimiento = 30,
+                    AlertaCreditoMaximo = true,
+                    AlertaVentaMaxima = true,
+                    NotificacionSonido = true,
+                    NotificacionPopup = true,
+                    NotificacionEmail = false
+                };
+            }
+
+            return View(config);
+        }
+
+        // POST: Configuracion/Alertas
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Alertas(ConfiguracionEmpresa configuracion)
+        {
+            if (ModelState.IsValid)
+            {
+                var existente = await _context.ConfiguracionEmpresas.FirstOrDefaultAsync();
+
+                if (existente != null)
+                {
+                    existente.PorcentajeAlertaAgotamiento = configuracion.PorcentajeAlertaAgotamiento;
+                    existente.StockMinimoAlerta = configuracion.StockMinimoAlerta;
+                    existente.DiasAlertaVencimiento = configuracion.DiasAlertaVencimiento;
+                    existente.AlertaCreditoMaximo = configuracion.AlertaCreditoMaximo;
+                    existente.AlertaVentaMaxima = configuracion.AlertaVentaMaxima;
+                    existente.NotificacionSonido = configuracion.NotificacionSonido;
+                    existente.NotificacionPopup = configuracion.NotificacionPopup;
+                    existente.NotificacionEmail = configuracion.NotificacionEmail;
+                    existente.FechaActualizacion = DateTime.Now;
+
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Configuración de alertas guardada exitosamente.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "No hay configuración de empresa. Configure primero los datos de la empresa.";
+                }
+            }
+
+            return RedirectToAction(nameof(Alertas));
+        }
+
+        // GET: Configuracion/MetodosPago
+        public async Task<IActionResult> MetodosPago()
+        {
+            var config = await _context.ConfiguracionEmpresas
+                .OrderByDescending(c => c.Id)
+                .FirstOrDefaultAsync();
+
+            if (config == null)
+            {
+                config = new ConfiguracionEmpresa
+                {
+                    AceptarEfectivo = true,
+                    AceptarTarjeta = true,
+                    AceptarTransferencia = true,
+                    AceptarSinpe = false,
+                    AceptarCredito = true,
+                    AceptarMixto = true,
+                    MetodoPagoPorDefecto = 1,
+                    MostrarOpcionesPago = true,
+                    PermitirCambio = true,
+                    PreguntarCambio = false,
+                    MontoMaximoCambio = 0
+                };
+            }
+
+            return View(config);
+        }
+
+        // POST: Configuracion/MetodosPago
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MetodosPago(ConfiguracionEmpresa configuracion)
+        {
+            if (ModelState.IsValid)
+            {
+                var existente = await _context.ConfiguracionEmpresas.FirstOrDefaultAsync();
+
+                if (existente != null)
+                {
+                    existente.AceptarEfectivo = configuracion.AceptarEfectivo;
+                    existente.AceptarTarjeta = configuracion.AceptarTarjeta;
+                    existente.AceptarTransferencia = configuracion.AceptarTransferencia;
+                    existente.AceptarSinpe = configuracion.AceptarSinpe;
+                    existente.AceptarCredito = configuracion.AceptarCredito;
+                    existente.AceptarMixto = configuracion.AceptarMixto;
+                    existente.MetodoPagoPorDefecto = configuracion.MetodoPagoPorDefecto;
+                    existente.MostrarOpcionesPago = configuracion.MostrarOpcionesPago;
+                    existente.PermitirCambio = configuracion.PermitirCambio;
+                    existente.PreguntarCambio = configuracion.PreguntarCambio;
+                    existente.MontoMaximoCambio = configuracion.MontoMaximoCambio;
+                    existente.FechaActualizacion = DateTime.Now;
+
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Configuración de métodos de pago guardada exitosamente.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "No hay configuración de empresa. Configure primero los datos de la empresa.";
+                }
+            }
+
+            return RedirectToAction(nameof(MetodosPago));
+        }
+
         // GET: Configuracion/Usuarios
         public async Task<IActionResult> Usuarios()
         {
-            var usuarios = _userManager.Users.ToList();
+            var usuarios = await _userManager.Users
+                .OrderByDescending(u => u.FechaRegistro)
+                .ToListAsync();
             return View(usuarios);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerUsuario(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return BadRequest();
+            var usuario = await _userManager.FindByIdAsync(id);
+            if (usuario == null) return NotFound();
+
+            return Json(new
+            {
+                id = usuario.Id,
+                nombre = usuario.Nombre,
+                apellido = usuario.Apellido,
+                email = usuario.Email,
+                rol = usuario.Rol,
+                activo = usuario.Activo,
+                puedeFacturar = usuario.PuedeFacturar,
+                puedeVerReportes = usuario.PuedeVerReportes,
+                puedeGestionarInventario = usuario.PuedeGestionarInventario,
+                puedeConfigurarSistema = usuario.PuedeConfigurarSistema,
+                puedeAnularFacturas = usuario.PuedeAnularFacturas,
+                puedeVerCostos = usuario.PuedeVerCostos,
+                puedeGestionarClientes = usuario.PuedeGestionarClientes,
+                puedeGestionarUsuarios = usuario.PuedeGestionarUsuarios
+            });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GuardarUsuario(string Nombre, string Apellido, string Email, string Password, string Rol)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Nombre) || string.IsNullOrEmpty(Email) || string.IsNullOrEmpty(Password))
+                {
+                    return BadRequest(new { success = false, message = "Nombre, Email y Contraseña son campos obligatorios." });
+                }
+
+                var userExistente = await _userManager.FindByEmailAsync(Email);
+                if (userExistente != null)
+                {
+                    return BadRequest(new { success = false, message = "Ya existe un usuario registrado con este correo electrónico." });
+                }
+
+                var user = new ApplicationUser
+                {
+                    UserName = Email,
+                    Email = Email,
+                    Nombre = Nombre,
+                    Apellido = Apellido,
+                    Rol = Rol ?? "Vendedor",
+                    FechaRegistro = DateTime.Now,
+                    Activo = true,
+                    // Permisos iniciales
+                    PuedeFacturar = true,
+                    PuedeGestionarClientes = true,
+                    PuedeVerReportes = (Rol == "Admin" || Rol == "Gerente"),
+                    PuedeGestionarInventario = (Rol == "Admin" || Rol == "Gerente"),
+                    PuedeConfigurarSistema = (Rol == "Admin"),
+                    PuedeAnularFacturas = (Rol == "Admin" || Rol == "Gerente"),
+                    PuedeVerCostos = (Rol == "Admin" || Rol == "Gerente"),
+                    PuedeGestionarUsuarios = (Rol == "Admin") // Solo el Admin crea usuarios por defecto
+                };
+
+                var result = await _userManager.CreateAsync(user, Password);
+                if (result.Succeeded)
+                {
+                    TempData["SuccessMessage"] = $"Usuario {Nombre} creado correctamente.";
+                    return Ok(new { success = true });
+                }
+
+                // Si hay errores de Identity (ej: contraseña débil), devolverlos todos
+                var errores = string.Join(" ", result.Errors.Select(e => e.Description));
+                return BadRequest(new { success = false, message = errores });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear usuario");
+                return BadRequest(new { success = false, message = "Error interno: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EditarUsuario(string Id, string Nombre, string Apellido, string Rol, bool Activo,
+            bool PuedeFacturar, bool PuedeVerReportes, bool PuedeGestionarInventario, bool PuedeConfigurarSistema,
+            bool PuedeAnularFacturas, bool PuedeVerCostos, bool PuedeGestionarClientes, bool PuedeGestionarUsuarios = false)
+        {
+            var user = await _userManager.FindByIdAsync(Id);
+            if (user == null) return NotFound();
+
+            user.Nombre = Nombre;
+            user.Apellido = Apellido;
+            user.Rol = Rol;
+            user.Activo = Activo;
+            user.PuedeFacturar = PuedeFacturar;
+            user.PuedeVerReportes = PuedeVerReportes;
+            user.PuedeGestionarInventario = PuedeGestionarInventario;
+            user.PuedeConfigurarSistema = PuedeConfigurarSistema;
+            user.PuedeAnularFacturas = PuedeAnularFacturas;
+            user.PuedeVerCostos = PuedeVerCostos;
+            user.PuedeGestionarClientes = PuedeGestionarClientes;
+            user.PuedeGestionarUsuarios = PuedeGestionarUsuarios;
+
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Usuario actualizado correctamente.";
+                return Ok(new { success = true });
+            }
+
+            return BadRequest(new { success = false, message = "Error al actualizar usuario" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> EliminarUsuario(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            // Evitar eliminarse a sí mismo
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.Id == user.Id)
+            {
+                return BadRequest(new { success = false, message = "No puedes eliminar tu propio usuario." });
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (result.Succeeded)
+            {
+                TempData["SuccessMessage"] = "Usuario eliminado correctamente.";
+                return Ok(new { success = true });
+            }
+
+            return BadRequest(new { success = false, message = "Error al eliminar usuario" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CambiarContrasena(string id, string nuevaContrasena)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null) return NotFound();
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, nuevaContrasena);
+
+            if (result.Succeeded)
+            {
+                return Ok(new { success = true, message = "Contraseña actualizada correctamente" });
+            }
+
+            return BadRequest(new { success = false, message = "Error al cambiar contraseña" });
         }
 
         // GET: Configuracion/DGII
@@ -498,6 +781,48 @@ namespace Facturapro.Controllers
                 _logger.LogError(ex, "Error al validar certificado");
                 return Json(new { valido = false, mensaje = $"Error: {ex.Message}" });
             }
+        }
+        // GET: Configuracion/Integraciones
+        public async Task<IActionResult> Integraciones()
+        {
+            var config = await _context.ConfiguracionIntegraciones.FirstOrDefaultAsync();
+            if (config == null)
+            {
+                config = new ConfiguracionIntegracion();
+                _context.ConfiguracionIntegraciones.Add(config);
+                await _context.SaveChangesAsync();
+            }
+            return View(config);
+        }
+
+        // POST: Configuracion/Integraciones
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Integraciones(ConfiguracionIntegracion config)
+        {
+            if (ModelState.IsValid)
+            {
+                var existente = await _context.ConfiguracionIntegraciones.FirstOrDefaultAsync();
+                if (existente != null)
+                {
+                    existente.EmailHabilitado = config.EmailHabilitado;
+                    existente.SmtpServer = config.SmtpServer;
+                    existente.SmtpPort = config.SmtpPort;
+                    existente.SmtpUser = config.SmtpUser;
+                    existente.SmtpPassword = config.SmtpPassword;
+                    existente.SmtpUseSSL = config.SmtpUseSSL;
+                    existente.WhatsAppHabilitado = config.WhatsAppHabilitado;
+                    existente.WhatsAppApiKey = config.WhatsAppApiKey;
+                    existente.WhatsAppPhoneId = config.WhatsAppPhoneId;
+                    existente.DgiiValidacionHabilitada = config.DgiiValidacionHabilitada;
+                    existente.TasaUSD = config.TasaUSD;
+                    existente.FechaActualizacion = DateTime.Now;
+
+                    await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Configuración de integraciones actualizada correctamente.";
+                }
+            }
+            return RedirectToAction(nameof(Integraciones));
         }
     }
 }

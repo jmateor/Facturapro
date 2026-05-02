@@ -1,393 +1,406 @@
-@model dynamic
-
+@model Facturapro.Models.ViewModels.POSViewModel
 @{
     ViewData["Title"] = "Punto de Venta (POS)";
-    var clientes = ViewData["Clientes"] as List<Facturapro.Models.Entities.Cliente> ?? new List<Facturapro.Models.Entities.Cliente>();
-    var productos = ViewData["Productos"] as List<Facturapro.Models.Entities.Producto> ?? new List<Facturapro.Models.Entities.Producto>();
-    var carrito = ViewData["Carrito"] as List<Facturapro.Controllers.CarritoItem> ?? new List<Facturapro.Controllers.CarritoItem>();
+    var clientes = Model.Clientes;
+    var productos = Model.Productos;
+    var carrito = Model.Carrito;
     var cultura = new System.Globalization.CultureInfo("es-DO");
+
+    // Calcular totales del carrito
+    decimal subtotalCarrito = 0;
+    decimal itbisCarrito = 0;
+    decimal totalCarrito = 0;
+    int carritoCount = 0;
+    bool carritoTieneItems = false;
+
+    foreach (Facturapro.Controllers.CarritoItem item in carrito)
+    {
+        subtotalCarrito += item.SubTotal;
+        itbisCarrito += item.ITBIS;
+        totalCarrito += item.Total;
+        carritoCount++;
+        carritoTieneItems = true;
+    }
+
+    var carritoJson = Model.CarritoJson;
+    var productosCount = productos.Count;
 }
 
 @section Styles {
-    <style>
-        /* Layout POS Velonic */
-        .pos-container {
-            height: calc(100vh - 180px);
-            min-height: 600px;
-        }
-
-        .pos-product-card {
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid var(--ct-border-color);
-            height: 100%;
-        }
-
-        .pos-product-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-            border-color: var(--ct-primary);
-        }
-
-        .pos-product-card:active {
-            transform: translateY(0);
-        }
-
-        .pos-product-card .stock-badge {
-            position: absolute;
-            top: 0.5rem;
-            right: 0.5rem;
-        }
-
-        .pos-product-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            min-height: 2.4rem;
-        }
-
-        .pos-product-price {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--ct-primary);
-        }
-
-        .pos-cart-item {
-            border-bottom: 1px solid var(--ct-border-color);
-            padding: 0.75rem 0;
-        }
-
-        .pos-cart-item:last-child {
-            border-bottom: none;
-        }
-
-        .pos-cart-item-name {
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 150px;
-        }
-
-        .pos-qty-btn {
-            width: 28px;
-            height: 28px;
-            padding: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pos-total-section {
-            background: var(--ct-tertiary-bg);
-            border-top: 2px solid var(--ct-primary);
-        }
-
-        .barcode-input:focus {
-            border-color: var(--ct-success) !important;
-            box-shadow: 0 0 0 0.2rem rgba(26, 188, 156, 0.25) !important;
-        }
-
-        .quick-product-btn {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 150px;
-        }
-
-        /* Scrollbar personalizado */
-        .pos-scroll {
-            max-height: 100%;
-            overflow-y: auto;
-        }
-
-        .pos-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .pos-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .pos-scroll::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.1);
-            border-radius: 3px;
-        }
-
-        /* Responsive */
-        @@media (max-width: 991px) {
-            .pos-container {
-                height: auto;
-            }
-
-            .pos-products-area {
-                max-height: 500px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="~/css/pos-limpio.css" />
 }
 
-<!-- start page title -->
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box">
-            <div class="page-title-right">
-                <a href="@Url.Action("Index", "Facturas")" class="btn btn-soft-secondary">
-                    <i class="ri-file-list-3-line me-1"></i>
-                    Ver Facturas
-                </a>
-            </div>
-            <h4 class="page-title">
-                <i class="ri-shopping-cart-2-line me-2"></i>
-                Punto de Venta
-            </h4>
-            <p class="text-muted mb-0">Venta rápida de productos</p>
-        </div>
+<!-- Page Header Simplificado -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="mb-0"><i class="ri-shopping-cart-2-line me-2"></i>Punto de Venta</h4>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-sm btn-soft-secondary" onclick="mostrarAyuda()">
+            <i class="ri-question-line"></i> Ayuda
+        </button>
+        <a href="@Url.Action("Index", "Facturas")" class="btn btn-sm btn-soft-primary">
+            <i class="ri-file-list-3-line"></i> Facturas
+        </a>
     </div>
 </div>
-<!-- end page title -->
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="ri-check-double-line me-1"></i>
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="ri-error-warning-line me-1"></i>
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-<div class="row pos-container">
-    <!-- Panel de Productos -->
-    <div class="col-lg-8">
-        <div class="card h-100">
-            <div class="card-header bg-light">
-                <!-- Escáner de Código de Barras -->
-                <div class="input-group mb-2">
-                    <span class="input-group-text bg-success text-white">
-                        <i class="ri-barcode-line"></i>
-                    </span>
-                    <input type="text" id="scanBarcode" class="form-control barcode-input"
-                           placeholder="Escaneé código de barras aquí..." autocomplete="off" />
+<!-- Contenedor Principal POS -->
+<div class="pos-container">
+    <section class="pos-products-section">
+        <!-- Toolbar Simplificada -->
+        <div class="pos-toolbar">
+            <div class="pos-search-group">
+                <div class="pos-input-wrapper">
+                    <i class="ri-barcode-box-line"></i>
+                    <input type="text" id="scanBarcode" class="form-control pos-barcode-input"
+                           placeholder="Código de barras" autocomplete="off" />
                 </div>
-
-                <!-- Búsqueda Manual -->
-                <div class="input-group">
-                    <span class="input-group-text">
-                        <i class="ri-search-line"></i>
-                    </span>
-                    <input type="text" id="buscarProducto" class="form-control"
-                           placeholder="Buscar producto por nombre o código..." autocomplete="off" />
-                </div>
-
-                <!-- Productos Rápidos -->
-                @if (productos.Take(8).Any())
-                {
-                    <div class="d-flex gap-2 flex-wrap mt-2">
-                        @foreach (var prod in productos.Take(8))
-                        {
-                            <button class="btn btn-sm btn-outline-secondary quick-product-btn" onclick="agregarAlCarrito(@prod.Id, 1)">
-                                <i class="ri-add-circle-line me-1"></i>
-                                @prod.Nombre
-                            </button>
-                        }
-                    </div>
-                }
-            </div>
-
-            <div class="card-body pos-scroll pos-products-area" style="max-height: calc(100vh - 350px);">
-                <div class="row g-3" id="productosGrid">
-                    @foreach (var producto in productos)
-                    {
-                        <div class="col-xl-3 col-lg-4 col-md-4 col-6">
-                            <div class="card pos-product-card position-relative" onclick="agregarAlCarrito(@producto.Id, 1)">
-                                @if (producto.Stock <= 5)
-                                {
-                                    <span class="badge bg-warning stock-badge">Stock Bajo</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success stock-badge">@producto.Stock</span>
-                                }
-
-                                <div class="card-body text-center p-3">
-                                    <div class="avatar-lg bg-light rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center">
-                                        <i class="ri-box-3-line fs-2 text-muted"></i>
-                                    </div>
-                                    <h6 class="pos-product-name mb-1">@producto.Nombre</h6>
-                                    @if (producto.Categoria != null)
-                                    {
-                                        <span class="badge bg-light text-muted mb-2">@producto.Categoria.Nombre</span>
-                                    }
-                                    <div class="pos-product-price">
-                                        @producto.Precio.ToString("C", cultura)
-                                    </div>
-                                    <small class="text-muted">
-                                        <i class="ri-archive-line me-1"></i>
-                                        Stock: @producto.Stock
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                <!-- No results message -->
-                <div id="noResults" class="text-center py-5" style="display: none;">
-                    <i class="ri-search-2-line text-muted" style="font-size: 4rem;"></i>
-                    <h5 class="text-muted mt-3">No se encontraron productos</h5>
-                    <p class="text-muted">Intenta con otra búsqueda</p>
+                <div class="pos-input-wrapper">
+                    <i class="ri-search-line"></i>
+                    <input type="text" id="buscarProducto" class="form-control pos-search-input"
+                           placeholder="Buscar producto..." autocomplete="off" />
                 </div>
             </div>
+            <div class="pos-filters-group" id="categoriasList"></div>
         </div>
-    </div>
 
-    <!-- Panel del Carrito -->
-    <div class="col-lg-4">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
-                <h5 class="mb-0">
-                    <i class="ri-shopping-basket-line me-2"></i>
-                    Carrito
-                </h5>
-                <span class="badge bg-white text-primary fs-6" id="cartCount">@carrito.Count</span>
-            </div>
+        <!-- Grid Productos -->
+        <div class="pos-products-grid pos-scroll" id="productosGrid">
 
-            <div class="card-body pos-scroll" style="max-height: calc(100vh - 450px);">
-                @if (!carrito.Any())
-                {
-                    <div class="text-center py-5" id="emptyCartMessage">
-                        <i class="ri-shopping-basket-line text-muted" style="font-size: 4rem;"></i>
-                        <h5 class="text-muted mt-3">El carrito está vacío</h5>
-                        <p class="text-muted">Haz clic en un producto para agregarlo</p>
-                    </div>
-                }
-
-                <div id="cartItems">
-                    @foreach (var item in carrito)
-                    {
-                        <div class="pos-cart-item" data-producto-id="@item.ProductoId">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="flex-grow-1 me-2">
-                                    <div class="pos-cart-item-name">@item.Nombre</div>
-                                    <small class="text-muted">
-                                        @item.Precio.ToString("C", cultura) c/u
-                                    </small>
-                                </div>
-
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="btn-group btn-group-sm">
-                                        <button class="btn btn-outline-secondary pos-qty-btn" onclick="actualizarCantidad(@item.ProductoId, -1, event)">
-                                            <i class="ri-subtract-line"></i>
-                                        </button>
-                                        <span class="btn btn-light disabled" style="min-width: 40px;">
-                                            @item.Cantidad
-                                        </span>
-                                        <button class="btn btn-outline-secondary pos-qty-btn" onclick="actualizarCantidad(@item.ProductoId, 1, event)">
-                                            <i class="ri-add-line"></i>
-                                        </button>
-                                    </div>
-
-                                    <div class="text-end" style="min-width: 90px;">
-                                        <div class="fw-bold text-primary">
-                                            @item.Total.ToString("C", cultura)
-                                        </div>
-                                    </div>
-
-                                    <button class="btn btn-sm btn-soft-danger" onclick="eliminarDelCarrito(@item.ProductoId, event)">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-
-            <div class="card-footer p-0">
-                <!-- Totales -->
-                <div class="p-3 pos-total-section">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">SubTotal:</span>
-                        <span class="fw-medium">@carrito.Sum(i => i.SubTotal).ToString("C", cultura)</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">ITBIS (18%):</span>
-                        <span class="fw-medium">@carrito.Sum(i => i.ITBIS).ToString("C", cultura)</span>
-                    </div>
-                    <div class="d-flex justify-content-between mt-2 pt-2 border-top">
-                        <span class="fs-5 fw-bold">TOTAL:</span>
-                        <span class="fs-4 fw-bold text-primary">
-                            @carrito.Sum(i => i.Total).ToString("C", cultura)
+            @foreach (var producto in productos)
+            {
+                var esStockBajo = producto.Stock <= 5;
+                var icono = string.IsNullOrEmpty(producto.Icono) ? "ri-box-3-line" : producto.Icono;
+                <div class="pos-product-card" data-producto-id="@producto.Id" onclick="agregarAlCarrito(@producto.Id)">
+                    <div class="pos-product-image"><i class="@icono"></i></div>
+                    <div class="pos-product-info">
+                        <h6 class="pos-product-name" title="@producto.Nombre">@producto.Nombre</h6>
+                        <span class="pos-product-price">@producto.Precio.ToString("C", cultura)</span>
+                        <span class="pos-product-stock @(esStockBajo ? "low" : "")">
+                            <i class="@(esStockBajo ? "ri-alert-line" : "ri-check-line")"></i> @producto.Stock
                         </span>
                     </div>
                 </div>
+            }
+        </div>
 
-                <!-- Formulario de Venta -->
-                <div class="p-3 bg-light">
-                    <form asp-action="ProcesarVenta" method="post" id="formVenta">
-                        @Html.AntiForgeryToken()
+        <div id="noResults" class="pos-no-results">
+            <i class="ri-search-2-line"></i>
+            <h5>No se encontraron productos</h5>
+            <p>Intenta con otra búsqueda</p>
+        </div>
+    </section>
 
-                        <div class="mb-2">
-                            <label class="form-label fw-bold">
-                                <i class="ri-user-3-line me-1"></i>
-                                Cliente <span class="text-danger">*</span>
-                            </label>
-                            <select name="ClienteId" class="form-select form-select-sm" required>
+    <!-- Carrito -->
+    <section class="pos-cart-section">
+        <div class="pos-cart-items pos-scroll" id="cartItems">
+            @if (!carritoTieneItems)
+            {
+                <div class="text-center text-muted py-5">
+                    <i class="ri-shopping-basket-2-line" style="font-size: 3rem; opacity: 0.4;"></i>
+                    <p class="mt-2 mb-0">Carrito vacío</p>
+                </div>
+            }
+            else
+            {
+                @foreach (Facturapro.Controllers.CarritoItem item in carrito)
+                {
+                    <div class="pos-cart-item" data-producto-id="@item.ProductoId">
+                        <button type="button" class="pos-cart-item-remove" onclick="eliminarDelCarrito(@item.ProductoId)">
+                            <i class="ri-close-line"></i>
+                        </button>
+                        <div class="flex-grow-1">
+                            <div class="pos-cart-item-name" title="@item.Nombre">@item.Nombre</div>
+                            <div class="pos-cart-item-price">@item.Precio.ToString("C", cultura)</div>
+                        </div>
+                        <div class="pos-cart-item-qty">
+                            <button type="button" class="pos-qty-btn" onclick="actualizarCantidad(@item.ProductoId, -1)">
+                                <i class="ri-subtract-line"></i>
+                            </button>
+                            <span class="pos-qty-value">@item.Cantidad</span>
+                            <button type="button" class="pos-qty-btn" onclick="actualizarCantidad(@item.ProductoId, 1)">
+                                <i class="ri-add-line"></i>
+                            </button>
+                        </div>
+                        <div class="pos-cart-item-total">@item.Total.ToString("C", cultura)</div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="pos-cart-footer">
+            <div class="pos-total-row grand-total">
+                <span>TOTAL</span>
+                <span id="totalValue">@totalCarrito.ToString("C", cultura)</span>
+            </div>
+            <button type="button" class="pos-checkout-btn" id="btnPagar" onclick="abrirModalPago()" @(carritoTieneItems ? "" : "disabled")>
+                <i class="ri-bank-card-line"></i>
+                <span>Pagar</span>
+                <span class="pos-checkout-shortcut">F2</span>
+            </button>
+        </div>
+    </section>
+</div>
+
+<!-- Modal Pago Simplificado -->
+<div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="ri-bank-card-line me-2"></i>Procesar Pago</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPago" asp-action="ProcesarPago" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Cliente -->
+                    <div class="mb-3">
+                        <label class="form-label"><i class="ri-user-3-line me-1"></i>Cliente</label>
+                        <div class="input-group">
+                            <select name="ClienteId" id="clienteSelect" class="form-select" required>
                                 <option value="">Seleccione un cliente</option>
-                                @foreach (var cliente in clientes)
+                                @foreach (Facturapro.Models.Entities.Cliente cliente in clientes)
                                 {
                                     <option value="@cliente.Id">@cliente.Nombre</option>
                                 }
                             </select>
+                            <button type="button" class="btn btn-outline-primary" onclick="abrirModalClienteRapido()" title="Nuevo Cliente">
+                                <i class="ri-add-line"></i>
+                            </button>
                         </div>
+                    </div>
 
-                        <div class="mb-2">
-                            <label class="form-label fw-bold">
-                                <i class="ri-file-text-line me-1"></i>
-                                Tipo NCF
-                            </label>
-                            <select name="TipoNcf" class="form-select form-select-sm">
-                                <option value="NO_NCF">Sin NCF (No fiscal)</option>
-                                <option value="01">01 - Crédito Fiscal</option>
-                                <option value="02">02 - Consumo</option>
-                                <option value="03">03 - Débito Gastos Menores</option>
-                                <option value="14">14 - Regímenes Especiales</option>
+                    <!-- Moneda y Tasa de Cambio -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0"><i class="ri-money-dollar-circle-line me-1"></i>Moneda de Pago</label>
+                            <span class="badge bg-soft-info text-info">Tasa USD: <span id="tasaUSDLabel">@Model.TasaUSD.ToString("N2")</span></span>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="Moneda" id="monedaDOP" value="DOP" checked autocomplete="off" onchange="cambiarMoneda('DOP')">
+                                <label class="btn btn-outline-secondary w-100" for="monedaDOP">Peso (DOP)</label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="Moneda" id="monedaUSD" value="USD" autocomplete="off" onchange="cambiarMoneda('USD')">
+                                <label class="btn btn-outline-secondary w-100" for="monedaUSD">Dólar (USD)</label>
+                            </div>
+                        </div>
+                        <input type="hidden" name="TasaCambio" id="inputTasaCambio" value="@Model.TasaUSD.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" />
+                    </div>
+
+                    <!-- Método de Pago -->
+                    <div class="mb-3">
+                        <label class="form-label"><i class="ri-wallet-line me-1"></i>Método de Pago</label>
+                        <div class="row g-2">
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="MetodoPago" id="metodoEfectivo" value="Efectivo" checked autocomplete="off">
+                                <label class="btn btn-outline-primary w-100" for="metodoEfectivo">Efectivo</label>
+                            </div>
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="MetodoPago" id="metodoTarjeta" value="Tarjeta" autocomplete="off">
+                                <label class="btn btn-outline-success w-100" for="metodoTarjeta">Tarjeta</label>
+                            </div>
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="MetodoPago" id="metodoTransferencia" value="Transferencia" autocomplete="off">
+                                <label class="btn btn-outline-info w-100" for="metodoTransferencia">Transferencia</label>
+                            </div>
+                            <div class="col-3">
+                                <input type="radio" class="btn-check" name="MetodoPago" id="metodoMixto" value="Mixto" autocomplete="off">
+                                <label class="btn btn-outline-warning w-100" for="metodoMixto">Mixto</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos Dinámicos -->
+                    <div id="camposDinamicos" class="card bg-light mb-3">
+                        <div class="card-body">
+                            <!-- Efectivo -->
+                            <div id="camposEfectivo">
+                                <label class="form-label">Monto Recibido</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text">RD$</span>
+                                    <input type="text" class="form-control" id="montoRecibido" name="MontoRecibido" placeholder="0.00" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" />
+                                </div>
+                                <div class="alert alert-success mt-2" id="vueltoAlert" style="display:none;">
+                                    <strong>Vuelto:</strong> <span id="vueltoMonto" class="fs-5"></span>
+                                </div>
+                            </div>
+
+                            <!-- Mixto -->
+                            <div id="camposMixto" style="display:none;">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label">Efectivo</label>
+                                        <input type="number" step="0.01" class="form-control" id="montoEfectivoMixto" name="MontoEfectivo" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Tarjeta</label>
+                                        <input type="number" step="0.01" class="form-control" id="montoTarjetaMixto" name="MontoTarjeta" />
+                                    </div>
+                                </div>
+                                <div class="alert alert-danger mt-2" id="mixtoAlert" style="display:none;">
+                                    <strong>Insuficiente:</strong> <span id="mixtoFaltante"></span>
+                                </div>
+                            </div>
+
+                            <!-- Tarjeta -->
+                            <div id="camposTarjeta" style="display:none;">
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label">Últimos 4 dígitos</label>
+                                        <input type="text" class="form-control" name="NumeroTarjeta" placeholder="0000" maxlength="4" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Autorización</label>
+                                        <input type="text" class="form-control" name="AutorizacionTarjeta" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comprobante y Notas -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Comprobante</label>
+                            <select name="TipoNcf" class="form-select">
+                                <option value="NO_NCF">Consumidor Final</option>
+                                <option value="01">Crédito Fiscal</option>
+                                <option value="02">Consumo</option>
                             </select>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                <i class="ri-sticky-note-line me-1"></i>
-                                Notas
-                            </label>
-                            <textarea name="Notas" class="form-control form-control-sm" rows="2"
-                                      placeholder="Comentarios opcionales..."></textarea>
+                        <div class="col-6">
+                            <label class="form-label">Notas</label>
+                            <textarea name="Notas" class="form-control" rows="1"></textarea>
                         </div>
+                    </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg" @(carrito.Any() ? "" : "disabled") id="btnCompletar">
-                                <i class="ri-check-double-line me-2"></i>
-                                Completar Venta
-                            </button>
-                            <button type="button" class="btn btn-soft-danger" onclick="limpiarCarrito()">
-                                <i class="ri-delete-bin-line me-1"></i>
-                                Limpiar Carrito
+                    <!-- Resumen -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="ri-receipt-line me-2"></i>Resumen</h6>
+                            <div id="modalCartItems" class="mb-2" style="max-height:150px;overflow-y:auto"></div>
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">SubTotal</span>
+                                <span id="modalSubTotal">RD$ 0.00</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">ITBIS</span>
+                                <span id="modalItbis">RD$ 0.00</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fs-5 fw-bold">TOTAL</span>
+                                <span class="fs-3 fw-bold text-success" id="modalTotal">RD$ 0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" class="btn btn-success btn-lg" onclick="procesarPago()">
+                            <i class="ri-check-double-line me-2"></i>Confirmar Pago
+                        </button>
+                        <button type="button" class="btn btn-soft-secondary btn-lg" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cliente Rápido -->
+<div class="modal fade" id="modalClienteRapido" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="ri-user-add-line me-2"></i>Nuevo Cliente Rápido</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formClienteRapido">
+                    @Html.AntiForgeryToken()
+                    <div class="mb-3">
+                        <label class="form-label">Nombre *</label>
+                        <input type="text" id="clienteNombre" name="Nombre" class="form-control" required placeholder="Nombre del cliente" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">RNC / Cédula</label>
+                        <div class="input-group">
+                            <input type="text" id="clienteNIF" name="NIF" class="form-control" placeholder="RNC o cédula" maxlength="11" />
+                            <button class="btn btn-outline-primary no-transition" type="button" id="btnValidarRncPos" onclick="validarRncPos()">
+                                <span id="spinnerRncPos" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                <i id="iconRncPos" class="ri-search-eye-line"></i>
                             </button>
                         </div>
-                    </form>
+                        <div id="rncFeedbackPos" class="small mt-1 d-none"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="clienteEmail" name="Email" class="form-control" placeholder="correo@ejemplo.com" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Teléfono</label>
+                        <input type="tel" id="clienteTelefono" name="Telefono" class="form-control" placeholder="809-000-0000" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" id="clienteDireccion" name="Direccion" class="form-control" placeholder="Calle #, Ciudad" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ciudad</label>
+                        <input type="text" id="clienteCiudad" name="Ciudad" class="form-control" placeholder="Ej: Santo Domingo" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarClienteRapido()">
+                    <i class="ri-save-line me-1"></i> Guardar y Seleccionar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Éxito -->
+<div class="modal fade" id="modalExito" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-body p-5">
+                <div class="text-success mb-3" style="font-size:4rem;">✓</div>
+                <h3 class="mb-2">¡Venta Completada!</h3>
+                <p class="text-muted mb-4">Factura: <strong id="exitoNumeroFactura"></strong></p>
+                <div class="fs-2 fw-bold text-success mb-4" id="exitoTotal"></div>
+                <div class="d-grid gap-2">
+                    <a href="#" target="_blank" class="btn btn-primary" id="btnImprimir"><i class="ri-printer-line me-2"></i>Ver / Imprimir Factura</a>
+                    <button type="button" class="btn btn-soft-secondary" onclick="nuevaVenta()">Nueva Venta</button>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ayuda -->
+<div class="modal fade" id="modalAyuda" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="ri-question-line me-2"></i>Ayuda</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="py-2"><kbd>F1</kbd> - Ayuda</li>
+                    <li class="py-2"><kbd>F2</kbd> - Pagar</li>
+                    <li class="py-2"><kbd>F3</kbd> - Buscar</li>
+                    <li class="py-2"><kbd>F4</kbd> - Limpiar carrito</li>
+                    <li class="py-2"><kbd>ESC</kbd> - Cerrar modal</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -395,61 +408,71 @@
 
 @section Scripts {
     <script>
-        function agregarAlCarrito(productoId, cantidad) {
+        // ========================================
+        // VARIABLES GLOBALES
+        // ========================================
+        let carritoActual = @Html.Raw(carritoJson);
+        let categoriaActual = 0;
+        let terminoBusqueda = '';
+        let filtroStockAlto = false;
+        const tasaUSDGlobal = @Model.TasaUSD.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+        let monedaSeleccionada = 'DOP';
+
+        // ========================================
+        // FUNCIONES DEL CARRITO
+        // ========================================
+        function agregarAlCarrito(productoId) {
             fetch('/POS/AgregarAlCarrito', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 },
-                body: `productoId=${productoId}&cantidad=${cantidad}`
+                body: `productoId=${productoId}&cantidad=1`
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Recargar la página para obtener el carrito actualizado del servidor
                     location.reload();
                 } else {
-                    mostrarAlerta(data.message, 'danger');
+                    mostrarNotificacion(data.message, 'danger');
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al agregar producto', 'danger');
             });
         }
 
-        function actualizarCantidad(productoId, cambio, event) {
-            if (event) event.stopPropagation();
-
-            const item = document.querySelector(`[data-producto-id="${productoId}"]`);
+        function actualizarCantidad(productoId, cambio) {
+            const item = carritoActual.find(i => (i.productoId || i.ProductoId) === productoId);
             if (!item) return;
 
-            const qtyDisplay = item.querySelector('.btn-light');
-            let nuevaCantidad = parseInt(qtyDisplay.textContent) + cambio;
+            const nuevaCantidad = (item.cantidad || item.Cantidad) + cambio;
 
             if (nuevaCantidad < 1) {
-                eliminarDelCarrito(productoId, event);
+                eliminarDelCarrito(productoId);
                 return;
             }
 
-            fetch('/POS/ActualizarCantidad', {
+            fetch(`/POS/ActualizarCantidad?productoId=${productoId}&cantidad=${nuevaCantidad}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                },
-                body: `productoId=${productoId}&cantidad=${nuevaCantidad}`
+                }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     location.reload();
                 } else {
-                    mostrarAlerta(data.message, 'danger');
+                    mostrarNotificacion(data.message, 'danger');
                 }
             });
         }
 
-        function eliminarDelCarrito(productoId, event) {
-            if (event) event.stopPropagation();
-            if (!confirm('¿Eliminar este producto del carrito?')) return;
-
+        function eliminarDelCarrito(productoId) {
             fetch('/POS/EliminarDelCarrito', {
                 method: 'POST',
                 headers: {
@@ -467,7 +490,7 @@
         }
 
         function limpiarCarrito() {
-            if (!confirm('¿Limpiar todo el carrito?')) return;
+            if (!confirm('¿Está seguro de limpiar todo el carrito?')) return;
 
             fetch('/POS/LimpiarCarrito', {
                 method: 'POST',
@@ -475,69 +498,122 @@
                     'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
                 }
             })
-            .then(() => location.reload());
-        }
-
-        function mostrarAlerta(mensaje, tipo) {
-            const alertHtml = `
-                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
-                    <i class="ri-${tipo === 'danger' ? 'error-warning' : 'check-double'}-line me-1"></i>
-                    ${mensaje}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `;
-
-            const container = document.querySelector('.container-fluid');
-            container.insertAdjacentHTML('afterbegin', alertHtml);
-        }
-
-        // Búsqueda en tiempo real
-        document.getElementById('buscarProducto')?.addEventListener('input', function(e) {
-            const termino = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('#productosGrid > div');
-            let visibleCount = 0;
-
-            cards.forEach(card => {
-                const texto = card.textContent.toLowerCase();
-                const visible = texto.includes(termino);
-                card.style.display = visible ? '' : 'none';
-                if (visible) visibleCount++;
+            .then(() => {
+                location.reload();
             });
+        }
 
-            document.getElementById('noResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        // ========================================
+        // BÚSQUEDA Y FILTRADO
+        // ========================================
+        document.getElementById('buscarProducto')?.addEventListener('input', function(e) {
+            terminoBusqueda = e.target.value.toLowerCase();
+            filtrarProductos();
         });
 
-        // Prevenir envío si carrito vacío
-        document.getElementById('formVenta')?.addEventListener('submit', function(e) {
-            const cartCount = parseInt(document.getElementById('cartCount').textContent);
-            if (cartCount === 0) {
-                e.preventDefault();
-                mostrarAlerta('El carrito está vacío', 'danger');
-                return false;
-            }
+        document.getElementById('filtroStockAlto')?.addEventListener('change', function(e) {
+            filtroStockAlto = e.target.checked;
+            filtrarProductos();
         });
 
-        // Foco en escáner al cargar
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('scanBarcode')?.focus();
-        });
+        function filtrarProductos() {
+            const grid = document.getElementById('productosGrid');
+            const noResults = document.getElementById('noResults');
+            
+            // Mostrar skeletons mientras carga
+            window.Skeleton.show('#productosGrid', 'product', 8);
+            noResults.style.display = 'none';
+            grid.style.display = 'grid';
 
-        // Manejar escaneo de código de barras
-        const barcodeInput = document.getElementById('scanBarcode');
+            fetch('/POS/FiltrarProductos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `categoriaId=${categoriaActual}&termino=${encodeURIComponent(terminoBusqueda)}&soloStock=${filtroStockAlto}`
+            })
+            .then(response => response.json())
+            .then(productos => {
+                if (productos.length === 0) {
+                    grid.style.display = 'none';
+                    noResults.style.display = 'flex';
+                    return;
+                }
+
+                grid.style.display = 'grid';
+                noResults.style.display = 'none';
+
+                const html = productos.map(p => `
+                    <div class="pos-product-card ${carritoActual.some(c => (c.productoId || c.ProductoId) === (p.id || p.Id)) ? 'in-cart' : ''}"
+                         data-producto-id="${p.id || p.Id}"
+                         onclick="agregarAlCarrito(${p.id || p.Id})">
+                        <div class="pos-product-image"><i class="${p.icono || p.Icono || 'ri-box-3-line'}"></i></div>
+                        <div class="pos-product-info">
+                            <h6 class="pos-product-name" title="${p.nombre || p.Nombre}">${p.nombre || p.Nombre}</h6>
+                            <span class="pos-product-price">${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(p.precio || p.Precio)}</span>
+                            <span class="pos-product-stock ${(p.stockBajo || p.StockBajo) ? 'low' : ''}">
+                                <i class="${(p.stockBajo || p.StockBajo) ? 'ri-alert-line' : 'ri-check-line'}"></i>${p.stock || p.Stock}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Ocultar skeletons y mostrar contenido real
+                window.Skeleton.hide('#productosGrid', html);
+            });
+        }
+
+        // ========================================
+        // CATEGORÍAS
+        // ========================================
+        function cargarCategorias() {
+            const container = document.getElementById('categoriasList');
+            window.Skeleton.show('#categoriasList', 'category', 5);
+
+            fetch('/POS/GetCategorias')
+                .then(r => r.json())
+                .then(categorias => {
+                    let html = '';
+
+                    // Botón "Todos"
+                    html += `<div class="pos-categoria-chip active" data-categoria="0" onclick="seleccionarCategoria(0, this)">
+                                <i class="ri-apps-line me-1"></i>Todos
+                             </div>`;
+
+                    // Categorías
+                    categorias.forEach((cat, idx) => {
+                        html += `<div class="pos-categoria-chip" data-categoria="${cat.id}" onclick="seleccionarCategoria(${cat.id}, this)">
+                                    ${cat.nombre}
+                                 </div>`;
+                    });
+
+                    window.Skeleton.hide('#categoriasList', html);
+                });
+        }
+
+        function seleccionarCategoria(id, btn) {
+            categoriaActual = id;
+            document.querySelectorAll('.pos-categoria-chip').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filtrarProductos();
+        }
+
+        // ========================================
+        // CÓDIGO DE BARRAS
+        // ========================================
         let barcodeTimeout;
-
-        barcodeInput?.addEventListener('input', function(e) {
+        document.getElementById('scanBarcode')?.addEventListener('input', function(e) {
             clearTimeout(barcodeTimeout);
-
             barcodeTimeout = setTimeout(() => {
                 const codigo = e.target.value.trim();
                 if (codigo.length >= 3) {
                     procesarCodigoBarras(codigo);
                 }
-            }, 100);
+            }, 150);
         });
 
-        barcodeInput?.addEventListener('keypress', function(e) {
+        document.getElementById('scanBarcode')?.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 clearTimeout(barcodeTimeout);
@@ -560,33 +636,513 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    barcodeInput.value = '';
-                    barcodeInput.focus();
+                    document.getElementById('scanBarcode').value = '';
                     location.reload();
                 } else {
-                    mostrarAlerta(data.message, 'danger');
-                    barcodeInput.value = '';
-                    barcodeInput.focus();
+                    mostrarNotificacion(data.message, 'danger');
+                    document.getElementById('scanBarcode').value = '';
+                }
+            });
+        }
+
+        // ========================================
+        // MODAL DE PAGO
+        // ========================================
+        let totalActual = 0;
+
+        function abrirModalPago() {
+            if (carritoActual.length === 0) {
+                mostrarNotificacion('El carrito está vacío', 'danger');
+                return;
+            }
+
+            totalActual = Math.round(carritoActual.reduce((sum, i) => sum + (i.total || i.Total || 0), 0) * 100) / 100;
+            const subtotal = Math.round(carritoActual.reduce((sum, i) => sum + (i.subTotal || i.SubTotal || 0), 0) * 100) / 100;
+            const itbis = Math.round(carritoActual.reduce((sum, i) => sum + (i.itbis || i.ITBIS || 0), 0) * 100) / 100;
+
+            // Reset moneda a DOP al abrir
+            monedaSeleccionada = 'DOP';
+            document.getElementById('monedaDOP').checked = true;
+
+            actualizarTotalesModal();
+            
+            document.getElementById('montoRecibido').value = '';
+            document.getElementById('vueltoAlert').style.display = 'none';
+            document.getElementById('mixtoAlert').style.display = 'none';
+
+            const modalCartItems = document.getElementById('modalCartItems');
+            modalCartItems.innerHTML = carritoActual.map(item => `
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+                        <small class="fw-semibold d-block text-truncate" style="max-width: 180px;">${item.nombre || item.Nombre}</small>
+                        <small class="text-muted">${item.cantidad || item.Cantidad} x ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.precio || item.Precio)}</small>
+                    </div>
+                    <span class="fw-bold">${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.total || item.Total)}</span>
+                </div>
+            `).join('');
+
+            const modal = new bootstrap.Modal(document.getElementById('modalPago'));
+            modal.show();
+            actualizarCamposPago();
+        }
+
+        function cambiarMoneda(moneda) {
+            monedaSeleccionada = moneda;
+            
+            if (moneda === 'USD') {
+                // Consultar tasa del Banco Central automáticamente
+                const label = document.getElementById('tasaUSDLabel');
+                const originalText = label.textContent;
+                label.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+                
+                fetch('/POS/GetTasaUSD')
+                    .then(r => r.json())
+                    .then(data => {
+                        const tasa = data.rate || tasaUSDGlobal;
+                        document.getElementById('inputTasaCambio').value = tasa.toFixed(2);
+                        label.textContent = tasa.toFixed(2);
+                        actualizarTotalesModal();
+                    })
+                    .catch(() => {
+                        label.textContent = originalText;
+                        actualizarTotalesModal();
+                    });
+            } else {
+                actualizarTotalesModal();
+            }
+            
+            // Disparar recálculo de vuelto si hay monto recibido
+            document.getElementById('montoRecibido').dispatchEvent(new Event('input'));
+        }
+
+        function actualizarTotalesModal() {
+            const currentTasa = parseFloat(document.getElementById('inputTasaCambio').value) || tasaUSDGlobal;
+            const factor = monedaSeleccionada === 'USD' ? (1 / currentTasa) : 1;
+            const totalConvertido = totalActual * factor;
+            const subtotalConvertido = Math.round(carritoActual.reduce((sum, i) => sum + (i.subTotal || i.SubTotal || 0), 0) * 100) / 100 * factor;
+            const itbisConvertido = Math.round(carritoActual.reduce((sum, i) => sum + (i.itbis || i.ITBIS || 0), 0) * 100) / 100 * factor;
+            const symbol = monedaSeleccionada === 'USD' ? 'US$' : 'RD$';
+            const currencyCode = monedaSeleccionada === 'USD' ? 'USD' : 'DOP';
+
+            document.getElementById('modalSubTotal').textContent = symbol + ' ' + subtotalConvertido.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('modalItbis').textContent = symbol + ' ' + itbisConvertido.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('modalTotal').textContent = symbol + ' ' + totalConvertido.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
+            document.getElementById('montoRecibido').placeholder = totalConvertido.toFixed(2);
+            document.querySelectorAll('.input-group-text').forEach(el => {
+                if(el.textContent.includes('RD$') || el.textContent.includes('US$')) {
+                    el.textContent = symbol;
+                }
+            });
+        }
+
+        function actualizarCamposPago() {
+            const metodo = document.querySelector('input[name="MetodoPago"]:checked')?.value;
+            const camposEfectivo = document.getElementById('camposEfectivo');
+            const camposTarjeta = document.getElementById('camposTarjeta');
+            const camposMixto = document.getElementById('camposMixto');
+
+            camposEfectivo.style.display = 'none';
+            camposTarjeta.style.display = 'none';
+            camposMixto.style.display = 'none';
+            document.getElementById('montoRecibido').required = false;
+            document.getElementById('mixtoAlert').style.display = 'none';
+
+            if (metodo === 'Efectivo') {
+                camposEfectivo.style.display = 'block';
+                document.getElementById('montoRecibido').required = true;
+            } else if (metodo === 'Tarjeta') {
+                camposTarjeta.style.display = 'block';
+            } else if (metodo === 'Mixto') {
+                camposMixto.style.display = 'block';
+            }
+        }
+
+        document.querySelectorAll('input[name="MetodoPago"]').forEach(radio => {
+            radio.addEventListener('change', actualizarCamposPago);
+        });
+
+        document.getElementById('montoRecibido')?.addEventListener('input', function(e) {
+            const val = e.target.value.replace(',', '.');
+            const recibido = parseFloat(val) || 0;
+            const factor = monedaSeleccionada === 'USD' ? (1 / tasaUSDGlobal) : 1;
+            const totalEnMoneda = Math.round(totalActual * factor * 100) / 100;
+            
+            const recibidoRedondeado = Math.round(recibido * 100) / 100;
+            const vuelto = Math.round((recibidoRedondeado - totalEnMoneda) * 100) / 100;
+            const vueltoAlert = document.getElementById('vueltoAlert');
+            const btnConfirmar = document.querySelector('#modalPago .btn-success');
+            const symbol = monedaSeleccionada === 'USD' ? 'US$' : 'RD$';
+
+            if (recibidoRedondeado >= totalEnMoneda && recibidoRedondeado > 0) {
+                vueltoAlert.style.display = 'block';
+                vueltoAlert.className = 'alert alert-success mt-2';
+                vueltoAlert.innerHTML = '<strong>Vuelto:</strong> <span class="fs-5">' + symbol + ' ' + vuelto.toLocaleString('en-US', {minimumFractionDigits:2}) + '</span>';
+                if (btnConfirmar) btnConfirmar.disabled = false;
+            } else if (recibidoRedondeado > 0 && recibidoRedondeado < totalEnMoneda) {
+                const faltante = Math.round((totalEnMoneda - recibidoRedondeado) * 100) / 100;
+                vueltoAlert.style.display = 'block';
+                vueltoAlert.className = 'alert alert-danger mt-2';
+                vueltoAlert.innerHTML = `<strong>Insuficiente:</strong> Faltan ${symbol} ${faltante.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+                if (btnConfirmar) btnConfirmar.disabled = true;
+            } else {
+                vueltoAlert.style.display = 'none';
+                if (btnConfirmar) btnConfirmar.disabled = false;
+            }
+        });
+
+        ['montoEfectivoMixto', 'montoTarjetaMixto'].forEach(id => {
+            document.getElementById(id)?.addEventListener('input', function() {
+                const efectivo = parseFloat(document.getElementById('montoEfectivoMixto')?.value) || 0;
+                const tarjeta = parseFloat(document.getElementById('montoTarjetaMixto')?.value) || 0;
+                const totalPagado = efectivo + tarjeta;
+                const mixtoAlert = document.getElementById('mixtoAlert');
+                const btnConfirmar = document.querySelector('#modalPago .btn-success');
+
+                if (totalPagado >= totalActual && totalPagado > 0) {
+                    mixtoAlert.style.display = 'none';
+                    if (btnConfirmar) btnConfirmar.disabled = false;
+                } else if (totalPagado > 0 && totalPagado < totalActual) {
+                    const faltante = totalActual - totalPagado;
+                    mixtoAlert.style.display = 'block';
+                    mixtoAlert.className = 'alert alert-danger mt-2';
+                    mixtoAlert.innerHTML = `<strong>Insuficiente:</strong> Faltan ${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(faltante)}`;
+                    if (btnConfirmar) btnConfirmar.disabled = true;
+                } else {
+                    mixtoAlert.style.display = 'none';
+                    if (btnConfirmar) btnConfirmar.disabled = false;
+                }
+            });
+        });
+
+        function procesarPago() {
+            const form = document.getElementById('formPago');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Validación final: verificar monto recibido si es efectivo
+            const metodoPago = document.querySelector('input[name="MetodoPago"]:checked')?.value;
+            const montoRecibidoInput = document.getElementById('montoRecibido');
+            const recibido = montoRecibidoInput ? parseFloat(montoRecibidoInput.value) || 0 : 0;
+            const factor = monedaSeleccionada === 'USD' ? (1 / tasaUSDGlobal) : 1;
+            const totalEnMoneda = totalActual * factor;
+
+            if (metodoPago === 'Efectivo' && recibido < totalEnMoneda - 0.01) {
+                mostrarNotificacion('El monto recibido es insuficiente', 'danger');
+                return;
+            }
+
+            // Mostrar confirmación
+            const symbol = monedaSeleccionada === 'USD' ? 'US$' : 'RD$';
+            if (!confirm('¿Está seguro de procesar esta venta?\n\n' +
+                        `Total: ${symbol} ${recibido > 0 ? recibido.toLocaleString('en-US', {minimumFractionDigits:2}) : totalEnMoneda.toLocaleString('en-US', {minimumFractionDigits:2})}\n` +
+                        `Método de pago: ${metodoPago}\n\n` +
+                        'Esta acción no se puede deshacer.')) {
+                return;
+            }
+
+            // Mostrar estado de procesamiento
+            const btnConfirmar = document.querySelector('#modalPago .btn-success');
+            const textoOriginal = btnConfirmar.innerHTML;
+            btnConfirmar.disabled = true;
+            btnConfirmar.innerHTML = '<i class="ri-loader-4-line ri-spin me-2"></i>Procesando...';
+
+            const formData = new FormData(form);
+
+            // Asignar montos según método de pago y moneda seleccionada
+            if (metodoPago === 'Efectivo') {
+                const montoEfectivo = recibido > 0 ? recibido : totalEnMoneda;
+                formData.set('MontoEfectivo', montoEfectivo.toFixed(2));
+                formData.set('MontoTarjeta', '0');
+                formData.set('MontoTransferencia', '0');
+            } else if (metodoPago === 'Tarjeta') {
+                formData.set('MontoEfectivo', '0');
+                formData.set('MontoTarjeta', totalEnMoneda.toFixed(2));
+                formData.set('MontoTransferencia', '0');
+            } else if (metodoPago === 'Transferencia') {
+                formData.set('MontoEfectivo', '0');
+                formData.set('MontoTarjeta', '0');
+                formData.set('MontoTransferencia', totalEnMoneda.toFixed(2));
+            } else if (metodoPago === 'Mixto') {
+                const efectivoMixto = parseFloat(document.getElementById('montoEfectivoMixto')?.value) || 0;
+                const tarjetaMixto = parseFloat(document.getElementById('montoTarjetaMixto')?.value) || 0;
+
+                if (efectivoMixto + tarjetaMixto < totalEnMoneda - 0.01) {
+                    mostrarNotificacion('La suma de los montos es menor que el total', 'danger');
+                    btnConfirmar.disabled = false;
+                    btnConfirmar.innerHTML = textoOriginal;
+                    return;
+                }
+
+                formData.set('MontoEfectivo', efectivoMixto.toFixed(2));
+                formData.set('MontoTarjeta', tarjetaMixto.toFixed(2));
+                formData.set('MontoTransferencia', '0');
+            }
+
+            // Asegurar que Moneda y TasaCambio estén presentes
+            formData.set('Moneda', monedaSeleccionada);
+            formData.set('TasaCambio', tasaUSDGlobal.toString());
+
+            const params = new URLSearchParams();
+            for (let [key, value] of formData.entries()) {
+                params.append(key, value);
+            }
+
+            fetch('/POS/ProcesarPago', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: params.toString()
+            })
+            .then(response => response.json())
+            .then(data => {
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerHTML = textoOriginal;
+
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalPago')).hide();
+
+                    document.getElementById('exitoNumeroFactura').textContent = data.numeroFactura || data.NumeroFactura;
+                    document.getElementById('exitoTotal').textContent = data.total || data.Total;
+                    const fId = data.facturaId || data.FacturaId;
+                    document.getElementById('btnImprimir').href = `/Facturas/DescargarPDF/${fId}`;
+
+                    const modal = new bootstrap.Modal(document.getElementById('modalExito'));
+                    modal.show();
+
+                    carritoActual = [];
+                } else {
+                    mostrarNotificacion(data.message, 'danger');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                barcodeInput.value = '';
-                barcodeInput.focus();
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerHTML = textoOriginal;
+                mostrarNotificacion('Error de conexión al procesar la venta', 'danger');
             });
         }
 
-        // Permitir que cualquier tecla en el documento envíe foco al escáner
+        function nuevaVenta() {
+            bootstrap.Modal.getInstance(document.getElementById('modalExito')).hide();
+            location.reload();
+        }
+
+        // ========================================
+        // ATAJOS DE TECLADO
+        // ========================================
         document.addEventListener('keydown', function(e) {
-            if (document.activeElement?.tagName === 'INPUT' ||
-                document.activeElement?.tagName === 'TEXTAREA' ||
-                document.activeElement?.tagName === 'SELECT') {
+            // F2 siempre debe funcionar para abrir modal de pago si hay productos
+            if (e.key === 'F2') {
+                e.preventDefault();
+                if (carritoActual.length > 0) {
+                    // Si el modal ya está abierto, no hacer nada
+                    const modalPago = document.getElementById('modalPago');
+                    if (!modalPago.classList.contains('show')) {
+                        abrirModalPago();
+                    }
+                } else {
+                    mostrarNotificacion('El carrito está vacío', 'danger');
+                }
                 return;
             }
 
-            if (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
-                barcodeInput?.focus();
+            // Ignorar otros atajos si el foco está en inputs
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                return;
             }
+
+            switch(e.key) {
+                case 'F1':
+                    e.preventDefault();
+                    mostrarAyuda();
+                    break;
+                case 'F3':
+                    e.preventDefault();
+                    document.getElementById('buscarProducto')?.focus();
+                    break;
+                case 'F4':
+                    e.preventDefault();
+                    if (carritoActual.length > 0) limpiarCarrito();
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        const instance = bootstrap.Modal.getInstance(modal);
+                        if (instance) instance.hide();
+                    });
+                    break;
+            }
+        });
+
+        // ========================================
+        // UTILIDADES
+        // ========================================
+        function mostrarNotificacion(mensaje, tipo) {
+            // Mapear tipos de bootstrap a tipos de Toast
+            const map = {
+                'success': 'success',
+                'danger': 'error',
+                'warning': 'warning',
+                'info': 'info'
+            };
+            const toastType = map[tipo] || 'info';
+            const title = tipo === 'success' ? '¡Éxito!' : tipo === 'danger' ? 'Error' : 'Aviso';
+            
+            window.Toast[toastType](title, mensaje);
+        }
+
+        function mostrarAyuda() {
+            const modal = new bootstrap.Modal(document.getElementById('modalAyuda'));
+            modal.show();
+        }
+
+        // ========================================
+        // CLIENTE RÁPIDO DESDE POS
+        // ========================================
+        function abrirModalClienteRapido() {
+            document.getElementById('formClienteRapido').reset();
+            document.getElementById('clienteNombre').value = '';
+            document.getElementById('clienteNIF').value = '';
+            document.getElementById('clienteEmail').value = '';
+            document.getElementById('clienteTelefono').value = '';
+            document.getElementById('clienteDireccion').value = '';
+            document.getElementById('clienteCiudad').value = '';
+
+            const modal = new bootstrap.Modal(document.getElementById('modalClienteRapido'));
+            modal.show();
+        }
+
+        function guardarClienteRapido() {
+            const nombre = document.getElementById('clienteNombre').value.trim();
+            const nif = document.getElementById('clienteNIF').value.trim();
+            const email = document.getElementById('clienteEmail').value.trim();
+            const telefono = document.getElementById('clienteTelefono').value.trim();
+            const direccion = document.getElementById('clienteDireccion').value.trim();
+            const ciudad = document.getElementById('clienteCiudad').value.trim();
+
+            if (!nombre) {
+                mostrarNotificacion('El nombre es obligatorio', 'danger');
+                return;
+            }
+
+            const formData = new URLSearchParams();
+            formData.append('__RequestVerificationToken', document.querySelector('input[name="__RequestVerificationToken"]').value);
+            formData.append('Nombre', nombre);
+            formData.append('NIF', nif);
+            formData.append('Email', email);
+            formData.append('Telefono', telefono);
+            formData.append('Direccion', direccion);
+            formData.append('Ciudad', ciudad);
+
+            fetch('/Clientes/CrearRapido', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: formData.toString()
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalClienteRapido')).hide();
+
+                    const clienteSelect = document.getElementById('clienteSelect');
+                    const option = document.createElement('option');
+                    option.value = data.cliente.id;
+                    option.textContent = data.cliente.nombre;
+                    option.selected = true;
+                    clienteSelect.appendChild(option);
+
+                    mostrarNotificacion('Cliente creado correctamente', 'success');
+                } else {
+                    mostrarNotificacion(data.message || 'Error al crear cliente', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarNotificacion('Error de conexión al crear cliente', 'danger');
+            });
+        }
+
+        async function validarRncPos() {
+            const rncInput = document.getElementById('clienteNIF');
+            const rnc = rncInput.value.trim();
+            
+            if (rnc.length !== 9 && rnc.length !== 11) {
+                mostrarNotificacion('El RNC debe tener 9 u 11 dígitos', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btnValidarRncPos');
+            const spinner = document.getElementById('spinnerRncPos');
+            const icon = document.getElementById('iconRncPos');
+            const feedback = document.getElementById('rncFeedbackPos');
+            const nombreInput = document.getElementById('clienteNombre');
+
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            icon.classList.add('d-none');
+            feedback.classList.remove('d-none');
+            feedback.className = 'small mt-1 text-muted';
+            feedback.innerHTML = '<i class="ri-loader-4-line ri-spin me-1"></i> Consultando DGII...';
+
+            try {
+                const response = await fetch(`/api/Validation/rnc/${rnc}`);
+                if (!response.ok) throw new Error('Error en respuesta');
+                const data = await response.json();
+
+                // Manejar tanto PascalCase como camelCase por si acaso
+                const esValido = data.esValido || data.EsValido;
+                const nombre = data.nombre || data.Nombre;
+                const mensaje = data.mensaje || data.Mensaje;
+
+                if (esValido) {
+                    feedback.className = 'small mt-1 text-success fw-semibold';
+                    feedback.innerHTML = `<i class="ri-checkbox-circle-line me-1"></i> ${mensaje}`;
+                    
+                    // Notificación visual de éxito
+                    mostrarNotificacion('¡Documento Válido!', 'success');
+                    rncInput.classList.add('border-success');
+                    
+                    if (nombre) {
+                        nombreInput.value = nombre;
+                        nombreInput.classList.add('is-valid');
+                        // Efecto visual
+                        nombreInput.style.backgroundColor = '#e8f5e9';
+                        setTimeout(() => nombreInput.style.backgroundColor = '', 1000);
+                    }
+                } else {
+                    feedback.className = 'small mt-1 text-danger';
+                    feedback.innerHTML = `<i class="ri-error-warning-line me-1"></i> ${data.mensaje}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                feedback.className = 'small mt-1 text-warning';
+                feedback.innerHTML = '<i class="ri-alert-line me-1"></i> Error al consultar.';
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+                icon.classList.remove('d-none');
+            }
+        }
+
+        // ========================================
+        // INICIALIZACIÓN
+        // ========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarCategorias();
+            document.getElementById('scanBarcode')?.focus();
+
+            carritoActual.forEach(item => {
+                const card = document.querySelector(`.pos-product-card[data-producto-id="${item.productoId || item.ProductoId}"]`);
+                if (card) card.classList.add('in-cart');
+            });
         });
     </script>
 }

@@ -1,0 +1,601 @@
+/* ========================================
+   POS ELITE - Diseño Premium UX/UI
+   ======================================== */
+
+:root {
+    --pos-primary: #6658dd;
+    --pos-primary-light: rgba(102, 88, 221, 0.1);
+    --pos-success: #0acf97;
+    --pos-success-gradient: linear-gradient(135deg, #0acf97 0%, #089d71 100%);
+    --pos-danger: #fa5c7c;
+    --pos-warning: #ffbc00;
+    --pos-bg: #f3f4f7;
+    --pos-card-bg: #ffffff;
+    --pos-border: rgba(0, 0, 0, 0.05);
+    --pos-text-main: #313a46;
+    --pos-text-muted: #98a6ad;
+    --pos-shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.03);
+    --pos-shadow-hover: 0 20px 40px rgba(102, 88, 221, 0.12);
+    --pos-radius-sm: 0.75rem;
+    --pos-radius-md: 1.25rem;
+    --pos-radius-lg: 1.75rem;
+}
+
+/* Contenedor Principal */
+.pos-container {
+    display: flex;
+    gap: 1.5rem;
+    height: calc(100vh - 120px);
+    min-height: 700px;
+    padding: 0;
+    margin-top: 1rem;
+    background: transparent;
+}
+
+@media (max-width: 992px) {
+    .pos-container {
+        flex-direction: column;
+        height: auto;
+    }
+    .pos-cart-section {
+        width: 100% !important;
+        height: 600px;
+    }
+}
+
+/* ========================================
+   SECCIÓN DE PRODUCTOS
+   ======================================== */
+.pos-products-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* Toolbar Premium (Buscador y Categorías) */
+.pos-toolbar {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 1.25rem;
+    border-radius: var(--pos-radius-md);
+    border: 1px solid rgba(255,255,255,0.5);
+    box-shadow: var(--pos-shadow-soft);
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.pos-search-group {
+    flex: 1;
+    display: flex;
+    gap: 1rem;
+    min-width: 320px;
+}
+
+.pos-input-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.pos-input-wrapper i {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--pos-primary);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.pos-search-input,
+.pos-barcode-input {
+    width: 100%;
+    padding: 1rem 1.25rem 1rem 3.5rem;
+    border: 2px solid transparent;
+    border-radius: 50rem; /* Pill shape */
+    font-size: 1rem;
+    font-weight: 500;
+    background-color: var(--pos-bg);
+    color: var(--pos-text-main);
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.pos-search-input:focus,
+.pos-barcode-input:focus {
+    border-color: var(--pos-primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 4px var(--pos-primary-light);
+    outline: none;
+}
+
+.pos-input-wrapper:focus-within i {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.pos-barcode-input {
+    width: 220px;
+    font-family: 'SF Mono', 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+/* Chips de Categoría Elite */
+.pos-filters-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.pos-categoria-chip {
+    padding: 0.6rem 1.25rem;
+    background: #fff;
+    border: 1px solid var(--pos-border);
+    border-radius: 50rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--pos-text-muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+}
+
+.pos-categoria-chip:hover {
+    border-color: var(--pos-primary);
+    color: var(--pos-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px var(--pos-primary-light);
+}
+
+.pos-categoria-chip.active {
+    background: var(--pos-primary);
+    border-color: var(--pos-primary);
+    color: white;
+    box-shadow: 0 8px 20px var(--pos-primary-light);
+}
+
+/* Cuadrícula de Productos */
+.pos-products-grid {
+    flex: 1;
+    padding: 0.5rem 0.5rem 2rem 0.5rem;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-auto-rows: min-content;
+    gap: 1.5rem;
+}
+
+@media (min-width: 1600px) { .pos-products-grid { grid-template-columns: repeat(5, 1fr); } }
+@media (max-width: 1599px) and (min-width: 1200px) { .pos-products-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* Tarjeta de Producto - Premium Neumorphism */
+.pos-product-card {
+    background: var(--pos-card-bg);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: var(--pos-radius-lg);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    position: relative;
+    box-shadow: var(--pos-shadow-soft);
+    overflow: hidden;
+}
+
+/* Efecto de cristal en hover */
+.pos-product-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    border-radius: var(--pos-radius-lg);
+}
+
+.pos-product-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--pos-shadow-hover);
+    border-color: var(--pos-primary-light);
+}
+
+.pos-product-card:hover::before {
+    opacity: 1;
+}
+
+.pos-product-card:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.pos-product-card.in-cart {
+    border: 2px solid var(--pos-success);
+    background: rgba(10, 207, 151, 0.03);
+    animation: bounceIn 0.5s;
+}
+
+@keyframes bounceIn {
+    0% { transform: scale(0.9); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Ícono del Producto con Gradiente */
+.pos-product-image {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8rem;
+    color: var(--pos-primary);
+    background: linear-gradient(135deg, var(--pos-bg) 0%, #ffffff 100%);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-bottom: 0.5rem;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03), 0 5px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.pos-product-card:hover .pos-product-image {
+    background: linear-gradient(135deg, var(--pos-primary) 0%, #8b7df0 100%);
+    color: white;
+    transform: rotateY(10deg) scale(1.1);
+    box-shadow: 0 10px 20px var(--pos-primary-light);
+}
+
+.pos-product-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    width: 100%;
+    z-index: 1;
+}
+
+.pos-product-name {
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--pos-text-main);
+    line-height: 1.4;
+    display: -webkit-box;
+    line-clamp: 2;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+    margin: 0;
+    height: 2.8em;
+}
+
+.pos-product-price {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--pos-primary);
+    margin: 0.25rem 0;
+    letter-spacing: -0.5px;
+}
+
+/* Badge de Stock Flotante */
+.pos-product-stock {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 50rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(10, 207, 151, 0.1);
+    color: #089d71;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+
+.pos-product-stock.low {
+    background: rgba(250, 92, 124, 0.1);
+    color: var(--pos-danger);
+}
+
+/* ========================================
+   PANEL DEL CARRITO (Lateral)
+   ======================================== */
+.pos-cart-section {
+    width: 420px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    border-radius: var(--pos-radius-lg);
+    border: 1px solid rgba(255,255,255,0.6);
+    box-shadow: -10px 0 40px rgba(0,0,0,0.04);
+    overflow: hidden;
+    position: relative;
+}
+
+.pos-cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+}
+
+/* Ítem del Carrito Elite */
+.pos-cart-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    background: #fff;
+    border: 1px solid var(--pos-border);
+    border-radius: var(--pos-radius-md);
+    gap: 1rem;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.pos-cart-item:hover {
+    border-color: var(--pos-primary-light);
+    box-shadow: 0 8px 20px rgba(102, 88, 221, 0.08);
+    transform: scale(1.01);
+}
+
+.pos-cart-item-remove {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(250, 92, 124, 0.1);
+    border: none;
+    color: var(--pos-danger);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.pos-cart-item-remove:hover {
+    background: var(--pos-danger);
+    color: white;
+    transform: rotate(90deg);
+}
+
+.pos-cart-item-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--pos-text-main);
+    margin-bottom: 0.3rem;
+}
+
+.pos-cart-item-price {
+    font-size: 0.8rem;
+    color: var(--pos-text-muted);
+    font-weight: 500;
+}
+
+/* Control de Cantidad tipo Píldora */
+.pos-cart-item-qty {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--pos-bg);
+    border-radius: 50rem;
+    padding: 0.2rem;
+    grid-column: 2 / -1;
+    justify-self: end;
+    margin-top: 0.5rem;
+}
+
+.pos-qty-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--pos-text-main);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pos-qty-btn:hover {
+    background: var(--pos-primary);
+    color: white;
+}
+
+.pos-qty-value {
+    min-width: 30px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--pos-text-main);
+}
+
+.pos-cart-item-total {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--pos-text-main);
+    text-align: right;
+    grid-column: 3;
+    grid-row: 1 / 3;
+    align-self: start;
+}
+
+/* ========================================
+   ÁREA DE PAGO (Footer del Carrito)
+   ======================================== */
+.pos-cart-footer {
+    padding: 2rem 1.5rem;
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 20%);
+    border-top: 1px dashed rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 10;
+}
+
+.pos-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--pos-text-muted);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.pos-total-row.grand-total {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--pos-text-main);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--pos-bg);
+    margin-bottom: 1.5rem;
+}
+
+.pos-total-row.grand-total #totalValue {
+    font-size: 2.2rem;
+    color: var(--pos-success);
+    letter-spacing: -1px;
+    text-shadow: 0 4px 10px rgba(10, 207, 151, 0.2);
+}
+
+/* Botón Checkout Gigante */
+.pos-checkout-btn {
+    width: 100%;
+    padding: 1.25rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    border-radius: var(--pos-radius-md);
+    background: var(--pos-success-gradient) !important;
+    border: none !important;
+    color: white !important;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 10px 25px rgba(10, 207, 151, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Brillo animado sobre el botón */
+.pos-checkout-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+    transform: skewX(-25deg);
+    animation: shine 3s infinite;
+}
+
+@keyframes shine {
+    0% { left: -100%; }
+    20% { left: 200%; }
+    100% { left: 200%; }
+}
+
+.pos-checkout-btn:hover:not(:disabled) {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(10, 207, 151, 0.5);
+}
+
+.pos-checkout-btn:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 5px 15px rgba(10, 207, 151, 0.3);
+}
+
+.pos-checkout-btn:disabled {
+    background: #e3e6ea !important;
+    color: #98a6ad !important;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.pos-checkout-btn:disabled::after {
+    display: none;
+}
+
+.pos-checkout-shortcut {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.8rem;
+    margin-left: auto;
+}
+
+/* ========================================
+   SCROLLBARS & EXTRAS
+   ======================================== */
+.pos-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.pos-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.pos-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.1);
+    border-radius: 10px;
+}
+.pos-scroll:hover::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+}
+
+/* Mensajes de Vacío / Sin Resultados */
+.pos-no-results {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    animation: fadeIn 0.5s;
+}
+
+.pos-cart-items .text-center.text-muted.py-5 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    animation: fadeIn 0.5s;
+}
+
+.pos-no-results i, .pos-cart-items .text-center.text-muted.py-5 i {
+    font-size: 4rem;
+    background: linear-gradient(135deg, #ced4da 0%, #adb5bd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

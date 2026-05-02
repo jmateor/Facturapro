@@ -18,10 +18,10 @@
         </div>
         <div class="d-flex gap-2">
             <div class="btn-group" role="group">
-                <a href="@Url.Action("Importar")" class="btn btn-soft-info" title="Importar desde CSV">
+                <a href="@Url.Action("Importar")" class="btn btn-soft-info" title="Importar desde Excel">
                     <i class="ri-upload-cloud-line"></i>
                 </a>
-                <a href="@Url.Action("Exportar")" class="btn btn-soft-info" title="Exportar a CSV">
+                <a href="@Url.Action("Exportar")" class="btn btn-soft-info" title="Exportar a Excel">
                     <i class="ri-download-cloud-line"></i>
                 </a>
             </div>
@@ -169,143 +169,184 @@
                         <th style="width: 10%;" class="text-end">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        <tr class="producto-row" data-codigo="@item.Codigo.ToLower()" data-nombre="@item.Nombre.ToLower()" data-categoria="@item.Categoria?.Nombre.ToLower()">
-                            <td>
-                                <span class="badge bg-light text-dark fw-normal">@item.Codigo</span>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="flex-shrink-0">
-                                        <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                                            <i class="ri-box-3-line"></i>
-                                        </div>
-                                    </div>
-                                    <div class="flex-grow-1 ms-3">
-                                        <h6 class="mb-0 fw-semibold">@item.Nombre</h6>
-                                        @if (!string.IsNullOrEmpty(item.Descripcion))
-                                        {
-                                            <small class="text-muted">@item.Descripcion.Substring(0, Math.Min(50, item.Descripcion.Length))...</small>
-                                        }
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                @if (item.Categoria != null)
-                                {
-                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">@item.Categoria.Nombre</span>
-                                }
-                                else
-                                {
-                                    <span class="text-muted">-</span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <span class="fw-bold text-success">@item.Precio.ToString("C", cultura)</span>
-                            </td>
-                            <td class="text-center">
-                                @if (item.Stock <= 5)
-                                {
-                                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle">
-                                        @item.Stock <i class="ri-alarm-warning-line ms-1"></i>
-                                    </span>
-                                }
-                                else if (item.Stock <= 15)
-                                {
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
-                                        @item.Stock
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
-                                        @item.Stock
-                                    </span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                @if (item.Activo)
-                                {
-                                    <span class="badge bg-success-soft text-success">
-                                        <i class="ri-checkbox-circle-fill me-1"></i>Activo
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary-soft text-secondary">
-                                        <i class="ri-stop-circle-fill me-1"></i>Inactivo
-                                    </span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <div class="btn-group" role="group">
-                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-sm btn-soft-info" title="Ver detalles">
-                                        <i class="ri-eye-line"></i>
-                                    </a>
-                                    <a href="@Url.Action("Edit", new { id = item.Id })" class="btn btn-sm btn-soft-primary" title="Editar">
-                                        <i class="ri-edit-line"></i>
-                                    </a>
-                                    <a href="@Url.Action("Delete", new { id = item.Id })" class="btn btn-sm btn-soft-danger" title="Eliminar" onclick="return confirm('¿Está seguro de eliminar este producto?')">
-                                        <i class="ri-delete-bin-line"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
+                <tbody id="tablaProductosBody">
+                    <!-- Dinámico vía AJAX -->
                 </tbody>
             </table>
         </div>
 
-        @if (!Model.Any())
-        {
+        <div id="noResults" style="display: none;">
             <div class="text-center py-5">
-                <div class="avatar-lg bg-soft-primary rounded-circle mb-3 mx-auto d-inline-flex" style="width: 100px; height: 100px;">
-                    <i class="ri-box-3-line display-4 text-primary"></i>
-                </div>
-                <h5 class="fw-semibold">No hay productos registrados</h5>
-                <p class="text-muted mb-3">Comienza agregando tu primer producto al catálogo</p>
-                <div class="d-flex gap-2 justify-content-center">
-                    <a href="@Url.Action("Create")" class="btn btn-primary">
-                        <i class="ri-add-line me-1"></i> Crear primer producto
-                    </a>
-                    <a href="@Url.Action("Importar")" class="btn btn-soft-info">
-                        <i class="ri-upload-cloud-line me-1"></i> Importar CSV
-                    </a>
-                </div>
+                <i class="ri-search-line display-4 text-muted"></i>
+                <h5 class="fw-semibold mt-3">No se encontraron productos</h5>
+                <p class="text-muted">Prueba con otros filtros o términos de búsqueda</p>
             </div>
-        }
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3 gap-3">
+            <div class="text-muted small">
+                Mostrando <span id="spanStart">0</span> a <span id="spanEnd">0</span> de <span id="spanTotal">0</span> productos
+            </div>
+            <nav aria-label="Navegación de productos">
+                <ul class="pagination pagination-rounded mb-0" id="paginationContainer">
+                    <!-- Dinámico -->
+                </ul>
+            </nav>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        // Búsqueda en tiempo real
+        let currentPage = 1;
+        const pageSize = 10;
+        const cultura = 'es-DO';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarProductos();
+        });
+
+        // Búsqueda en tiempo real (con debounce)
+        let searchTimeout;
         document.querySelector('input[name="buscar"]').addEventListener('input', function() {
-            const filtro = this.value.toLowerCase();
-            const filas = document.querySelectorAll('.producto-row');
-
-            filas.forEach(function(fila) {
-                const codigo = fila.getAttribute('data-codigo');
-                const nombre = fila.getAttribute('data-nombre');
-                const categoria = fila.getAttribute('data-categoria');
-
-                if (codigo?.includes(filtro) || nombre?.includes(filtro) || categoria?.includes(filtro)) {
-                    fila.style.display = '';
-                } else {
-                    fila.style.display = 'none';
-                }
-            });
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentPage = 1;
+                cargarProductos();
+            }, 300);
         });
 
-        // Confirmar eliminación
-        document.querySelectorAll('.btn-soft-danger').forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                if (!confirm('¿Está seguro de eliminar este producto? Esta acción no se puede deshacer.')) {
-                    e.preventDefault();
-                }
-            });
+        // Cambio de categoría
+        document.querySelector('select[name="categoriaId"]').addEventListener('change', function() {
+            currentPage = 1;
+            cargarProductos();
         });
+
+        // Prevenir el submit normal del form
+        document.querySelector('form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            currentPage = 1;
+            cargarProductos();
+        });
+
+        function cargarProductos(page = 1) {
+            currentPage = page;
+            const buscar = document.querySelector('input[name="buscar"]').value;
+            const categoriaId = document.querySelector('select[name="categoriaId"]').value;
+            const body = document.getElementById('tablaProductosBody');
+            const noResults = document.getElementById('noResults');
+
+            window.Skeleton.show('#tablaProductosBody', 'tableRow', 8);
+
+            fetch(`/Productos/GetProductosJson?categoriaId=${categoriaId}&buscar=${buscar}&page=${currentPage}&pageSize=${pageSize}`)
+                .then(r => r.json())
+                .then(data => {
+                    const productos = data.items;
+                    if (productos.length === 0) {
+                        body.innerHTML = '';
+                        noResults.style.display = 'block';
+                        updatePaginationInfo(0, 0, 0);
+                        renderPagination(0);
+                        return;
+                    }
+
+                    noResults.style.display = 'none';
+                    const html = productos.map(item => {
+                        const stockBadgeClass = getStockBadgeClass(item.stock);
+                        const statusBadgeClass = item.activo ? 'bg-success-soft text-success' : 'bg-secondary-soft text-secondary';
+                        const statusText = item.activo ? 'Activo' : 'Inactivo';
+                        const statusIcon = item.activo ? 'ri-checkbox-circle-fill' : 'ri-stop-circle-fill';
+
+                        return `
+                            <tr>
+                                <td><span class="badge bg-light text-dark fw-normal">${item.codigo}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <div class="avatar-sm rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                                <i class="ri-box-3-line"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3">
+                                            <h6 class="mb-0 fw-semibold">${item.nombre}</h6>
+                                            <small class="text-muted">${item.descripcion ? (item.descripcion.length > 50 ? item.descripcion.substring(0, 50) + '...' : item.descripcion) : ''}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">${item.categoriaNombre}</span></td>
+                                <td class="text-end"><span class="fw-bold text-success">${new Intl.NumberFormat(cultura, { style: 'currency', currency: 'DOP' }).format(item.precio)}</span></td>
+                                <td class="text-center"><span class="badge ${stockBadgeClass}">${item.stock}</span></td>
+                                <td class="text-center">
+                                    <span class="badge ${statusBadgeClass}">
+                                        <i class="${statusIcon} me-1"></i>${statusText}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group" role="group">
+                                        <a href="/Productos/Details/${item.id}" class="btn btn-sm btn-soft-info" title="Ver detalles"><i class="ri-eye-line"></i></a>
+                                        <a href="/Productos/Edit/${item.id}" class="btn btn-sm btn-soft-primary" title="Editar"><i class="ri-edit-line"></i></a>
+                                        <a href="/Productos/Delete/${item.id}" class="btn btn-sm btn-soft-danger" title="Eliminar"><i class="ri-delete-bin-line"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    window.Skeleton.hide('#tablaProductosBody', html);
+                    
+                    const start = ((currentPage - 1) * pageSize) + 1;
+                    const end = Math.min(currentPage * pageSize, data.totalItems);
+                    updatePaginationInfo(start, end, data.totalItems);
+                    renderPagination(data.totalPages);
+                });
+        }
+
+        function getStockBadgeClass(stock) {
+            if (stock <= 5) return 'bg-danger-subtle text-danger-emphasis border border-danger-subtle';
+            if (stock <= 15) return 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+            return 'bg-success-subtle text-success-emphasis border border-success-subtle';
+        }
+
+        function updatePaginationInfo(start, end, total) {
+            document.getElementById('spanStart').textContent = start;
+            document.getElementById('spanEnd').textContent = end;
+            document.getElementById('spanTotal').textContent = total;
+        }
+
+        function renderPagination(totalPages) {
+            const container = document.getElementById('paginationContainer');
+            container.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            container.innerHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="cargarProductos(${currentPage - 1})">
+                        <i class="ri-arrow-left-s-line"></i>
+                    </a>
+                </li>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    container.innerHTML += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="javascript:void(0)" onclick="cargarProductos(${i})">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    container.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+
+            container.innerHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="javascript:void(0)" onclick="cargarProductos(${currentPage + 1})">
+                        <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                </li>
+            `;
+        }
     </script>
 }

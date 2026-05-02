@@ -170,5 +170,73 @@ namespace Facturapro.Controllers
         {
             return _context.Clientes.Any(e => e.Id == id);
         }
+
+        // POST: Clientes/CrearRapido (AJAX)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CrearRapido([Bind("Nombre,Email,NIF,Direccion,Ciudad,Telefono")] Cliente cliente)
+        {
+            if (string.IsNullOrEmpty(cliente.Nombre))
+            {
+                return BadRequest(new { success = false, message = "El nombre es obligatorio" });
+            }
+
+            cliente.FechaAlta = DateTime.Now;
+            cliente.Activo = true;
+
+            _context.Add(cliente);
+            await _context.SaveChangesAsync();
+
+            return Ok(new {
+                success = true,
+                message = "Cliente creado correctamente",
+                cliente = new {
+                    Id = cliente.Id,
+                    Nombre = cliente.Nombre,
+                    RNC = cliente.NIF,
+                    Direccion = cliente.Direccion,
+                    Telefono = cliente.Telefono,
+                    Email = cliente.Email
+                }
+            });
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetClientesJson(string q, string estado)
+        {
+            var query = _context.Clientes
+                .Include(c => c.Facturas)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(q))
+            {
+                q = q.ToLower();
+                query = query.Where(c => c.Nombre.ToLower().Contains(q) || 
+                                       (c.NIF != null && c.NIF.ToLower().Contains(q)) || 
+                                       (c.Email != null && c.Email.ToLower().Contains(q)));
+            }
+
+            if (!string.IsNullOrEmpty(estado))
+            {
+                bool activo = estado == "activo";
+                query = query.Where(c => c.Activo == activo);
+            }
+
+            var clientes = await query
+                .Select(c => new ClienteViewModel
+                {
+                    Id = c.Id,
+                    Nombre = c.Nombre,
+                    Email = c.Email,
+                    NIF = c.NIF,
+                    Telefono = c.Telefono,
+                    Ciudad = c.Ciudad,
+                    Activo = c.Activo,
+                    TotalFacturas = c.Facturas != null ? c.Facturas.Count : 0,
+                    TotalFacturado = c.Facturas != null ? c.Facturas.Where(f => f.Estado == "Pagada").Sum(f => f.Total) : 0
+                })
+                .ToListAsync();
+
+            return Json(clientes);
+        }
     }
 }

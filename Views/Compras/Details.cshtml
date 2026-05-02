@@ -78,6 +78,15 @@
                     <dt>Notas</dt>
                     <dd>@Model.Notas</dd>
                 }
+
+                <dt>NCF (Proveedor)</dt>
+                <dd><span class="badge badge-info">@(Model.NCF ?? "No especificado")</span></dd>
+
+                <dt>Tipo de Gasto (DGII)</dt>
+                <dd>@(Model.TipoGasto ?? "-")</dd>
+
+                <dt>Fecha de Pago</dt>
+                <dd>@(Model.FechaPago?.ToString("dd/MM/yyyy") ?? "-")</dd>
             </dl>
 
             @if (Model.Estado == EstadoCompra.Pendiente)
@@ -134,6 +143,12 @@
 
                 <dt>Descuento</dt>
                 <dd style="font-size: 1.1rem;">@Model.Descuento.ToString("C", new System.Globalization.CultureInfo("es-ES"))</dd>
+
+                <dt>ITBIS Retenido</dt>
+                <dd class="text-danger" style="font-size: 1.1rem;">@Model.MontoITBISRetenido.ToString("C", new System.Globalization.CultureInfo("es-ES"))</dd>
+
+                <dt>ISR Retenido</dt>
+                <dd class="text-danger" style="font-size: 1.1rem;">@Model.MontoISRRetenido.ToString("C", new System.Globalization.CultureInfo("es-ES"))</dd>
 
                 <dt>Total</dt>
                 <dd style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);">@Model.Total.ToString("C", new System.Globalization.CultureInfo("es-ES"))</dd>

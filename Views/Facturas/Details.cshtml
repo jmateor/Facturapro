@@ -359,7 +359,7 @@
                         var mensajeWhatsApp = $"Hola! Te envío tu factura electrónica No. {Model.NumeroFactura} con fecha {Model.FechaEmision:dd/MM/yyyy}. Monto total: {Model.Total.ToString("C", cultura)}. Gracias por tu compra!";
                         var telefonoLimpio = Model.Cliente.Telefono.Replace("-", "").Replace(" ", "").Replace("(", "").Replace(")", "");
 
-                        <a href="https://wa.me/1@(telefonoLimpio)?text=@System.Net.WebUtility.UrlEncode(mensajeWhatsApp)" class="btn btn-soft-success" target="_blank">
+                        <a href="@Url.Action("EnviarWhatsApp", new { id = Model.Id })" class="btn btn-soft-success" target="_blank">
                             <i class="ri-whatsapp-line me-1"></i> Enviar por WhatsApp
                         </a>
                         <small class="text-muted text-center">

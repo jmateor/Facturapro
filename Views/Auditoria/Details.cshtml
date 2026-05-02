@@ -1,0 +1,57 @@
+@model Facturapro.Models.Entities.LogAuditoria
+@{
+    Layout = null;
+}
+
+<div class="list-group list-group-flush">
+    <div class="list-group-item px-0">
+        <div class="d-flex align-items-start">
+            <div class="flex-grow-1">
+                <label class="text-muted mb-0">ID de Log</label>
+                <h6 class="mb-0">#@Model.Id</h6>
+            </div>
+            <div class="flex-grow-1">
+                <label class="text-muted mb-0">Fecha y Hora</label>
+                <h6 class="mb-0">@Model.Fecha.ToString("G")</h6>
+            </div>
+        </div>
+    </div>
+    <div class="list-group-item px-0">
+        <div class="d-flex align-items-start">
+            <div class="flex-grow-1">
+                <label class="text-muted mb-0">Usuario</label>
+                <h6 class="mb-0">@Model.Usuario</h6>
+            </div>
+            <div class="flex-grow-1">
+                <label class="text-muted mb-0">Dirección IP</label>
+                <h6 class="mb-0">@(string.IsNullOrEmpty(Model.IpAddress) ? "Local / Interno" : Model.IpAddress)</h6>
+            </div>
+        </div>
+    </div>
+    <div class="list-group-item px-0">
+        <div class="d-flex align-items-start">
+            <div class="flex-grow-1">
+                <label class="text-muted mb-0">Módulo</label>
+                <h6 class="mb-0">@Model.Modulo</h6>
+            </div>
+            <div class="flex-grow-1">
+                <label class="text-muted mb-0">Acción</label>
+                <h6 class="mb-0">@Model.Accion</h6>
+            </div>
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(Model.EntidadId))
+    {
+        <div class="list-group-item px-0">
+            <label class="text-muted mb-0">ID de Entidad Afectada</label>
+            <h6 class="mb-0">@Model.EntidadId</h6>
+        </div>
+    }
+    <div class="list-group-item px-0">
+        <label class="text-muted mb-0">Descripción Completa</label>
+        <p class="mb-0 p-3 bg-light rounded mt-2 border">@Model.Descripcion</p>
+    </div>
+</div>
+<div class="mt-3 text-end">
+    <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">Cerrar</button>
+</div>

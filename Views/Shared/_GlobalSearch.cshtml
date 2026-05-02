@@ -1,0 +1,93 @@
+<div class="modal fade" id="globalSearchModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 12px; margin-top: 10vh;">
+            <div class="modal-body p-0">
+                <div class="d-flex align-items-center p-3 border-bottom">
+                    <i class="ri-search-2-line fs-4 text-muted me-2"></i>
+                    <input type="text" id="globalSearchInput" class="form-control border-0 bg-transparent fs-5" 
+                           placeholder="Busca clientes, productos, facturas o comandos..." 
+                           autocomplete="off">
+                    <kbd class="ms-2 d-none d-md-inline-block text-muted bg-light">ESC</kbd>
+                </div>
+                
+                <div id="globalSearchResults" class="overflow-auto" style="max-height: 400px;">
+                    <div class="p-4 text-center text-muted" id="searchPlaceholder">
+                        <i class="ri-keyboard-line display-4 mb-3 d-block opacity-25"></i>
+                        <p class="mb-0">Escribe algo para buscar en el sistema...</p>
+                        <small>Prueba buscando "Nueva factura", "Jose" o "Laptop"</small>
+                    </div>
+                    
+                    <div id="resultsContainer" style="display: none;">
+                        <!-- Los resultados se inyectarán aquí -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer p-2 border-top-0 d-flex justify-content-between bg-light rounded-bottom-4">
+                <div class="d-flex gap-3 small text-muted ms-2">
+                    <span><kbd class="me-1">↑↓</kbd> Navegar</span>
+                    <span><kbd class="me-1">Enter</kbd> Seleccionar</span>
+                </div>
+                <div class="small text-muted me-2">
+                    Powered by Facturapro
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #globalSearchModal .modal-content {
+        transition: transform 0.2s ease-out;
+    }
+    
+    .search-result-item {
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 8px;
+        margin: 4px 8px;
+        transition: all 0.15s ease;
+    }
+    
+    .search-result-item:hover, .search-result-item.active {
+        background: var(--ct-primary-rgb, rgba(64, 81, 137, 0.1));
+        color: var(--ct-primary, #405189);
+        outline: none;
+    }
+    
+    .search-result-item i {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        margin-right: 15px;
+        font-size: 1.2rem;
+    }
+    
+    .search-category-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #adb5bd;
+        margin: 15px 20px 5px;
+    }
+    
+    #globalSearchInput:focus {
+        box-shadow: none;
+    }
+
+    kbd {
+        padding: 2px 4px;
+        font-size: 0.75rem;
+        font-family: inherit;
+        background: #f1f3fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        color: #6c757d;
+    }
+</style>

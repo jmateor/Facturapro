@@ -408,9 +408,18 @@
 
                 <div class="card bg-soft-primary border-0">
                     <div class="card-body p-3">
-                        <h6 class="card-title text-primary mb-2">
-                            <i class="ri-link me-1"></i> Endpoints API DGII
-                        </h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="card-title text-primary mb-0">
+                                <i class="ri-link me-1"></i> Endpoints API DGII
+                            </h6>
+                            <form asp-action="CambiarModo" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="modoPruebas" value="@(Model.ModoPruebas ? "false" : "true")" />
+                                <button type="submit" class="btn btn-sm @(Model.ModoPruebas ? "btn-outline-danger" : "btn-outline-warning") py-0" style="font-size: 11px;">
+                                    <i class="ri-refresh-line me-1"></i> Cambiar a @(Model.ModoPruebas ? "Producción" : "Pruebas")
+                                </button>
+                            </form>
+                        </div>
                         <ul class="list-unstyled mb-0 small">
                             <li class="mb-1">
                                 <i class="ri-flask-line text-warning me-1"></i>

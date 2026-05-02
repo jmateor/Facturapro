@@ -19,6 +19,7 @@ namespace Facturapro.Controllers
         private readonly IFacturacionElectronicaAPIService _apiService;
         private readonly IPdfService _pdfService;
         private readonly ILogger<FacturasController> _logger;
+        private readonly Services.Notifications.IWhatsAppService _whatsappService;
 
         public FacturasController(
             ApplicationDbContext context,
@@ -26,7 +27,8 @@ namespace Facturapro.Controllers
             FacturacionElectronicaService facturacionService,
             IFacturacionElectronicaAPIService apiService,
             IPdfService pdfService,
-            ILogger<FacturasController> logger)
+            ILogger<FacturasController> logger,
+            Services.Notifications.IWhatsAppService whatsappService)
         {
             _context = context;
             _rangoService = rangoService;
@@ -34,6 +36,7 @@ namespace Facturapro.Controllers
             _apiService = apiService;
             _pdfService = pdfService;
             _logger = logger;
+            _whatsappService = whatsappService;
         }
 
         // GET: Facturas
@@ -98,34 +101,55 @@ namespace Facturapro.Controllers
             return View(factura);
         }
 
-        // POST: Facturas/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("ClienteId,TipoECF,FechaEmision,FechaVencimiento,PorcentajeITBIS,TipoPago,Notas")] Factura factura)
         {
+            // Remover validaciones de campos que se generan en el backend
+            ModelState.Remove("NumeroFactura");
+            ModelState.Remove("Cliente");
+
             if (ModelState.IsValid)
             {
-                // Obtener siguiente número e-CF
-                var resultadoRango = await _rangoService.ObtenerSiguienteNumeroAsync(factura.TipoECF ?? "31");
+                // Iniciar transacción para asegurar atomicidad entre NCF e Invoice
+                using var transaction = await _context.Database.BeginTransactionAsync();
 
-                if (!resultadoRango.Exito)
+                try
                 {
-                    ModelState.AddModelError("", resultadoRango.Mensaje);
-                    ViewData["Clientes"] = new SelectList(_context.Clientes.Where(c => c.Activo), "Id", "Nombre", factura.ClienteId);
-                    return View(factura);
+                    // 1. Obtener siguiente número e-CF (Esto bloquea la fila del rango en el DB si se configura correctamente)
+                    var resultadoRango = await _rangoService.ObtenerSiguienteNumeroAsync(factura.TipoECF ?? "31");
+
+                    if (!resultadoRango.Exito)
+                    {
+                        await transaction.RollbackAsync();
+                        ModelState.AddModelError("", resultadoRango.Mensaje);
+                        ViewData["Clientes"] = new SelectList(_context.Clientes.Where(c => c.Activo), "Id", "Nombre", factura.ClienteId);
+                        return View(factura);
+                    }
+
+                    // 2. Asignar datos del comprobante
+                    factura.eNCF = resultadoRango.Data?.ToString();
+                    factura.NumeroFactura = factura.eNCF ?? $"FAC-{DateTime.Now:yyyy}-{factura.Id:D4}";
+                    factura.Estado = "Pendiente";
+                    factura.EstadoDGII = "Pendiente";
+                    factura.TipoIngresos = "01"; // Ingresos por operaciones
+
+                    // 3. Guardar factura
+                    _context.Add(factura);
+                    await _context.SaveChangesAsync();
+
+                    // 4. Confirmar transacción
+                    await transaction.CommitAsync();
+
+                    TempData["SuccessMessage"] = $"Factura {factura.eNCF} creada. Ahora puede agregar líneas y firmarla.";
+                    return RedirectToAction(nameof(Edit), new { id = factura.Id });
                 }
-
-                factura.eNCF = resultadoRango.Data?.ToString();
-                factura.NumeroFactura = factura.eNCF ?? $"FAC-{DateTime.Now:yyyy}-{factura.Id:D4}";
-                factura.Estado = "Pendiente";
-                factura.EstadoDGII = "Pendiente";
-                factura.TipoIngresos = "01"; // Ingresos por operaciones
-
-                _context.Add(factura);
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = $"Factura {factura.eNCF} creada. Ahora puede agregar líneas y firmarla.";
-                return RedirectToAction(nameof(Edit), new { id = factura.Id });
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(ex, "Error crítico al crear factura transaccional");
+                    ModelState.AddModelError("", "Ocurrió un error inesperado al procesar la numeración fiscal. Intente nuevamente.");
+                }
             }
 
             ViewData["Clientes"] = new SelectList(_context.Clientes.Where(c => c.Activo), "Id", "Nombre", factura.ClienteId);
@@ -333,10 +357,8 @@ namespace Facturapro.Controllers
                 // Generar PDF con la representación impresa
                 var pdfBytes = _pdfService.GenerarFacturaPDF(factura, empresa);
 
-                // Nombre del archivo
-                var fileName = $"{factura.eNCF ?? factura.NumeroFactura}.pdf";
-
-                return File(pdfBytes, "application/pdf", fileName);
+                // Retornar el archivo para visualización directa en el navegador (inline)
+                return File(pdfBytes, "application/pdf");
             }
             catch (Exception ex)
             {
@@ -412,26 +434,31 @@ namespace Facturapro.Controllers
             return View(factura);
         }
 
-        // POST: Facturas/Delete/5
-        [HttpPost, ActionName("Delete")]
+        // POST: Facturas/Cancel/5
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Cancel(int id, string tipoAnulacion, string? motivo)
         {
             var factura = await _context.Facturas.FindAsync(id);
-            if (factura != null)
-            {
-                // Solo permitir eliminar si no está firmada
-                if (factura.EstadoDGII == "Aprobado")
-                {
-                    TempData["ErrorMessage"] = "No se puede eliminar una factura aprobada por la DGII.";
-                    return RedirectToAction(nameof(Index));
-                }
+            if (factura == null) return NotFound();
 
-                _context.Facturas.Remove(factura);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Factura eliminada correctamente.";
+            if (factura.Estado == "Cancelada")
+            {
+                TempData["ErrorMessage"] = "Esta factura ya está cancelada.";
+                return RedirectToAction(nameof(Index));
             }
 
+            // Según la DGII, si ya fue aprobada y se cancela, debe reportarse en el 608.
+            // Si no tiene NCF (ej. borrador), simplemente se marca como cancelada.
+            
+            factura.Estado = "Cancelada";
+            factura.TipoAnulacion = tipoAnulacion;
+            factura.MotivoAnulacion = motivo;
+            
+            _context.Update(factura);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Factura {factura.eNCF} cancelada correctamente y marcada para el reporte 608.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -455,9 +482,77 @@ namespace Facturapro.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EnviarWhatsApp(int id)
+        {
+            var factura = await _context.Facturas
+                .Include(f => f.Cliente)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
+            if (factura == null) return NotFound();
+
+            var link = _whatsappService.GenerateWhatsAppLink(factura);
+            if (string.IsNullOrEmpty(link))
+            {
+                TempData["ErrorMessage"] = "El cliente no tiene un número de teléfono válido.";
+                return RedirectToAction("Details", new { id = id });
+            }
+
+            return Redirect(link);
+        }
+
         private bool FacturaExists(int id)
         {
             return _context.Facturas.Any(e => e.Id == id);
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetFacturasJson(string? tipoECF, string? estadoDGII, int page = 1, int pageSize = 10)
+        {
+            var query = _context.Facturas
+                .Include(f => f.Cliente)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(tipoECF))
+            {
+                query = query.Where(f => f.TipoECF == tipoECF);
+            }
+
+            if (!string.IsNullOrEmpty(estadoDGII))
+            {
+                query = query.Where(f => f.EstadoDGII == estadoDGII);
+            }
+
+            var totalItems = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+            var facturas = await query
+                .OrderByDescending(f => f.FechaEmision)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(f => new
+                {
+                    id = f.Id,
+                    numeroFactura = f.NumeroFactura,
+                    eNCF = f.eNCF,
+                    tipoECF = f.TipoECF,
+                    clienteNombre = f.Cliente != null ? f.Cliente.Nombre : "Consumidor Final",
+                    clienteTelefono = f.Cliente != null ? f.Cliente.Telefono : null,
+                    fechaEmision = f.FechaEmision.ToString("dd/MM/yyyy"),
+                    total = f.Total,
+                    estadoDGII = f.EstadoDGII,
+                    estado = f.Estado,
+                    xmlFirmado = f.XMLFirmado
+                })
+                .ToListAsync();
+
+            return Json(new
+            {
+                items = facturas,
+                totalItems,
+                totalPages,
+                currentPage = page,
+                pageSize
+            });
         }
     }
 }

@@ -18,9 +18,10 @@
 8. [Módulo de Compras](#módulo-de-compras)
 9. [Módulo de Inventario (Kalder)](#módulo-de-inventario-kalder)
 10. [Punto de Venta (POS)](#punto-de-venta-pos)
-11. [Módulo de Reportes](#módulo-de-reportes)
-12. [Solución de Problemas](#solución-de-problemas)
-13. [Preguntas Frecuentes](#preguntas-frecuentes)
+11. [Módulo de Reportes y DGII](#módulo-de-reportes-y-dgii)
+12. [Gestión de Usuarios y Roles](#gestión-de-usuarios-y-roles)
+13. [Solución de Problemas](#solución-de-problemas)
+14. [Preguntas Frecuentes](#preguntas-frecuentes)
 
 ---
 
@@ -57,7 +58,7 @@ Facturapro es un sistema de facturación diseñado para cumplir con los requisit
    - **Contraseña:** su contraseña personal
 5. Haga clic en **Iniciar Sesión**
 
-> 🔒 **Nota:** El sistema requiere autenticación. Los roles disponibles son: Admin, Gerente, Vendedor, Cajero.
+> 🔒 **Nota:** El sistema requiere autenticación y su navegación estará adaptada según su nivel de acceso. Los roles disponibles son: Admin, Gerente, Vendedor y Cajero.
 
 ### Credenciales de Administrador (Instalación Nueva)
 
@@ -147,6 +148,7 @@ Antes de facturar, debe configurar los rangos autorizados por la DGII:
 | **Fecha de Vencimiento** | 30 días después (por defecto) |
 | **Tipo de Pago** | Contado, Crédito, Mixto |
 | **ITBIS (%)** | 18% por defecto |
+| **Moneda** | DOP (Pesos Dominicanos) o USD (Dólares). Si selecciona USD, se le pedirá la **Tasa de Cambio**. |
 | **Notas** | Comentarios adicionales (opcional) |
 
 3. Haga clic en **Crear Factura e-CF**
@@ -604,10 +606,15 @@ El módulo POS permite realizar ventas rápidas con interfaz optimizada para cob
    - Tarjeta de Crédito/Débito
    - Mixto (efectivo + tarjeta)
 
-6. **Completar Venta:**
+6. **Moneda y Tasa de Cambio (Bimonetario):**
+   - El POS soporta ventas en DOP y USD.
+   - Puede cambiar la moneda desde el panel de pago.
+   - El sistema calculará el total en DOP automáticamente para fines fiscales según la tasa del día.
+
+7. **Completar Venta:**
    - Haga clic en **Cobrar**
    - El sistema calculará el cambio automáticamente
-   - Imprima el comprobante (si está habilitado)
+   - Imprima el comprobante térmico o formato completo (Elite UI)
 
 ### Carrito de Compras
 
@@ -680,7 +687,18 @@ El módulo POS permite realizar ventas rápidas con interfaz optimizada para cob
 
 ---
 
-## 📈 Reportes
+## 📈 Módulo de Reportes y DGII
+
+### Formatos de Envío DGII (606)
+
+**Ruta:** `Reportes > Formato 606`
+
+Facturapro automatiza la generación del formato 606 exigido por la DGII:
+1. Seleccione el período (Mes y Año).
+2. El sistema validará todas las compras, NCF válidos, retenciones de ITBIS e ISR.
+3. Se mostrará un resumen pre-validado en pantalla para su revisión.
+4. Haga clic en **Generar Archivo TXT**.
+5. Obtendrá el archivo compatible y listo para subir a la Oficina Virtual de la DGII.
 
 ### Dashboard Principal
 
@@ -769,7 +787,33 @@ Todos los reportes pueden exportarse a PDF:
    - Período del reporte
    - Tabla detallada de datos
    - Totales generales
+   - Totales generales
    - Fecha de generación
+
+---
+
+## 👥 Gestión de Usuarios y Roles
+
+Facturapro cuenta con un sistema de Control de Acceso Basado en Roles (RBAC) que asegura que cada empleado solo vea y modifique lo que le corresponde.
+
+### Jerarquía de Roles
+
+| Rol | Nivel de Acceso | Menús Visibles |
+|-----|-----------------|----------------|
+| **Cajero** | Básico | POS, Facturas, Clientes. Ideal para personal de mostrador. |
+| **Vendedor** | Intermedio | POS, Facturas, Clientes, Productos, Categorías. |
+| **Gerente** | Avanzado | Todo lo anterior + Compras, Inventario (Kalder), Proveedores y Reportes. |
+| **Super Admin** | Total | Acceso absoluto incluyendo Configuración General, Usuarios y Firma Digital. |
+
+### Crear un Usuario
+
+**Ruta:** `Configuración > Usuarios` (Solo Super Admin)
+
+1. Haga clic en **Nuevo Usuario**.
+2. Complete el Nombre, Correo Electrónico (será su usuario de acceso) y Teléfono.
+3. Asigne una **Contraseña Inicial**.
+4. Seleccione el **Rol** del empleado desde el menú desplegable.
+5. El sistema ajustará automáticamente el menú lateral (Sidebar) cuando este usuario inicie sesión.
 
 ---
 
@@ -1037,6 +1081,7 @@ Cuando contacte soporte, proporcione la siguiente información:
 |---------|-------|---------|
 | 1.0 | Abril 2026 | Versión inicial con módulos básicos |
 | 1.1 | Abril 2026 | Actualizado con flujo completo de e-CF, módulo Kalder, reportes y POS |
+| 1.2 | Mayo 2026 | Agregado diseño Elite UI, soporte Bimonetario (USD/DOP), sistema de Roles (RBAC), formato 606 y optimización de seguridad. |
 
 ---
 

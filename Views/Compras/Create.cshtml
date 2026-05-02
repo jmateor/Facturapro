@@ -15,11 +15,23 @@
             </h4>
             <p class="text-muted mb-0">Registra una nueva compra a proveedor</p>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('inputOCR').click()">
+                <i class="ri-camera-lens-line me-1"></i> Escanear con IA
+            </button>
+            <input type="file" id="inputOCR" style="display: none;" accept="image/*" onchange="procesarOCR(this)" />
+            
             <a href="@Url.Action("Index")" class="btn btn-soft-secondary">
                 <i class="ri-arrow-left-line me-1"></i> Volver
             </a>
         </div>
+    </div>
+</div>
+
+<div id="ocrLoader" class="alert alert-info border-0 mb-3" style="display: none;">
+    <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        <strong>La IA está analizando tu factura...</strong> un momento por favor.
     </div>
 </div>
 
@@ -90,7 +102,7 @@
                             <small class="text-muted d-block mt-1">Fecha en que se recibió la mercadería</small>
                         </div>
 
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label asp-for="Estado" class="form-label">Estado</label>
                             <select asp-for="Estado" class="form-select">
                                 <option value="Pendiente">Pendiente</option>
@@ -99,16 +111,158 @@
                             </select>
                             <span asp-validation-for="Estado" class="text-danger small"></span>
                         </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="NCF" class="form-label">NCF (Comprobante Fiscal)</label>
+                            <input asp-for="NCF" class="form-control" placeholder="Ej: B0100000001" maxlength="13" />
+                            <span asp-validation-for="NCF" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="TipoGasto" class="form-label">Tipo de Gasto (DGII)</label>
+                            <select asp-for="TipoGasto" class="form-select">
+                                <option value="01">01 - Gastos de Personal</option>
+                                <option value="02">02 - Gastos por Trabajos, Suministros y Servicios</option>
+                                <option value="03">03 - Arrendamientos</option>
+                                <option value="04">04 - Gastos de Activos Fijos</option>
+                                <option value="05">05 - Gastos de Representación</option>
+                                <option value="06">06 - Otras Deducciones Admitidas</option>
+                                <option value="07">07 - Gastos Financieros</option>
+                                <option value="08">08 - Gastos Extraordinarios</option>
+                                <option value="09">09 - Compras y Gastos que Formarán Parte del Costo de Venta</option>
+                                <option value="10">10 - Adquisiciones de Activos Fijos</option>
+                                <option value="11">11 - Gastos de Seguros</option>
+                            </select>
+                            <span asp-validation-for="TipoGasto" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="FechaPago" class="form-label">Fecha de Pago</label>
+                            <input asp-for="FechaPago" type="date" class="form-control" />
+                            <span asp-validation-for="FechaPago" class="text-danger small"></span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Sección 2: Productos -->
+            <!-- Sección 2: Información Fiscal DGII -->
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-primary rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Información Fiscal DGII</h5>
+                            <p class="text-muted mb-0 small">Datos requeridos para el reporte 606</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="FormaPago" class="form-label">Forma de Pago</label>
+                            <select asp-for="FormaPago" class="form-select">
+                                <option value="01">01 - Efectivo</option>
+                                <option value="02">02 - Cheques/Transferencias/Depósito</option>
+                                <option value="03">03 - Tarjeta Crédito/Débito</option>
+                                <option value="04">04 - Compra a Crédito</option>
+                                <option value="05">05 - Permuta</option>
+                                <option value="06">06 - Notas de Crédito</option>
+                                <option value="07">07 - Mixto</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="NCFModificado" class="form-label">NCF Modificado</label>
+                            <input asp-for="NCFModificado" class="form-control" placeholder="Solo para Notas de Crédito/Débito" maxlength="13" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="TipoRetencionISR" class="form-label">Tipo Retención ISR</label>
+                            <select asp-for="TipoRetencionISR" class="form-select">
+                                <option value="">-- No aplica --</option>
+                                <option value="1">01 - Alquileres</option>
+                                <option value="2">02 - Honorarios por Servicios</option>
+                                <option value="3">03 - Otras Rentas</option>
+                                <option value="4">04 - Otras Rentas (Rentas Presuntas)</option>
+                                <option value="5">05 - Intereses pagados a Personas Jurídicas</option>
+                                <option value="6">06 - Intereses pagados a Personas Físicas</option>
+                                <option value="7">07 - Retención por Proveedores del Estado</option>
+                                <option value="8">08 - Juegos Telefónicos</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="MontoServicios" class="form-label">Monto en Servicios (Sin ITBIS)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">RD$</span>
+                                <input asp-for="MontoServicios" class="form-control" type="number" step="0.01" value="0" onchange="validarDesglose()" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="MontoBienes" class="form-label">Monto en Bienes (Sin ITBIS)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">RD$</span>
+                                <input asp-for="MontoBienes" class="form-control" type="number" step="0.01" value="0" onchange="validarDesglose()" />
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="ISC" class="form-label">ISC (S. Consumo)</label>
+                            <input asp-for="ISC" class="form-control" type="number" step="0.01" value="0" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="OtrosImpuestos" class="form-label">Otros Impuestos</label>
+                            <input asp-for="OtrosImpuestos" class="form-control" type="number" step="0.01" value="0" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="PropinaLegal" class="form-label">Propina Legal (10%)</label>
+                            <input asp-for="PropinaLegal" class="form-control" type="number" step="0.01" value="0" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 3: Retenciones Fiscales (Opcional) -->
+            <div class="card border-info">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">3</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0 text-info">Retenciones Fiscales</h5>
+                            <p class="text-muted mb-0 small">Solo si aplica retención en esta compra</p>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="MontoITBISRetenido" class="form-label">ITBIS Retenido</label>
+                            <div class="input-group">
+                                <span class="input-group-text">RD$</span>
+                                <input asp-for="MontoITBISRetenido" class="form-control" type="number" step="0.01" value="0" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="MontoISRRetenido" class="form-label">ISR Retenido</label>
+                            <div class="input-group">
+                                <span class="input-group-text">RD$</span>
+                                <input asp-for="MontoISRRetenido" class="form-control" type="number" step="0.01" value="0" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 4: Productos -->
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-4">
                         <div class="avatar-sm bg-success rounded-3 me-3">
-                            <span class="avatar-title text-white fw-bold">2</span>
+                            <span class="avatar-title text-white fw-bold">4</span>
                         </div>
                         <div>
                             <h5 class="card-title mb-0">Productos</h5>
@@ -141,12 +295,12 @@
                 </div>
             </div>
 
-            <!-- Sección 3: Notas Adicionales -->
+            <!-- Sección 5: Notas Adicionales -->
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-4">
                         <div class="avatar-sm bg-info rounded-3 me-3">
-                            <span class="avatar-title text-white fw-bold">3</span>
+                            <span class="avatar-title text-white fw-bold">5</span>
                         </div>
                         <div>
                             <h5 class="card-title mb-0">Notas Adicionales</h5>
@@ -363,6 +517,27 @@
             document.getElementById('ITBIS').value = totalITBIS.toFixed(2);
             document.getElementById('Descuento').value = totalDescuento.toFixed(2);
             document.getElementById('Total').value = total.toFixed(2);
+
+            // Por defecto, asignar todo el subtotal a Bienes si no se ha modificado manualmente
+            var montoBienesInput = document.getElementById('MontoBienes');
+            var montoServiciosInput = document.getElementById('MontoServicios');
+            
+            if (parseFloat(montoBienesInput.value) + parseFloat(montoServiciosInput.value) === 0) {
+                montoBienesInput.value = subtotal.toFixed(2);
+            }
+        }
+
+        function validarDesglose() {
+            var subtotal = parseFloat(document.getElementById('SubTotal').value) || 0;
+            var bienes = parseFloat(document.getElementById('MontoBienes').value) || 0;
+            var servicios = parseFloat(document.getElementById('MontoServicios').value) || 0;
+            
+            if (Math.abs((bienes + servicios) - subtotal) > 0.01) {
+                document.getElementById('subtotalDisplay').classList.add('text-danger');
+                // Opcional: mostrar alerta o advertencia
+            } else {
+                document.getElementById('subtotalDisplay').classList.remove('text-danger');
+            }
         }
 
         // Validación de precio - máximo 2 decimales
@@ -377,6 +552,57 @@
                 }
             }
         });
+
+        function procesarOCR(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('ocrLoader').style.display = 'block';
+
+            fetch('/Compras/AnalizarFactura', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Rellenar campos básicos
+                    if (data.ncf) {
+                        document.getElementById('NCF').value = data.ncf;
+                        document.getElementById('NumeroFactura').value = data.ncf;
+                    }
+                    if (data.fecha) {
+                        const date = new Date(data.fecha);
+                        document.getElementById('FechaCompra').value = date.toISOString().split('T')[0];
+                    }
+                    if (data.total) {
+                        document.getElementById('Total').value = data.total;
+                        // Forzar primera línea con el total si no hay nada
+                        const tbody = document.getElementById('tbodyLineas');
+                        const row = tbody.querySelector('tr');
+                        if (row) {
+                            row.querySelector('.precio').value = data.total - (data.itbis || 0);
+                            row.querySelector('.itbis').value = 18; // Default RD
+                            calcularTotales();
+                        }
+                    }
+                    
+                    // Notificar éxito
+                    alert('¡Factura analizada con éxito! Por favor verifica los datos extraídos.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Hubo un error al procesar la imagen.');
+            })
+            .finally(() => {
+                document.getElementById('ocrLoader').style.display = 'none';
+                input.value = ''; // Limpiar input
+            });
+        }
 
         // Agregar primera línea automáticamente
         agregarLinea();

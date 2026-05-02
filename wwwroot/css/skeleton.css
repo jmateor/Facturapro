@@ -1,0 +1,89 @@
+/* 
+   Skeleton Loaders - Facturapro
+   Efecto de brillo animado para mejorar la percepción de carga.
+*/
+
+:root {
+    --skeleton-bg: #e9ecef;
+    --skeleton-shimmer: linear-gradient(
+        90deg, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 0.5) 50%, 
+        rgba(255, 255, 255, 0) 100%
+    );
+}
+
+.skeleton {
+    background-color: var(--skeleton-bg);
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.skeleton::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: var(--skeleton-shimmer);
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Formas predefinidas */
+.skeleton-text {
+    height: 0.8rem;
+    margin-bottom: 0.5rem;
+    width: 100%;
+}
+
+.skeleton-text.short { width: 40%; }
+.skeleton-text.medium { width: 70%; }
+
+.skeleton-circle {
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+}
+
+.skeleton-rect {
+    height: 150px;
+    width: 100%;
+}
+
+.skeleton-button {
+    height: 38px;
+    width: 100px;
+    border-radius: 6px;
+}
+
+/* Composición de Card de Producto (POS) */
+.skeleton-product-card {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 15px;
+    background: white;
+}
+
+.skeleton-product-card .img {
+    height: 120px;
+    margin-bottom: 15px;
+}
+
+.skeleton-product-card .title {
+    height: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.skeleton-product-card .price {
+    height: 1.5rem;
+    width: 50%;
+}

@@ -1,0 +1,292 @@
+@{
+    ViewData["Title"] = "Transferencias de Inventario";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-flex align-items-center justify-content-between">
+            <h4 class="page-title mb-0">
+                <i class="ri-swap-box-line me-2 text-primary"></i>Transferencias de Inventario
+            </h4>
+            <div class="d-flex gap-2">
+                <a href="@Url.Action("Index", "Kalder")" class="btn btn-sm btn-outline-secondary">
+                    <i class="ri-arrow-left-line me-1"></i>Volver al Almacén
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Formulario de Transferencia -->
+    <div class="col-lg-5">
+        <div class="card" style="border-radius: 16px; border: none; box-shadow: 0 4px 24px rgba(114,124,245,0.10);">
+            <div class="card-header" style="background: linear-gradient(135deg, #727cf5 0%, #0acf97 100%); border-radius: 16px 16px 0 0; padding: 1.2rem 1.5rem;">
+                <h5 class="mb-0 text-white fw-semibold">
+                    <i class="ri-swap-line me-2"></i>Nueva Transferencia
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div id="transfer-alert" class="alert d-none mb-3" role="alert"></div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Producto</label>
+                    <select id="productoId" class="form-select" onchange="cargarStockProducto()">
+                        <option value="">-- Seleccione un producto --</option>
+                    </select>
+                </div>
+
+                <div id="stock-info" class="d-none mb-3">
+                    <div class="alert alert-info py-2 mb-0">
+                        <i class="ri-information-line me-1"></i>
+                        <span id="stock-info-text"></span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Almacén Origen</label>
+                        <select id="almacenOrigenId" class="form-select" onchange="cargarStockProducto()">
+                            <option value="">-- Origen --</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Almacén Destino</label>
+                        <select id="almacenDestinoId" class="form-select">
+                            <option value="">-- Destino --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Cantidad a Transferir</label>
+                    <div class="input-group">
+                        <input type="number" id="cantidad" class="form-control" min="1" value="1" placeholder="0">
+                        <span class="input-group-text"><i class="ri-stack-line"></i></span>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary w-100 py-2 fw-semibold" id="btn-transferir" onclick="realizarTransferencia()" style="border-radius: 10px; background: linear-gradient(135deg, #727cf5, #0acf97); border: none;">
+                    <i class="ri-swap-box-line me-2"></i>Realizar Transferencia
+                </button>
+            </div>
+        </div>
+
+        <!-- Resumen de Almacenes -->
+        <div class="card mt-3" style="border-radius: 16px; border: none; box-shadow: 0 4px 24px rgba(0,0,0,0.06);">
+            <div class="card-header border-bottom-0 pb-0">
+                <h6 class="mb-0 fw-semibold"><i class="ri-store-2-line me-2 text-primary"></i>Stock por Almacén</h6>
+            </div>
+            <div class="card-body pt-2">
+                <div id="stock-por-almacen">
+                    <p class="text-muted small">Selecciona un producto para ver el stock por almacén.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Transferencias -->
+    <div class="col-lg-7">
+        <div class="card" style="border-radius: 16px; border: none; box-shadow: 0 4px 24px rgba(0,0,0,0.06);">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 fw-semibold"><i class="ri-history-line me-2 text-primary"></i>Historial de Transferencias</h5>
+                <span class="badge bg-primary rounded-pill" id="total-transferencias">...</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tabla-historial">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Producto</th>
+                                <th>Origen</th>
+                                <th>Destino</th>
+                                <th class="text-center">Cant.</th>
+                                <th>Estado</th>
+                                <th class="text-end pe-3">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historial-body">
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Cargando historial...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const antiForgeryToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
+    // ====== Inicialización ======
+    document.addEventListener('DOMContentLoaded', async () => {
+        await Promise.all([cargarAlmacenes(), cargarProductos(), cargarHistorial()]);
+    });
+
+    async function cargarAlmacenes() {
+        const res = await fetch('/Sucursales/GetAlmacenes');
+        if (!res.ok) return;
+        const almacenes = await res.json();
+
+        ['almacenOrigenId', 'almacenDestinoId'].forEach(id => {
+            const sel = document.getElementById(id);
+            sel.innerHTML = `<option value="">-- ${id === 'almacenOrigenId' ? 'Origen' : 'Destino'} --</option>`;
+            almacenes.forEach(a => {
+                sel.innerHTML += `<option value="${a.id}">${a.nombre} (${a.sucursal})</option>`;
+            });
+        });
+    }
+
+    async function cargarProductos() {
+        const res = await fetch('/Sucursales/GetProductos');
+        if (!res.ok) return;
+        const productos = await res.json();
+        const sel = document.getElementById('productoId');
+        sel.innerHTML = '<option value="">-- Seleccione un producto --</option>';
+        productos.forEach(p => {
+            sel.innerHTML += `<option value="${p.id}">${p.nombre} (${p.codigo})</option>`;
+        });
+    }
+
+    async function cargarStockProducto() {
+        const productoId = document.getElementById('productoId').value;
+        const almacenOrigenId = document.getElementById('almacenOrigenId').value;
+        const stockInfo = document.getElementById('stock-info');
+        const stockPorAlmacen = document.getElementById('stock-por-almacen');
+
+        if (!productoId) {
+            stockInfo.classList.add('d-none');
+            stockPorAlmacen.innerHTML = '<p class="text-muted small">Selecciona un producto para ver el stock por almacén.</p>';
+            return;
+        }
+
+        const res = await fetch(`/Sucursales/GetStockProducto?productoId=${productoId}`);
+        if (!res.ok) return;
+        const stocks = await res.json();
+
+        // Mostrar stock por almacén
+        if (stocks.length === 0) {
+            stockPorAlmacen.innerHTML = '<p class="text-muted small">No hay stock registrado para este producto en ningún almacén.</p>';
+        } else {
+            stockPorAlmacen.innerHTML = stocks.map(s => `
+                <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                    <span class="small fw-semibold">${s.almacen}</span>
+                    <span class="badge ${s.cantidad <= 5 ? 'bg-danger' : s.cantidad <= 10 ? 'bg-warning text-dark' : 'bg-success'} rounded-pill">
+                        ${s.cantidad} uds.
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // Mostrar stock del almacén origen
+        if (almacenOrigenId) {
+            const stockOrigen = stocks.find(s => s.almacenId == almacenOrigenId);
+            const disponible = stockOrigen?.cantidad ?? 0;
+            stockInfo.classList.remove('d-none');
+            document.getElementById('stock-info-text').textContent =
+                `Stock disponible en almacén de origen: ${disponible} unidades`;
+            document.getElementById('cantidad').max = disponible;
+        } else {
+            stockInfo.classList.add('d-none');
+        }
+    }
+
+    async function cargarHistorial() {
+        const res = await fetch('/Sucursales/GetHistorialTransferencias');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById('total-transferencias').textContent = data.length;
+
+        const tbody = document.getElementById('historial-body');
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted"><i class="ri-inbox-line fs-24"></i><br>No hay transferencias registradas</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(t => `
+            <tr>
+                <td class="ps-3">
+                    <span class="fw-semibold small">${t.producto}</span>
+                </td>
+                <td>
+                    <span class="badge bg-primary-subtle text-primary rounded-pill small">${t.origen}</span>
+                </td>
+                <td>
+                    <span class="badge bg-success-subtle text-success rounded-pill small">${t.destino}</span>
+                </td>
+                <td class="text-center">
+                    <strong>${t.cantidad}</strong>
+                </td>
+                <td>
+                    <span class="badge ${t.estado === 'Completado' ? 'bg-success' : 'bg-warning text-dark'} rounded-pill">
+                        ${t.estado}
+                    </span>
+                </td>
+                <td class="text-end pe-3">
+                    <small class="text-muted">${t.fecha}</small>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function realizarTransferencia() {
+        const productoId = document.getElementById('productoId').value;
+        const almacenOrigenId = document.getElementById('almacenOrigenId').value;
+        const almacenDestinoId = document.getElementById('almacenDestinoId').value;
+        const cantidad = parseFloat(document.getElementById('cantidad').value);
+
+        const alertEl = document.getElementById('transfer-alert');
+
+        if (!productoId || !almacenOrigenId || !almacenDestinoId || !cantidad || cantidad <= 0) {
+            alertEl.className = 'alert alert-warning';
+            alertEl.textContent = 'Por favor completa todos los campos correctamente.';
+            alertEl.classList.remove('d-none');
+            return;
+        }
+
+        if (almacenOrigenId === almacenDestinoId) {
+            alertEl.className = 'alert alert-warning';
+            alertEl.textContent = 'El almacén de origen y destino no pueden ser el mismo.';
+            alertEl.classList.remove('d-none');
+            return;
+        }
+
+        const btn = document.getElementById('btn-transferir');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Transfiriendo...';
+
+        try {
+            const res = await fetch('/Sucursales/TransferirStock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': antiForgeryToken ?? ''
+                },
+                body: `productoId=${productoId}&almacenOrigenId=${almacenOrigenId}&almacenDestinoId=${almacenDestinoId}&cantidad=${cantidad}`
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alertEl.className = 'alert alert-success';
+                alertEl.innerHTML = `<i class="ri-check-circle-line me-1"></i>${data.message}`;
+                alertEl.classList.remove('d-none');
+                await Promise.all([cargarStockProducto(), cargarHistorial()]);
+            } else {
+                alertEl.className = 'alert alert-danger';
+                alertEl.innerHTML = `<i class="ri-error-warning-line me-1"></i>${data.message}`;
+                alertEl.classList.remove('d-none');
+            }
+        } catch (e) {
+            alertEl.className = 'alert alert-danger';
+            alertEl.textContent = 'Error de conexión. Intenta de nuevo.';
+            alertEl.classList.remove('d-none');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ri-swap-box-line me-2"></i>Realizar Transferencia';
+        }
+    }
+</script>
+}

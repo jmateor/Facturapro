@@ -33,6 +33,16 @@ namespace Facturapro.Models
         [Display(Name = "Último acceso")]
         public DateTime? UltimoAcceso { get; set; }
 
+        // PERMISOS GRANULARES (Switches)
+        public bool PuedeFacturar { get; set; } = true;
+        public bool PuedeVerReportes { get; set; } = false;
+        public bool PuedeGestionarInventario { get; set; } = false;
+        public bool PuedeConfigurarSistema { get; set; } = false;
+        public bool PuedeAnularFacturas { get; set; } = false;
+        public bool PuedeVerCostos { get; set; } = false;
+        public bool PuedeGestionarClientes { get; set; } = true;
+        public bool PuedeGestionarUsuarios { get; set; } = false; // Gestionar el módulo de usuarios
+
         // Propiedades de navegación para auditoría
         public virtual ICollection<FacturaAudit> FacturasCreadas { get; set; } = new List<FacturaAudit>();
     }

@@ -1,0 +1,264 @@
+@model Facturapro.Services.DGII.FiscalSummaryViewModel
+@{
+    ViewData["Title"] = "Reportes Fiscales DGII";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <form method="get" class="d-flex align-items-center">
+                    <select name="mes" class="form-select form-select-sm me-2" onchange="this.form.submit()" style="width: 130px;">
+                        @for (int i = 1; i <= 12; i++)
+                        {
+                            <option value="@i" selected='@(ViewBag.Mes == i)'>@System.Globalization.DateTimeFormatInfo.CurrentInfo.GetMonthName(i)</option>
+                        }
+                    </select>
+                    <select name="año" class="form-select form-select-sm" onchange="this.form.submit()" style="width: 100px;">
+                        @for (int i = DateTime.Now.Year; i >= DateTime.Now.Year - 3; i--)
+                        {
+                            <option value="@i" selected='@(ViewBag.Año == i)'>@i</option>
+                        }
+                    </select>
+                </form>
+            </div>
+            <h4 class="page-title">
+                <i class="ri-bank-line me-1 text-primary"></i> 
+                Reportes Fiscales DGII
+            </h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Resumen de Ventas (607) -->
+    <div class="col-xl-6">
+        <div class="card overflow-hidden border-0 shadow-sm mb-4">
+            <div class="card-body p-0">
+                <div class="p-4 text-bg-primary">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="avatar-md bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="ri-arrow-up-circle-line fs-1 text-white"></i>
+                        </div>
+                        <div class="text-end">
+                            <h6 class="text-white-50 text-uppercase mt-0">Formato 607</h6>
+                            <h2 class="text-white my-1">@Model.CantidadVentas</h2>
+                            <p class="text-white-50 mb-0 small">Facturas Emitidas</p>
+                        </div>
+                    </div>
+                    <div class="row g-0 text-center mt-4">
+                        <div class="col-6 border-end border-white border-opacity-10">
+                            <h5 class="text-white mb-1">@Model.TotalVentas.ToString("C", cultura)</h5>
+                            <p class="text-white-50 mb-0 small">Total Facturado</p>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-white mb-1">@Model.TotalITBISVentas.ToString("C", cultura)</h5>
+                            <p class="text-white-50 mb-0 small">ITBIS Generado</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 bg-white">
+                    <h5 class="header-title mb-3 fs-14">Generación de Archivo</h5>
+                    <p class="text-muted small mb-4">
+                        Este archivo contiene todas las ventas, ingresos y anulaciones realizadas durante el periodo seleccionado.
+                    </p>
+                    <form asp-action="Exportar607" method="post">
+                        <input type="hidden" name="mes" value="@ViewBag.Mes" />
+                        <input type="hidden" name="año" value="@ViewBag.Año" />
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="ri-download-2-line me-1"></i> Descargar Formato 607 (.txt)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen de Compras (606) -->
+    <div class="col-xl-6">
+        <div class="card overflow-hidden border-0 shadow-sm mb-4">
+            <div class="card-body p-0">
+                <div class="p-4 text-bg-success">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="avatar-md bg-white bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center">
+                            <i class="ri-arrow-down-circle-line fs-1 text-white"></i>
+                        </div>
+                        <div class="text-end">
+                            <h6 class="text-white-50 text-uppercase mt-0">Formato 606</h6>
+                            <h2 class="text-white my-1">@Model.CantidadCompras</h2>
+                            <p class="text-white-50 mb-0 small">Gastos Registrados</p>
+                        </div>
+                    </div>
+                    <div class="row g-0 text-center mt-4">
+                        <div class="col-6 border-end border-white border-opacity-10">
+                            <h5 class="text-white mb-1">@Model.TotalCompras.ToString("C", cultura)</h5>
+                            <p class="text-white-50 mb-0 small">Total Compras</p>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-white mb-1">@Model.TotalITBISCompras.ToString("C", cultura)</h5>
+                            <p class="text-white-50 mb-0 small">ITBIS por Adelantar</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 bg-white">
+                    <h5 class="header-title mb-3 fs-14">Generación de Archivo</h5>
+                    <p class="text-muted small mb-4">
+                        Este archivo detalla todas las compras de bienes y servicios para sustentar sus costos y gastos.
+                    </p>
+                    <form asp-action="Exportar606" method="post">
+                        <input type="hidden" name="mes" value="@ViewBag.Mes" />
+                        <input type="hidden" name="año" value="@ViewBag.Año" />
+                        <button type="submit" class="btn btn-success w-100 py-2">
+                            <i class="ri-download-2-line me-1"></i> Descargar Formato 606 (.txt)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <ul class="nav nav-tabs nav-bordered mb-3">
+                    <li class="nav-item">
+                        <a href="#ventas-tab" data-bs-toggle="tab" aria-expanded="true" class="nav-link active">
+                            <i class="ri-file-list-3-line d-md-none d-block"></i>
+                            <span class="d-none d-md-block">Ventas (607)</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#compras-tab" data-bs-toggle="tab" aria-expanded="false" class="nav-link">
+                            <i class="ri-shopping-cart-2-line d-md-none d-block"></i>
+                            <span class="d-none d-md-block">Compras (606)</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#anuladas-tab" data-bs-toggle="tab" aria-expanded="false" class="nav-link">
+                            <i class="ri-error-warning-line d-md-none d-block"></i>
+                            <span class="d-none d-md-block">Anulaciones (608)</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <!-- Tab Ventas -->
+                    <div class="tab-pane show active" id="ventas-tab">
+                        <div class="table-responsive">
+                            <table class="table table-centered table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>NCF</th>
+                                        <th>Cliente</th>
+                                        <th>Fecha</th>
+                                        <th class="text-end">Monto</th>
+                                        <th class="text-end">ITBIS</th>
+                                        <th class="text-center">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var f in Model.Ventas.OrderByDescending(x => x.FechaEmision))
+                                    {
+                                        <tr>
+                                            <td class="fw-bold text-primary">@f.eNCF</td>
+                                            <td>@(f.Cliente?.Nombre ?? "Consumidor Final")</td>
+                                            <td>@f.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end">@f.Total.ToString("N2")</td>
+                                            <td class="text-end">@f.MontoITBIS.ToString("N2")</td>
+                                            <td class="text-center">
+                                                <span class="badge @(f.EstadoDGII == "Aprobado" ? "bg-success" : "bg-warning")">@f.EstadoDGII</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                    @if (!Model.Ventas.Any())
+                                    {
+                                        <tr><td colspan="6" class="text-center py-4 text-muted">No hay ventas en este periodo</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab Compras -->
+                    <div class="tab-pane" id="compras-tab">
+                        <div class="table-responsive">
+                            <table class="table table-centered table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>NCF</th>
+                                        <th>Proveedor</th>
+                                        <th>Fecha</th>
+                                        <th class="text-end">Monto</th>
+                                        <th class="text-end">ITBIS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var c in Model.Compras.OrderByDescending(x => x.FechaCompra))
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@c.NCF</td>
+                                            <td>@(c.Proveedor?.Nombre ?? "Desconocido")</td>
+                                            <td>@c.FechaCompra.ToString("dd/MM/yyyy")</td>
+                                            <td class="text-end">@c.Total.ToString("N2")</td>
+                                            <td class="text-end">@c.ITBIS.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                    @if (!Model.Compras.Any())
+                                    {
+                                        <tr><td colspan="5" class="text-center py-4 text-muted">No hay compras registradas en este periodo</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Tab Anulaciones -->
+                    <div class="tab-pane" id="anuladas-tab">
+                        <div class="table-responsive">
+                            <table class="table table-centered table-nowrap mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>NCF</th>
+                                        <th>Fecha Anulación</th>
+                                        <th>Tipo Anulación</th>
+                                        <th>Motivo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var f in Model.Anuladas.OrderByDescending(x => x.FechaEmision))
+                                    {
+                                        <tr>
+                                            <td class="text-danger fw-bold">@f.eNCF</td>
+                                            <td>@f.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                            <td><span class="badge bg-soft-danger text-danger">@f.TipoAnulacion</span></td>
+                                            <td class="text-muted">@f.MotivoAnulacion</td>
+                                        </tr>
+                                    }
+                                    @if (!Model.Anuladas.Any())
+                                    {
+                                        <tr><td colspan="4" class="text-center py-4 text-muted">No hay anulaciones en este periodo</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .text-bg-primary { background: linear-gradient(135deg, #405189 0%, #299cdb 100%) !important; }
+        .text-bg-success { background: linear-gradient(135deg, #0ab39c 0%, #405189 100%) !important; }
+        .avatar-md { height: 3.5rem; width: 3.5rem; }
+        .avatar-sm { height: 2.5rem; width: 2.5rem; display: flex; align-items: center; justify-content: center; }
+        .bg-soft-danger { background-color: rgba(240, 101, 72, 0.1); }
+        .bg-soft-info { background-color: rgba(41, 156, 219, 0.1); }
+        .bg-soft-warning { background-color: rgba(247, 184, 75, 0.1); }
+    </style>
+}

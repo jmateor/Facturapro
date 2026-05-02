@@ -54,7 +54,7 @@
 <div class="row">
     <!-- Columna Izquierda - Formulario -->
     <div class="col-xl-8">
-        <form asp-action="Create" method="post" id="productoForm">
+        <form asp-action="Create" method="post" id="productoForm" class="dirty-check">
             @Html.AntiForgeryToken()
 
             <!-- Sección 1: Información Básica -->
@@ -90,6 +90,29 @@
                         </div>
 
                         <div class="col-12">
+                            <label asp-for="Icono" class="form-label">
+                                <i class="ri-emotion-line me-1"></i> Ícono Personalizado
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ri-remixicon-line"></i></span>
+                                <input asp-for="Icono" class="form-control" placeholder="Ej: ri-car-line, ri-t-shirt-line, ri-cup-line" id="iconoInput" />
+                                <button type="button" class="btn btn-outline-primary" onclick="abrirSelectorIconos()">
+                                    <i class="ri-grid-line me-1"></i> Seleccionar
+                                </button>
+                            </div>
+                            <span asp-validation-for="Icono" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">
+                                Ícono de <a href="https://remixicon.com/" target="_blank">RemixIcon</a>. Deja vacío para usar el ícono predeterminado.
+                            </small>
+                            <div id="vistaPreviaIcono" class="mt-2" style="display: none;">
+                                <div class="d-inline-flex align-items-center gap-2 px-3 py-2 bg-light rounded">
+                                    <i id="iconoPreview" class="" style="font-size: 1.5rem;"></i>
+                                    <span class="small text-muted" id="nombreIconoPreview"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
                             <label asp-for="Descripcion" class="form-label">Descripción</label>
                             <textarea asp-for="Descripcion" class="form-control" rows="3" placeholder="Descripción detallada del producto, características, especificaciones..."></textarea>
                             <span asp-validation-for="Descripcion" class="text-danger small"></span>
@@ -99,32 +122,160 @@
                 </div>
             </div>
 
-            <!-- Sección 2: Precios y Stock -->
+            <!-- Sección 2: Tipo de Producto -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-warning rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">2</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Tipo de Producto</h5>
+                            <p class="text-muted mb-0 small">Clasifica el producto según su naturaleza</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <input type="radio" class="btn-check" name="TipoProducto" id="tipoArticulo" value="1" checked autocomplete="off">
+                            <label class="card h-100 mb-0 border-2 shadow-sm" for="tipoArticulo" style="cursor: pointer; transition: all 0.2s;">
+                                <div class="card-body text-center py-4">
+                                    <div class="avatar-md bg-soft-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                                        <i class="ri-box-3-line text-primary fs-3"></i>
+                                    </div>
+                                    <h6 class="mb-1">Artículo</h6>
+                                    <small class="text-muted">Producto físico tangible</small>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="col-md-4">
+                            <input type="radio" class="btn-check" name="TipoProducto" id="tipoServicio" value="2" autocomplete="off">
+                            <label class="card h-100 mb-0 border-2 shadow-sm" for="tipoServicio" style="cursor: pointer; transition: all 0.2s;">
+                                <div class="card-body text-center py-4">
+                                    <div class="avatar-md bg-soft-success rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                                        <i class="ri-customer-service-2-line text-success fs-3"></i>
+                                    </div>
+                                    <h6 class="mb-1">Servicio</h6>
+                                    <small class="text-muted">Servicio intangible</small>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="col-md-4">
+                            <input type="radio" class="btn-check" name="TipoProducto" id="tipoLibra" value="3" autocomplete="off">
+                            <label class="card h-100 mb-0 border-2 shadow-sm" for="tipoLibra" style="cursor: pointer; transition: all 0.2s;">
+                                <div class="card-body text-center py-4">
+                                    <div class="avatar-md bg-soft-info rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                                        <i class="ri-weight-line text-info fs-3"></i>
+                                    </div>
+                                    <h6 class="mb-1">Libra / Peso</h6>
+                                    <small class="text-muted">Producto a granel</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Campos condicionales para Libra -->
+                    <div id="camposLibra" style="display: none;" class="mt-3 pt-3 border-top">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="PesoPorUnidad" class="form-label">Peso por Unidad (lb)</label>
+                                <input asp-for="PesoPorUnidad" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                                <small class="text-muted d-block mt-1">Peso promedio por unidad individual</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="UnidadMedida" class="form-label">Unidad de Medida</label>
+                                <select asp-for="UnidadMedida" class="form-select">
+                                    <option value="Libra">Libra (lb)</option>
+                                    <option value="Kilogramo">Kilogramo (kg)</option>
+                                    <option value="Onza">Onza (oz)</option>
+                                    <option value="Gramo">Gramo (g)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 3: Precios y Ganancia -->
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-4">
                         <div class="avatar-sm bg-success rounded-3 me-3">
-                            <span class="avatar-title text-white fw-bold">2</span>
+                            <span class="avatar-title text-white fw-bold">3</span>
                         </div>
                         <div>
-                            <h5 class="card-title mb-0">Precios y Stock</h5>
-                            <p class="text-muted mb-0 small">Información comercial y de inventario</p>
+                            <h5 class="card-title mb-0">Precios y Ganancia</h5>
+                            <p class="text-muted mb-0 small">Información comercial y rentabilidad</p>
                         </div>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
+                            <label asp-for="PrecioCompra" class="form-label">
+                                <i class="ri-shopping-cart-2-line me-1"></i> Precio de Compra
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-soft-warning text-warning fw-bold">$</span>
+                                <input asp-for="PrecioCompra" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" id="precioCompra" />
+                            </div>
+                            <span asp-validation-for="PrecioCompra" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Costo de adquisición del producto</small>
+                        </div>
+
+                        <div class="col-md-6">
                             <label asp-for="Precio" class="form-label">
-                                Precio de Venta <span class="text-danger">*</span>
+                                <i class="ri-money-dollar-circle-line me-1"></i> Precio de Venta <span class="text-danger">*</span>
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text bg-soft-primary text-primary fw-bold">$</span>
-                                <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                                <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" id="precioVenta" />
                             </div>
                             <span asp-validation-for="Precio" class="text-danger small"></span>
                             <small class="text-muted d-block mt-1">Precio unitario antes de impuestos</small>
                         </div>
 
+                        <!-- Resumen de Ganancia -->
+                        <div class="col-12">
+                            <div class="card bg-soft-success border-0">
+                                <div class="card-body py-3">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block">Ganancia por Unidad</small>
+                                            <span class="fs-4 fw-bold text-success" id="gananciaUnidad">$0.00</span>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block">Margen de Ganancia</small>
+                                            <span class="fs-4 fw-bold text-success" id="margenGanancia">0%</span>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <span class="badge bg-success-soft text-success">
+                                                <i class="ri-line-chart-line me-1"></i> Rentabilidad
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 4: Stock e Inventario -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-info rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">4</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Stock e Inventario</h5>
+                            <p class="text-muted mb-0 small">Control de existencias y alertas</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <label asp-for="Stock" class="form-label">
                                 Stock Inicial
@@ -133,30 +284,63 @@
                                 <span class="input-group-text bg-soft-info text-info">
                                     <i class="ri-archive-line"></i>
                                 </span>
-                                <input asp-for="Stock" type="number" min="0" class="form-control" value="0" />
+                                <input asp-for="Stock" type="number" min="0" class="form-control" value="0" id="stockInicial" />
                             </div>
                             <span asp-validation-for="Stock" class="text-danger small"></span>
                             <small class="text-muted d-block mt-1">Cantidad disponible en almacén</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="StockMinimo" class="form-label">
+                                Stock Mínimo de Alerta
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-soft-warning text-warning">
+                                    <i class="ri-alert-line"></i>
+                                </span>
+                                <input asp-for="StockMinimo" type="number" min="0" class="form-control" value="5" />
+                            </div>
+                            <span asp-validation-for="StockMinimo" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Nivel para activar alerta de reorden</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="form-check form-switch form-switch-lg">
+                                <input asp-for="ControlaStock" class="form-check-input" type="checkbox" checked id="controlaStock">
+                                <label class="form-check-label" for="controlaStock">
+                                    <strong>Controlar Stock</strong>
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Desactivar para servicios o productos digitales</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Ubicacion" class="form-label">
+                                <i class="ri-map-pin-2-line me-1"></i> Ubicación en Almacén
+                            </label>
+                            <input asp-for="Ubicacion" class="form-control" placeholder="Ej: Pasillo A, Estante 3" />
+                            <span asp-validation-for="Ubicacion" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Ubicación física para fácil localización</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Sección 3: Clasificación -->
+            <!-- Sección 5: Clasificación y Proveedor -->
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-4">
-                        <div class="avatar-sm bg-info rounded-3 me-3">
-                            <span class="avatar-title text-white fw-bold">3</span>
+                        <div class="avatar-sm bg-purple rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">5</span>
                         </div>
                         <div>
-                            <h5 class="card-title mb-0">Clasificación</h5>
-                            <p class="text-muted mb-0 small">Categorización del producto</p>
+                            <h5 class="card-title mb-0">Clasificación y Proveedor</h5>
+                            <p class="text-muted mb-0 small">Categorización y proveedor principal</p>
                         </div>
                     </div>
 
                     <div class="row g-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label asp-for="CategoriaId" class="form-label">Categoría</label>
                             <select asp-for="CategoriaId" class="form-select" asp-items="ViewBag.CategoriaId">
                                 <option value="">-- Sin categoría --</option>
@@ -164,8 +348,85 @@
                             <span asp-validation-for="CategoriaId" class="text-danger small"></span>
                             <small class="text-muted d-block mt-1">
                                 <i class="ri-information-line me-1"></i>
-                                <a href="@Url.Action("Index", "Categorias")" target="_blank" class="text-decoration-none">Ver categorías disponibles</a>
+                                <a href="@Url.Action("Index", "Categorias")" target="_blank" class="text-decoration-none">Ver categorías</a>
                             </small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ProveedorId" class="form-label">Proveedor Principal</label>
+                            <select asp-for="ProveedorId" class="form-select" asp-items="ViewBag.ProveedorId">
+                                <option value="">-- Sin proveedor --</option>
+                            </select>
+                            <span asp-validation-for="ProveedorId" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ri-information-line me-1"></i>
+                                <a href="@Url.Action("Index", "Proveedores")" target="_blank" class="text-decoration-none">Ver proveedores</a>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 6: Lote y Vencimiento -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-danger rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">6</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Lote y Vencimiento</h5>
+                            <p class="text-muted mb-0 small">Control de caducidad y trazabilidad</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="NumeroLote" class="form-label">Número de Lote</label>
+                            <input asp-for="NumeroLote" class="form-control" placeholder="Ej: LOT-2026-001" />
+                            <span asp-validation-for="NumeroLote" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">Útil para productos perecederos o con garantía</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="FechaVencimiento" class="form-label">Fecha de Vencimiento</label>
+                            <input asp-for="FechaVencimiento" type="date" class="form-control" />
+                            <span asp-validation-for="FechaVencimiento" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">El sistema alertará antes del vencimiento</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección 7: Código de Barras -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="avatar-sm bg-dark rounded-3 me-3">
+                            <span class="avatar-title text-white fw-bold">7</span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Código de Barras</h5>
+                            <p class="text-muted mb-0 small">Identificación universal del producto</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CodigoBarras" class="form-label">Código de Barras</label>
+                            <input asp-for="CodigoBarras" class="form-control" placeholder="Escanear o ingresar código" />
+                            <span asp-validation-for="CodigoBarras" class="text-danger small"></span>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ri-barcode-line me-1"></i>
+                                Se genera automáticamente si está vacío
+                            </small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Vista Previa</label>
+                            <div class="border rounded p-3 bg-light text-center" id="barcodePreview">
+                                <small class="text-muted">El código de barras se mostrará aquí</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -272,10 +533,96 @@
 
 @section Scripts {
     <script>
+        // ========================================
+        // CÁLCULO DE GANANCIA EN TIEMPO REAL
+        // ========================================
+        function calcularGanancia() {
+            const precioCompra = parseFloat(document.getElementById('precioCompra')?.value) || 0;
+            const precioVenta = parseFloat(document.getElementById('precioVenta')?.value) || 0;
+
+            const ganancia = precioVenta - precioCompra;
+            const margen = precioVenta > 0 ? (ganancia / precioVenta) * 100 : 0;
+
+            document.getElementById('gananciaUnidad').textContent = '$' + ganancia.toFixed(2);
+            document.getElementById('margenGanancia').textContent = margen.toFixed(1) + '%';
+
+            // Cambiar color según rentabilidad
+            const gananciaElement = document.getElementById('gananciaUnidad');
+            const margenElement = document.getElementById('margenGanancia');
+
+            if (ganancia < 0) {
+                gananciaElement.className = 'fs-4 fw-bold text-danger';
+                margenElement.className = 'fs-4 fw-bold text-danger';
+            } else if (ganancia === 0) {
+                gananciaElement.className = 'fs-4 fw-bold text-warning';
+                margenElement.className = 'fs-4 fw-bold text-warning';
+            } else {
+                gananciaElement.className = 'fs-4 fw-bold text-success';
+                margenElement.className = 'fs-4 fw-bold text-success';
+            }
+        }
+
+        document.getElementById('precioCompra')?.addEventListener('input', calcularGanancia);
+        document.getElementById('precioVenta')?.addEventListener('input', calcularGanancia);
+
+        // ========================================
+        // MANEJO DE TIPO DE PRODUCTO
+        // ========================================
+        document.querySelectorAll('input[name="TipoProducto"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const camposLibra = document.getElementById('camposLibra');
+                const controlaStockCheckbox = document.getElementById('controlaStock');
+                const stockInput = document.getElementById('stockInicial');
+
+                if (this.value === '3') { // Libra / Peso
+                    camposLibra.style.display = 'block';
+                } else {
+                    camposLibra.style.display = 'none';
+                }
+
+                if (this.value === '2') { // Servicio
+                    controlaStockCheckbox.checked = false;
+                    stockInput.value = '0';
+                    stockInput.disabled = true;
+                } else {
+                    controlaStockCheckbox.checked = true;
+                    stockInput.disabled = false;
+                }
+            });
+        });
+
+        // ========================================
+        // VISTA PREVIA DE CÓDIGO DE BARRAS
+        // ========================================
+        document.querySelector('input[name="CodigoBarras"]')?.addEventListener('input', function(e) {
+            const codigo = e.target.value.trim();
+            const preview = document.getElementById('barcodePreview');
+
+            if (codigo) {
+                // Simular código de barras con caracteres
+                const barras = codigo.split('').map(c => {
+                    const width = (c.charCodeAt(0) % 3) + 1;
+                    return '<div class="d-inline-block bg-dark" style="width: ' + width + 'px; height: 30px; margin-right: 1px;"></div>';
+                }).join('');
+
+                preview.innerHTML = `
+                    <div class="d-flex justify-content-center align-items-end gap-1">
+                        ${barras}
+                    </div>
+                    <small class="d-block mt-2 text-muted">${codigo}</small>
+                `;
+            } else {
+                preview.innerHTML = '<small class="text-muted">El código de barras se mostrará aquí</small>';
+            }
+        });
+
+        // ========================================
+        // VALIDACIONES EXISTENTES
+        // ========================================
+
         // Validación de Precio - Solo números con decimales
         document.querySelector('input[name="Precio"]').addEventListener('input', function(e) {
             let value = this.value.replace(/[^0-9.]/g, '');
-            // Asegurar máximo 2 decimales
             const parts = value.split('.');
             if (parts.length > 1 && parts[1].length > 2) {
                 value = parts[0] + '.' + parts[1].substring(0, 2);
@@ -286,73 +633,14 @@
         // Validación de Stock - Solo números enteros
         document.querySelector('input[name="Stock"]').addEventListener('input', function(e) {
             this.value = this.value.replace(/[^0-9]/g, '');
-            // No permitir negativos
             if (parseInt(this.value) < 0) {
                 this.value = '0';
             }
         });
 
-        // Validación de Código - Convertir a mayúsculas y solo caracteres válidos
+        // Validación de Código - Convertir a mayúsculas
         document.querySelector('input[name="Codigo"]').addEventListener('input', function(e) {
             this.value = this.value.toUpperCase().replace(/[^A-Z0-9\-_]/g, '');
-        });
-
-        // Validación del formulario antes de enviar
-        document.getElementById('productoForm').addEventListener('submit', function(e) {
-            let isValid = true;
-            const camposObligatorios = ['Codigo', 'Nombre', 'Precio'];
-
-            camposObligatorios.forEach(function(campo) {
-                const elemento = document.querySelector('input[name="' + campo + '"]');
-                if (elemento && !elemento.value.trim()) {
-                    isValid = false;
-                    elemento.classList.add('is-invalid');
-                    elemento.classList.add('border-danger');
-                } else if (elemento) {
-                    elemento.classList.remove('is-invalid');
-                    elemento.classList.remove('border-danger');
-                }
-            });
-
-            // Validar precio mayor a 0
-            const precioInput = document.querySelector('input[name="Precio"]');
-            if (precioInput && parseFloat(precioInput.value) <= 0) {
-                isValid = false;
-                precioInput.classList.add('is-invalid');
-                precioInput.classList.add('border-danger');
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-
-                // Mostrar alerta de error
-                const alerta = document.createElement('div');
-                alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
-                alerta.setAttribute('role', 'alert');
-                alerta.innerHTML = `
-                    <i class="ri-error-warning-line me-2"></i>
-                    Por favor completa los campos requeridos con valores válidos.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-
-                const formContainer = document.querySelector('.page-header-title');
-                const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
-                if (alertaExistente) {
-                    alertaExistente.remove();
-                }
-                formContainer.after(alerta);
-
-                // Scroll al primer error
-                document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
-
-        // Remover clase de error al escribir
-        document.querySelectorAll('.form-control, .form-select, textarea').forEach(function(input) {
-            input.addEventListener('input', function() {
-                this.classList.remove('is-invalid');
-                this.classList.remove('border-danger');
-            });
         });
 
         // Auto-formateo de precio al perder foco
@@ -364,5 +652,343 @@
                 }
             }
         });
+
+        // ========================================
+        // ESTILOS DINÁMICOS PARA TARJETAS DE TIPO
+        // ========================================
+        document.querySelectorAll('input[name="TipoProducto"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.btn-check + .card').forEach(card => {
+                    card.classList.remove('border-primary', 'border-success', 'border-info');
+                    card.classList.add('border-2');
+                });
+
+                const card = this.nextElementSibling;
+                if (this.value === '1') {
+                    card.classList.add('border-primary');
+                } else if (this.value === '2') {
+                    card.classList.add('border-success');
+                } else if (this.value === '3') {
+                    card.classList.add('border-info');
+                }
+            });
+        });
+
+        // Trigger inicial para marcar la tarjeta seleccionada
+        document.querySelector('input[name="TipoProducto"]:checked')?.dispatchEvent(new Event('change'));
+
+        // ========================================
+        // SELECTOR DE ÍCONOS
+        // ========================================
+        function abrirSelectorIconos() {
+            const modal = new bootstrap.Modal(document.getElementById('modalSelectorIconos'));
+            modal.show();
+        }
+
+        function seleccionarIcono(nombreIcono) {
+            document.getElementById('iconoInput').value = nombreIcono;
+            mostrarVistaPrevia(nombreIcono);
+            bootstrap.Modal.getInstance(document.getElementById('modalSelectorIconos')).hide();
+        }
+
+        function mostrarVistaPrevia(nombreIcono) {
+            const vistaPrevia = document.getElementById('vistaPreviaIcono');
+            const iconoPreview = document.getElementById('iconoPreview');
+            const nombreIconoPreview = document.getElementById('nombreIconoPreview');
+
+            if (nombreIcono.trim()) {
+                iconoPreview.className = nombreIcono;
+                nombreIconoPreview.textContent = nombreIcono;
+                vistaPrevia.style.display = 'inline-flex';
+            } else {
+                vistaPrevia.style.display = 'none';
+            }
+        }
+
+        // Vista previa al escribir
+        document.getElementById('iconoInput')?.addEventListener('input', function(e) {
+            mostrarVistaPrevia(e.target.value);
+        });
+
+        // Búsqueda en tiempo real
+        document.getElementById('buscadorIconos')?.addEventListener('input', function(e) {
+            const termino = e.target.value.toLowerCase();
+            document.querySelectorAll('.icono-item').forEach(item => {
+                const nombre = item.dataset.icono.toLowerCase();
+                const categoria = item.dataset.categoria.toLowerCase();
+                item.style.display = (nombre.includes(termino) || categoria.includes(termino)) ? 'block' : 'none';
+            });
+        });
     </script>
 }
+
+<!-- Modal Selector de Íconos -->
+<div class="modal fade" id="modalSelectorIconos" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="ri-emotion-line me-2"></i>Seleccionar Ícono</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="buscadorIconos" class="form-control" placeholder="Buscar ícono (ej: car, shirt, cup...)" autocomplete="off" />
+                </div>
+                <div class="row g-2" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Comercios y Negocios -->
+                    <div class="col-3 icono-item" data-icono="ri-store-line" data-categoria="comercio tienda negocio">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-store-line')" style="cursor: pointer;">
+                            <i class="ri-store-line fs-1 text-primary"></i>
+                            <small class="mt-1">Tienda</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-shopping-bag-line" data-categoria="comercio bolsa compra">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-shopping-bag-line')" style="cursor: pointer;">
+                            <i class="ri-shopping-bag-line fs-1 text-success"></i>
+                            <small class="mt-1">Bolsa</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-shopping-cart-line" data-categoria="comercio carrito compra">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-shopping-cart-line')" style="cursor: pointer;">
+                            <i class="ri-shopping-cart-line fs-1 text-info"></i>
+                            <small class="mt-1">Carrito</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-shop-2-line" data-categoria="comercio tienda">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-shop-2-line')" style="cursor: pointer;">
+                            <i class="ri-shop-2-line fs-1 text-warning"></i>
+                            <small class="mt-1">Comercio</small>
+                        </div>
+                    </div>
+
+                    <!-- Ropa y Accesorios -->
+                    <div class="col-3 icono-item" data-icono="ri-t-shirt-line" data-categoria="ropa camisa vestir">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-t-shirt-line')" style="cursor: pointer;">
+                            <i class="ri-t-shirt-line fs-1 text-danger"></i>
+                            <small class="mt-1">Camisa</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-customer-service-2-line" data-categoria="ropa servicio">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-customer-service-2-line')" style="cursor: pointer;">
+                            <i class="ri-customer-service-2-line fs-1 text-primary"></i>
+                            <small class="mt-1">Servicio</small>
+                        </div>
+                    </div>
+
+                    <!-- Alimentos y Bebidas -->
+                    <div class="col-3 icono-item" data-icono="ri-cup-line" data-categoria="bebida vaso taza">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-cup-line')" style="cursor: pointer;">
+                            <i class="ri-cup-line fs-1 text-info"></i>
+                            <small class="mt-1">Vaso</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-restaurant-2-line" data-categoria="comida restaurante">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-restaurant-2-line')" style="cursor: pointer;">
+                            <i class="ri-restaurant-2-line fs-1 text-success"></i>
+                            <small class="mt-1">Restaurante</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-knife-line" data-categoria="comida cuchillo cocina">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-knife-line')" style="cursor: pointer;">
+                            <i class="ri-knife-line fs-1 text-secondary"></i>
+                            <small class="mt-1">Cuchillo</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-bowl-line" data-categoria="comida plato tazón">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-bowl-line')" style="cursor: pointer;">
+                            <i class="ri-bowl-line fs-1 text-warning"></i>
+                            <small class="mt-1">Tazón</small>
+                        </div>
+                    </div>
+
+                    <!-- Vehículos y Repuestos -->
+                    <div class="col-3 icono-item" data-icono="ri-car-line" data-categoria="vehiculo carro auto">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-car-line')" style="cursor: pointer;">
+                            <i class="ri-car-line fs-1 text-primary"></i>
+                            <small class="mt-1">Carro</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-bike-line" data-categoria="vehiculo bicicleta">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-bike-line')" style="cursor: pointer;">
+                            <i class="ri-bike-line fs-1 text-success"></i>
+                            <small class="mt-1">Bicicleta</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-steering-2-line" data-categoria="vehiculo volante direccion">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-steering-2-line')" style="cursor: pointer;">
+                            <i class="ri-steering-2-line fs-1 text-danger"></i>
+                            <small class="mt-1">Volante</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-oil-line" data-categoria="vehiculo aceite mantenimiento">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-oil-line')" style="cursor: pointer;">
+                            <i class="ri-oil-line fs-1 text-dark"></i>
+                            <small class="mt-1">Aceite</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-tools-line" data-categoria="vehiculo herramientas reparacion">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-tools-line')" style="cursor: pointer;">
+                            <i class="ri-tools-line fs-1 text-warning"></i>
+                            <small class="mt-1">Herramientas</small>
+                        </div>
+                    </div>
+
+                    <!-- Tecnología -->
+                    <div class="col-3 icono-item" data-icono="ri-computer-line" data-categoria="tecnologia computadora">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-computer-line')" style="cursor: pointer;">
+                            <i class="ri-computer-line fs-1 text-primary"></i>
+                            <small class="mt-1">Computadora</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-smartphone-line" data-categoria="tecnologia celular telefono">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-smartphone-line')" style="cursor: pointer;">
+                            <i class="ri-smartphone-line fs-1 text-success"></i>
+                            <small class="mt-1">Celular</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-macbook-line" data-categoria="tecnologia laptop portatil">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-macbook-line')" style="cursor: pointer;">
+                            <i class="ri-macbook-line fs-1 text-info"></i>
+                            <small class="mt-1">Laptop</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-headphone-line" data-categoria="tecnologia audio audifonos">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-headphone-line')" style="cursor: pointer;">
+                            <i class="ri-headphone-line fs-1 text-danger"></i>
+                            <small class="mt-1">Audífonos</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-mouse-line" data-categoria="tecnologia computadora mouse">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-mouse-line')" style="cursor: pointer;">
+                            <i class="ri-mouse-line fs-1 text-secondary"></i>
+                            <small class="mt-1">Mouse</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-keyboard-line" data-categoria="tecnologia computadora teclado">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-keyboard-line')" style="cursor: pointer;">
+                            <i class="ri-keyboard-line fs-1 text-dark"></i>
+                            <small class="mt-1">Teclado</small>
+                        </div>
+                    </div>
+
+                    <!-- Hogar y Muebles -->
+                    <div class="col-3 icono-item" data-icono="ri-home-4-line" data-categoria="hogar casa">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-home-4-line')" style="cursor: pointer;">
+                            <i class="ri-home-4-line fs-1 text-primary"></i>
+                            <small class="mt-1">Casa</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-chair-line" data-categoria="hogar mueble silla">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-chair-line')" style="cursor: pointer;">
+                            <i class="ri-chair-line fs-1 text-warning"></i>
+                            <small class="mt-1">Silla</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-lightbulb-line" data-categoria="hogar luz electrico">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-lightbulb-line')" style="cursor: pointer;">
+                            <i class="ri-lightbulb-line fs-1 text-warning"></i>
+                            <small class="mt-1">Bombillo</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-door-line" data-categoria="hogar puerta">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-door-line')" style="cursor: pointer;">
+                            <i class="ri-door-line fs-1 text-secondary"></i>
+                            <small class="mt-1">Puerta</small>
+                        </div>
+                    </div>
+
+                    <!-- Deportes y Fitness -->
+                    <div class="col-3 icono-item" data-icono="ri-basketball-line" data-categoria="deporte pelota baloncesto">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-basketball-line')" style="cursor: pointer;">
+                            <i class="ri-basketball-line fs-1 text-danger"></i>
+                            <small class="mt-1">Baloncesto</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-football-line" data-categoria="deporte pelota futbol">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-football-line')" style="cursor: pointer;">
+                            <i class="ri-football-line fs-1 text-success"></i>
+                            <small class="mt-1">Fútbol</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-dumbbell-line" data-categoria="deporte fitness pesas">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-dumbbell-line')" style="cursor: pointer;">
+                            <i class="ri-dumbbell-line fs-1 text-primary"></i>
+                            <small class="mt-1">Pesas</small>
+                        </div>
+                    </div>
+
+                    <!-- Belleza y Salud -->
+                    <div class="col-3 icono-item" data-icono="ri-hand-sanitizer-line" data-categoria="belleza salud limpieza">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-hand-sanitizer-line')" style="cursor: pointer;">
+                            <i class="ri-hand-sanitizer-line fs-1 text-info"></i>
+                            <small class="mt-1">Sanitizante</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-lipstick-line" data-categoria="belleza maquillaje">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-lipstick-line')" style="cursor: pointer;">
+                            <i class="ri-lipstick-line fs-1 text-danger"></i>
+                            <small class="mt-1">Labial</small>
+                        </div>
+                    </div>
+
+                    <!-- Mascotas -->
+                    <div class="col-3 icono-item" data-icono="ri-paw-line" data-categoria="mascota animal perro gato">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-paw-line')" style="cursor: pointer;">
+                            <i class="ri-paw-line fs-1 text-warning"></i>
+                            <small class="mt-1">Mascota</small>
+                        </div>
+                    </div>
+
+                    <!-- Oficina y Librería -->
+                    <div class="col-3 icono-item" data-icono="ri-book-3-line" data-categoria="oficina libro lectura">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-book-3-line')" style="cursor: pointer;">
+                            <i class="ri-book-3-line fs-1 text-primary"></i>
+                            <small class="mt-1">Libro</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-pencil-line" data-categoria="oficina escritura lapiz">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-pencil-line')" style="cursor: pointer;">
+                            <i class="ri-pencil-line fs-1 text-success"></i>
+                            <small class="mt-1">Lápiz</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-file-text-line" data-categoria="oficina documento archivo">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-file-text-line')" style="cursor: pointer;">
+                            <i class="ri-file-text-line fs-1 text-secondary"></i>
+                            <small class="mt-1">Documento</small>
+                        </div>
+                    </div>
+
+                    <!-- Genéricos -->
+                    <div class="col-3 icono-item" data-icono="ri-box-3-line" data-categoria="generico caja paquete">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-box-3-line')" style="cursor: pointer;">
+                            <i class="ri-box-3-line fs-1 text-secondary"></i>
+                            <small class="mt-1">Caja</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-archive-line" data-categoria="generico almacen">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-archive-line')" style="cursor: pointer;">
+                            <i class="ri-archive-line fs-1 text-dark"></i>
+                            <small class="mt-1">Archivo</small>
+                        </div>
+                    </div>
+                    <div class="col-3 icono-item" data-icono="ri-gift-line" data-categoria="generico regalo">
+                        <div class="card h-100 text-center p-2" onclick="seleccionarIcono('ri-gift-line')" style="cursor: pointer;">
+                            <i class="ri-gift-line fs-1 text-danger"></i>
+                            <small class="mt-1">Regalo</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        ¿No encuentras el ícono? Ver más en
+                        <a href="https://remixicon.com/" target="_blank">remixicon.com</a>
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>

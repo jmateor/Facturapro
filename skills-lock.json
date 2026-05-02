@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "csharp-expert": {
+      "source": "personamanagmentlayer/pcl",
+      "sourceType": "github",
+      "skillPath": "stdlib/languages/csharp-expert/SKILL.md",
+      "computedHash": "4f0d20ba86aad201d5e86bf8d8bf022a94efbb9476eb9eb4c27b7a1720ed282e"
+    }
+  }
+}

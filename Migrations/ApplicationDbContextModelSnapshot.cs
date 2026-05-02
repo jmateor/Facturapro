@@ -79,6 +79,30 @@ namespace Facturapro.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("PuedeAnularFacturas")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeConfigurarSistema")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeFacturar")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeGestionarClientes")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeGestionarInventario")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeGestionarUsuarios")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeVerCostos")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PuedeVerReportes")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Rol")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -108,6 +132,38 @@ namespace Facturapro.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Facturapro.Models.Entities.Almacen", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EsPrincipalAlmacen")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("SucursalId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SucursalId");
+
+                    b.ToTable("Almacenes");
                 });
 
             modelBuilder.Entity("Facturapro.Models.Entities.Categoria", b =>
@@ -225,11 +281,54 @@ namespace Facturapro.Migrations
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("FechaPago")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("FechaRecepcion")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("FormaPago")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<decimal>("ISC")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ISRPercibido")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("ITBIS")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ITBISCosto")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ITBISPercibido")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ITBISProporcionalidad")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoBienes")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoISRRetenido")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoITBISRetenido")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoServicios")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("NCF")
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
+
+                    b.Property<string>("NCFModificado")
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
 
                     b.Property<string>("Notas")
                         .HasMaxLength(500)
@@ -240,11 +339,24 @@ namespace Facturapro.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<decimal>("OtrosImpuestos")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PropinaLegal")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("ProveedorId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("SubTotal")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TipoGasto")
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
+                    b.Property<int?>("TipoRetencionISR")
+                        .HasColumnType("int");
 
                     b.Property<decimal>("Total")
                         .HasColumnType("decimal(18,2)");
@@ -302,6 +414,58 @@ namespace Facturapro.Migrations
                     b.ToTable("CompraLineas");
                 });
 
+            modelBuilder.Entity("Facturapro.Models.Entities.ConfiguracionDispositivo", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("AbrirCajon")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("AnchoPapel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("CorteAutomatico")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("HabilitarImpresora")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HabilitarLector")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HabilitarPantallaCliente")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("ImprimirCopia")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModoEscaneo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PuertoPantallaCliente")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("SonidoEscaneo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SufijoLectura")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracionDispositivos");
+                });
+
             modelBuilder.Entity("Facturapro.Models.Entities.ConfiguracionEmpresa", b =>
                 {
                     b.Property<int>("Id")
@@ -318,9 +482,33 @@ namespace Facturapro.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<bool>("AceptarCredito")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AceptarEfectivo")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AceptarMixto")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AceptarSinpe")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AceptarTarjeta")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AceptarTransferencia")
+                        .HasColumnType("bit");
+
                     b.Property<string>("ActividadEconomica")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("AlertaCreditoMaximo")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AlertaVentaMaxima")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("ClienteObligatorio")
                         .HasColumnType("bit");
@@ -342,6 +530,9 @@ namespace Facturapro.Migrations
 
                     b.Property<bool>("DescuentoCantidad")
                         .HasColumnType("bit");
+
+                    b.Property<int>("DiasAlertaVencimiento")
+                        .HasColumnType("int");
 
                     b.Property<int>("DiasPlazoCredito")
                         .HasColumnType("int");
@@ -369,6 +560,9 @@ namespace Facturapro.Migrations
                     b.Property<bool>("ImprimirAutomático")
                         .HasColumnType("bit");
 
+                    b.Property<int>("MetodoPagoPorDefecto")
+                        .HasColumnType("int");
+
                     b.Property<bool>("ModoPruebas")
                         .HasColumnType("bit");
 
@@ -378,6 +572,9 @@ namespace Facturapro.Migrations
                         .HasColumnType("nvarchar(3)");
 
                     b.Property<decimal>("MontoCreditoMaximo")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoMaximoCambio")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("MontoVentaMaxima")
@@ -401,6 +598,9 @@ namespace Facturapro.Migrations
                     b.Property<bool>("MostrarNCF")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("MostrarOpcionesPago")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("Multimoneda")
                         .HasColumnType("bit");
 
@@ -412,8 +612,20 @@ namespace Facturapro.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<bool>("NotificacionEmail")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NotificacionPopup")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("NotificacionSonido")
+                        .HasColumnType("bit");
+
                     b.Property<string>("PasswordCertificado")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PermitirCambio")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("PermitirVentasCredito")
                         .HasColumnType("bit");
@@ -424,6 +636,9 @@ namespace Facturapro.Migrations
 
                     b.Property<int>("PorcentajeAlertaAgotamiento")
                         .HasColumnType("int");
+
+                    b.Property<bool>("PreguntarCambio")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Provincia")
                         .HasMaxLength(50)
@@ -451,6 +666,9 @@ namespace Facturapro.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
+
+                    b.Property<int>("StockMinimoAlerta")
+                        .HasColumnType("int");
 
                     b.Property<bool>("StockNegativo")
                         .HasColumnType("bit");
@@ -507,6 +725,68 @@ namespace Facturapro.Migrations
                     b.ToTable("ConfiguracionEmpresas");
                 });
 
+            modelBuilder.Entity("Facturapro.Models.Entities.ConfiguracionIntegracion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("DgiiValidacionHabilitada")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EmailHabilitado")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("FechaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("GoogleDriveHabilitado")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("PasarelaPagoHabilitada")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PasarelaProveedor")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SmtpPassword")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SmtpPort")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SmtpServer")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("SmtpUseSSL")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SmtpUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("TasaUSD")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("WhatsAppApiKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("WhatsAppHabilitado")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("WhatsAppPhoneId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConfiguracionIntegraciones");
+                });
+
             modelBuilder.Entity("Facturapro.Models.Entities.Factura", b =>
                 {
                     b.Property<int>("Id")
@@ -545,8 +825,36 @@ namespace Facturapro.Migrations
                     b.Property<string>("MensajeDGII")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Moneda")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<decimal>("MontoEfectivo")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoISRRetenido")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("MontoITBIS")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoITBISRetenido")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoTarjeta")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MontoTransferencia")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("MotivoAnulacion")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NCFModificado")
+                        .HasMaxLength(13)
+                        .HasColumnType("nvarchar(13)");
 
                     b.Property<string>("Notas")
                         .HasMaxLength(1000)
@@ -575,6 +883,13 @@ namespace Facturapro.Migrations
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<decimal>("TasaCambio")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("TipoAnulacion")
+                        .HasMaxLength(2)
+                        .HasColumnType("nvarchar(2)");
+
                     b.Property<string>("TipoECF")
                         .HasMaxLength(2)
                         .HasColumnType("nvarchar(2)");
@@ -586,6 +901,9 @@ namespace Facturapro.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalDOP")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("TotalITBIS")
@@ -676,6 +994,59 @@ namespace Facturapro.Migrations
                     b.ToTable("FacturaLineas");
                 });
 
+            modelBuilder.Entity("Facturapro.Models.Entities.LogAuditoria", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EntidadId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("Modulo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Nivel")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Usuario")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Fecha");
+
+                    b.HasIndex("Modulo");
+
+                    b.HasIndex("Usuario");
+
+                    b.ToTable("LogsAuditoria");
+                });
+
             modelBuilder.Entity("Facturapro.Models.Entities.MovimientoInventario", b =>
                 {
                     b.Property<int>("Id")
@@ -725,8 +1096,6 @@ namespace Facturapro.Migrations
 
                     b.HasIndex("FacturaId");
 
-                    b.HasIndex("FechaMovimiento");
-
                     b.HasIndex("ProductoId", "FechaMovimiento");
 
                     b.ToTable("MovimientosInventario");
@@ -759,6 +1128,12 @@ namespace Facturapro.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<bool>("ControlaStock")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("CostoPromedio")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Descripcion")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
@@ -766,16 +1141,51 @@ namespace Facturapro.Migrations
                     b.Property<DateTime>("FechaCreacion")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("FechaVencimiento")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Icono")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("NumeroLote")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal?>("PesoPorUnidad")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("Precio")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("Stock")
+                    b.Property<decimal>("PrecioCompra")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("ProveedorId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("Stock")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("StockMinimo")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TipoProducto")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Ubicacion")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UnidadMedida")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -787,6 +1197,8 @@ namespace Facturapro.Migrations
                     b.HasIndex("CodigoBarras")
                         .IsUnique()
                         .HasFilter("[CodigoBarras] IS NOT NULL");
+
+                    b.HasIndex("ProveedorId");
 
                     b.ToTable("Productos");
                 });
@@ -885,6 +1297,127 @@ namespace Facturapro.Migrations
                     b.HasIndex("TipoECF", "Estado");
 
                     b.ToTable("RangoNumeraciones");
+                });
+
+            modelBuilder.Entity("Facturapro.Models.Entities.StockAlmacen", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlmacenId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UltimaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenId");
+
+                    b.HasIndex("ProductoId", "AlmacenId")
+                        .IsUnique();
+
+                    b.ToTable("StocksAlmacen");
+                });
+
+            modelBuilder.Entity("Facturapro.Models.Entities.Sucursal", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Direccion")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("EsPrincipal")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RNC_Especifico")
+                        .IsRequired()
+                        .HasMaxLength(11)
+                        .HasColumnType("nvarchar(11)");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Sucursales");
+                });
+
+            modelBuilder.Entity("Facturapro.Models.Entities.TransferenciaInventario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlmacenDestinoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AlmacenOrigenId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("FechaTransferencia")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notas")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ProductoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UsuarioId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlmacenDestinoId");
+
+                    b.HasIndex("AlmacenOrigenId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("TransferenciasInventario");
                 });
 
             modelBuilder.Entity("Facturapro.Models.FacturaAudit", b =>
@@ -1061,6 +1594,17 @@ namespace Facturapro.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Facturapro.Models.Entities.Almacen", b =>
+                {
+                    b.HasOne("Facturapro.Models.Entities.Sucursal", "Sucursal")
+                        .WithMany("Almacenes")
+                        .HasForeignKey("SucursalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sucursal");
+                });
+
             modelBuilder.Entity("Facturapro.Models.Entities.Compra", b =>
                 {
                     b.HasOne("Facturapro.Models.Entities.Proveedor", "Proveedor")
@@ -1145,7 +1689,60 @@ namespace Facturapro.Migrations
                         .HasForeignKey("CategoriaId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Facturapro.Models.Entities.Proveedor", "Proveedor")
+                        .WithMany("Productos")
+                        .HasForeignKey("ProveedorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Categoria");
+
+                    b.Navigation("Proveedor");
+                });
+
+            modelBuilder.Entity("Facturapro.Models.Entities.StockAlmacen", b =>
+                {
+                    b.HasOne("Facturapro.Models.Entities.Almacen", "Almacen")
+                        .WithMany("Stocks")
+                        .HasForeignKey("AlmacenId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Facturapro.Models.Entities.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Almacen");
+
+                    b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("Facturapro.Models.Entities.TransferenciaInventario", b =>
+                {
+                    b.HasOne("Facturapro.Models.Entities.Almacen", "AlmacenDestino")
+                        .WithMany()
+                        .HasForeignKey("AlmacenDestinoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Facturapro.Models.Entities.Almacen", "AlmacenOrigen")
+                        .WithMany()
+                        .HasForeignKey("AlmacenOrigenId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Facturapro.Models.Entities.Producto", "Producto")
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AlmacenDestino");
+
+                    b.Navigation("AlmacenOrigen");
+
+                    b.Navigation("Producto");
                 });
 
             modelBuilder.Entity("Facturapro.Models.FacturaAudit", b =>
@@ -1211,6 +1808,11 @@ namespace Facturapro.Migrations
                     b.Navigation("FacturasCreadas");
                 });
 
+            modelBuilder.Entity("Facturapro.Models.Entities.Almacen", b =>
+                {
+                    b.Navigation("Stocks");
+                });
+
             modelBuilder.Entity("Facturapro.Models.Entities.Categoria", b =>
                 {
                     b.Navigation("Productos");
@@ -1234,6 +1836,13 @@ namespace Facturapro.Migrations
             modelBuilder.Entity("Facturapro.Models.Entities.Proveedor", b =>
                 {
                     b.Navigation("Compras");
+
+                    b.Navigation("Productos");
+                });
+
+            modelBuilder.Entity("Facturapro.Models.Entities.Sucursal", b =>
+                {
+                    b.Navigation("Almacenes");
                 });
 #pragma warning restore 612, 618
         }

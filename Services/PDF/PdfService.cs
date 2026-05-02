@@ -39,7 +39,7 @@ namespace Facturapro.Services.PDF
                 {
                     page.Size(PageSizes.A4);
                     page.Margin(2, Unit.Centimetre);
-                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Arial));
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Verdana));
 
                     page.Header().Element(header => ComposeHeader(header, factura, empresa, logoPath));
                     page.Content().Element(content => ComposeContent(content, factura, empresa));

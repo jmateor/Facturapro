@@ -21,6 +21,21 @@
     </div>
 </div>
 <!-- end page title -->
+@if (Model.AlertasNCF.Any())
+{
+    <div class="row">
+        <div class="col-12">
+            @foreach (var alerta in Model.AlertasNCF)
+            {
+                <div class="alert alert-@(alerta.Nivel) alert-dismissible fade show" role="alert">
+                    <i class="ri-@(alerta.Nivel == "danger" ? "error-warning-fill" : "alert-fill") me-2"></i>
+                    <strong>Alerta de NCF:</strong> @alerta.Mensaje
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+        </div>
+    </div>
+}
 
 <!-- Stats Grid -->
 <div class="row">
@@ -31,7 +46,7 @@
                     <i class="ri-money-dollar-circle-line widget-icon"></i>
                 </div>
                 <h6 class="text-uppercase mt-0" title="Ingresos">Ingresos del Mes</h6>
-                <h2 class="my-2">@Model.IngresosMes.ToString("C", cultura)</h2>
+                <h2 class="my-2" id="stat-ingresos"><div class="skeleton skeleton-text title medium bg-white bg-opacity-25"></div></h2>
                 <p class="mb-0">
                     <span class="badge bg-white bg-opacity-10 me-1">Ventas actuales</span>
                 </p>
@@ -46,7 +61,7 @@
                     <i class="ri-file-list-3-line widget-icon"></i>
                 </div>
                 <h6 class="text-uppercase mt-0" title="Facturas">Facturas del Mes</h6>
-                <h2 class="my-2">@Model.FacturasMes</h2>
+                <h2 class="my-2" id="stat-facturas"><div class="skeleton skeleton-text title short bg-white bg-opacity-25"></div></h2>
                 <p class="mb-0">
                     <span class="badge bg-white bg-opacity-10 me-1">Este período</span>
                 </p>
@@ -61,7 +76,7 @@
                     <i class="ri-time-line widget-icon"></i>
                 </div>
                 <h6 class="text-uppercase mt-0" title="Pendientes">Facturas Pendientes</h6>
-                <h2 class="my-2">@Model.FacturasPendientes</h2>
+                <h2 class="my-2" id="stat-pendientes"><div class="skeleton skeleton-text title short bg-white bg-opacity-25"></div></h2>
                 <p class="mb-0">
                     <a href="@Url.Action("Index", "Facturas")" class="text-white text-decoration-underline">Ver facturas →</a>
                 </p>
@@ -76,9 +91,9 @@
                     <i class="ri-user-3-line widget-icon"></i>
                 </div>
                 <h6 class="text-uppercase mt-0" title="Clientes">Clientes Registrados</h6>
-                <h2 class="my-2">@Model.TotalClientes</h2>
-                <p class="mb-0">
-                    <span class="badge bg-white bg-opacity-25 me-1">@Model.ClientesActivos con facturas</span>
+                <h2 class="my-2" id="stat-clientes"><div class="skeleton skeleton-text title short bg-white bg-opacity-25"></div></h2>
+                <p class="mb-0" id="stat-clientes-activos">
+                    <span class="skeleton skeleton-text short bg-white bg-opacity-25 d-inline-block" style="width: 80px;"></span>
                 </p>
             </div>
         </div>
@@ -94,25 +109,20 @@
                     <i class="ri-box-3-line widget-icon"></i>
                 </div>
                 <h6 class="text-uppercase mt-0">Productos Activos</h6>
-                <h2 class="my-2">@Model.TotalProductos</h2>
+                <h2 class="my-2" id="stat-productos"><div class="skeleton skeleton-text title short bg-white bg-opacity-25"></div></h2>
             </div>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="card widget-flat @(Model.StockBajo > 0 ? "text-bg-danger" : "text-bg-pink")">
+        <div class="card widget-flat text-bg-pink" id="card-stock">
             <div class="card-body">
                 <div class="float-end">
                     <i class="ri-alarm-warning-line widget-icon"></i>
                 </div>
                 <h6 class="text-uppercase mt-0">Stock Bajo</h6>
-                <h2 class="my-2">@Model.StockBajo</h2>
-                @if (Model.StockBajo > 0)
-                {
-                    <p class="mb-0">
-                        <a href="@Url.Action("ReporteStock", "Kalder", new { estado = "bajo" })" class="text-white text-decoration-underline">Ver alertas →</a>
-                    </p>
-                }
+                <h2 class="my-2" id="stat-stock"><div class="skeleton skeleton-text title short bg-white bg-opacity-25"></div></h2>
+                <div id="stat-stock-alert"></div>
             </div>
         </div>
     </div>
@@ -130,6 +140,36 @@
     </div>
 </div>
 
+<!-- Charts Section -->
+<div class="row mt-3">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="header-title mb-0">Tendencia de Ventas (Últimos 7 días)</h5>
+                <i class="ri-line-chart-line text-muted"></i>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="salesTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="header-title mb-0">Top Items (Este Mes)</h5>
+                <i class="ri-pie-chart-line text-muted"></i>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Recent Activity -->
 <div class="row mt-3">
     <div class="col-12">
@@ -139,64 +179,170 @@
                 <a href="@Url.Action("Index", "Facturas")" class="btn btn-sm btn-primary">Ver todas</a>
             </div>
             <div class="card-body">
-                @if (Model.FacturasRecientes.Any())
-                {
-                    <div class="table-responsive-sm">
-                        <table class="table table-centered mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Nº Factura</th>
-                                    <th>Cliente</th>
-                                    <th>Fecha</th>
-                                    <th>Total</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var factura in Model.FacturasRecientes)
-                                {
-                                    <tr>
-                                        <td><span class="fw-bold">#@factura.NumeroFactura</span></td>
-                                        <td>@(factura.Cliente?.Nombre ?? "N/A")</td>
-                                        <td>@factura.FechaEmision.ToString("dd/MM/yyyy")</td>
-                                        <td>@factura.Total.ToString("C", cultura)</td>
-                                        <td>
-                                            @switch (factura.Estado)
-                                            {
-                                                case "Pagada":
-                                                    <span class="badge bg-success">@factura.Estado</span>
-                                                    break;
-                                                case "Pendiente":
-                                                case "Emitida":
-                                                    <span class="badge bg-warning">@factura.Estado</span>
-                                                    break;
-                                                case "Cancelada":
-                                                    <span class="badge bg-secondary">@factura.Estado</span>
-                                                    break;
-                                                default:
-                                                    <span class="badge bg-secondary">@factura.Estado</span>
-                                                    break;
-                                            }
-                                        </td>
-                                        <td>
-                                            <a href="@Url.Action("Details", "Facturas", new { id = factura.Id })" class="btn btn-sm btn-light">Ver</a>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    <div class="text-center py-5">
-                        <i class="ri-file-list-3-line text-muted" style="font-size: 3rem;"></i>
-                        <p class="text-muted mt-3">No hay facturas registradas</p>
-                        <a href="@Url.Action("Create", "Facturas")" class="btn btn-primary mt-2">Crear primera factura</a>
-                    </div>
-                }
+                <div class="table-responsive-sm" id="recentInvoicesContainer">
+                    <table class="table table-centered mb-0" id="recentInvoicesTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Nº Factura</th>
+                                <th>Cliente</th>
+                                <th>Fecha</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentInvoicesBody">
+                            <!-- Se cargará vía AJAX con Skeletons -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarStats();
+            cargarFacturasRecientes();
+        });
+
+        let salesChart = null;
+        let categoriesChart = null;
+
+        function cargarStats() {
+            fetch('/Home/GetDashboardStats')
+                .then(r => r.json())
+                .then(s => {
+                    document.getElementById('stat-ingresos').innerText = new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(s.ingresosMes);
+                    document.getElementById('stat-facturas').innerText = s.facturasMes;
+                    document.getElementById('stat-pendientes').innerText = s.facturasPendientes;
+                    document.getElementById('stat-clientes').innerText = s.totalClientes;
+                    document.getElementById('stat-productos').innerText = s.totalProductos;
+                    
+                    if (document.getElementById('stat-clientes-activos')) {
+                        document.getElementById('stat-clientes-activos').innerHTML = `<span class="badge bg-white bg-opacity-25 me-1">${s.totalClientes} registrados</span>`;
+                    }
+                    
+                    document.getElementById('stat-stock').innerText = s.stockBajo;
+
+                    if (s.stockBajo > 0) {
+                        const card = document.getElementById('card-stock');
+                        card.classList.remove('text-bg-pink');
+                        card.classList.add('text-bg-danger');
+                    }
+
+                    // Inicializar Gráfico de Tendencia
+                    const trendCtx = document.getElementById('salesTrendChart').getContext('2d');
+                    if (salesChart) salesChart.destroy();
+                    salesChart = new Chart(trendCtx, {
+                        type: 'line',
+                        data: {
+                            labels: s.tendencia.labels,
+                            datasets: [{
+                                label: 'Ingresos (DOP)',
+                                data: s.tendencia.data,
+                                borderColor: '#405189',
+                                backgroundColor: 'rgba(64, 81, 137, 0.1)',
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 4,
+                                pointBackgroundColor: '#405189'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { display: false } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+
+                    // Inicializar Gráfico de Categorías
+                    const catCtx = document.getElementById('categoriesChart').getContext('2d');
+                    if (categoriesChart) categoriesChart.destroy();
+                    categoriesChart = new Chart(catCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: s.categorias.labels,
+                            datasets: [{
+                                data: s.categorias.data,
+                                backgroundColor: [
+                                    '#405189', '#0ab39c', '#f7b84b', '#f06548', '#299cdb'
+                                ],
+                                borderWeight: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { position: 'bottom', labels: { boxWidth: 10, padding: 15 } }
+                            },
+                            cutout: '70%'
+                        }
+                    });
+                })
+                .catch(err => console.error('Error stats:', err));
+        }
+
+        function cargarFacturasRecientes() {
+            const body = document.getElementById('recentInvoicesBody');
+            
+            // Mostrar 5 skeletons de fila de tabla
+            window.Skeleton.show('#recentInvoicesBody', 'tableRow', 5);
+
+            fetch('/Home/GetFacturasRecientes')
+                .then(r => r.json())
+                .then(facturas => {
+                    if (facturas.length === 0) {
+                        const emptyHtml = `
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <i class="ri-file-list-3-line text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3">No hay facturas registradas</p>
+                                    <a href="/Facturas/Create" class="btn btn-primary mt-2">Crear primera factura</a>
+                                </td>
+                            </tr>`;
+                        window.Skeleton.hide('#recentInvoicesBody', emptyHtml);
+                        return;
+                    }
+
+                    const html = facturas.map(f => `
+                        <tr>
+                            <td><span class="fw-bold">#${f.numeroFactura}</span></td>
+                            <td>${f.cliente}</td>
+                            <td>${f.fecha}</td>
+                            <td>${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(f.total)}</td>
+                            <td>
+                                <span class="badge ${getEstadoClass(f.estado)}">${f.estado}</span>
+                            </td>
+                            <td>
+                                <a href="/Facturas/Details/${f.id}" class="btn btn-sm btn-light">Ver</a>
+                            </td>
+                        </tr>
+                    `).join('');
+
+                    window.Skeleton.hide('#recentInvoicesBody', html);
+                })
+                .catch(err => {
+                    console.error('Error al cargar facturas:', err);
+                    window.Skeleton.hide('#recentInvoicesBody', '<tr><td colspan="6" class="text-center text-danger">Error al cargar datos</td></tr>');
+                });
+        }
+
+        function getEstadoClass(estado) {
+            switch (estado) {
+                case "Pagada": return "bg-success";
+                case "Pendiente":
+                case "Emitida": return "bg-warning";
+                case "Cancelada": return "bg-secondary";
+                default: return "bg-secondary";
+            }
+        }
+    </script>
+}

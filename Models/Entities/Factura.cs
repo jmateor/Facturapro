@@ -21,6 +21,10 @@ namespace Facturapro.Models.Entities
         [Display(Name = "Tipo de Comprobante")]
         public string? TipoECF { get; set; } = "31"; // 31=Crédito Fiscal, 32=Consumo, 33=Nota Débito, 34=Nota Crédito
 
+        [StringLength(13)]
+        [Display(Name = "NCF Modificado")]
+        public string? NCFModificado { get; set; }
+
         [Display(Name = "Versión del XML")]
         public string? VersionXML { get; set; } = "1.0";
 
@@ -85,9 +89,35 @@ namespace Facturapro.Models.Entities
         [DataType(DataType.Currency)]
         public decimal TotalITBIS { get; set; }
 
+        [Display(Name = "ITBIS Retenido")]
+        public decimal MontoITBISRetenido { get; set; }
+
+        [Display(Name = "ISR Retenido")]
+        public decimal MontoISRRetenido { get; set; }
+
         [Display(Name = "Total")]
         [DataType(DataType.Currency)]
         public decimal Total { get; set; }
+
+        [StringLength(10)]
+        [Display(Name = "Moneda")]
+        public string Moneda { get; set; } = "DOP"; // DOP o USD
+
+        [Display(Name = "Tasa de Cambio")]
+        public decimal TasaCambio { get; set; } = 1.0m;
+
+        [Display(Name = "Total en DOP (Fiscal)")]
+        [DataType(DataType.Currency)]
+        public decimal TotalDOP { get; set; }
+
+        [Display(Name = "Monto Efectivo")]
+        public decimal MontoEfectivo { get; set; }
+
+        [Display(Name = "Monto Tarjeta")]
+        public decimal MontoTarjeta { get; set; }
+
+        [Display(Name = "Monto Transferencia")]
+        public decimal MontoTransferencia { get; set; }
 
         [StringLength(50)]
         [Display(Name = "Estado")]
@@ -96,6 +126,14 @@ namespace Facturapro.Models.Entities
         [StringLength(1000)]
         [Display(Name = "Notas")]
         public string? Notas { get; set; }
+
+        [StringLength(2)]
+        [Display(Name = "Tipo de Anulación (608)")]
+        public string? TipoAnulacion { get; set; } // 01-11 según DGII
+
+        [StringLength(200)]
+        [Display(Name = "Motivo de Anulación")]
+        public string? MotivoAnulacion { get; set; }
 
         [Display(Name = "Fecha de creación")]
         public DateTime FechaCreacion { get; set; } = DateTime.Now;

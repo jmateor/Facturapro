@@ -3,6 +3,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.Xml;
 using System.Text;
 
 namespace Facturapro.Services.DGII
@@ -62,8 +63,20 @@ namespace Facturapro.Services.DGII
             // var fechaHoraFirma = new XElement("FechaHoraFirma", DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss"));
             // ecf.Add(fechaHoraFirma);
 
+            XNamespace dgiiNs = "http://dgii.gov.do/empresa/facturaElectronica";
+            AsignarNamespace(ecf, dgiiNs);
+
             doc.Add(ecf);
             return doc;
+        }
+
+        private void AsignarNamespace(XElement elemento, XNamespace ns)
+        {
+            elemento.Name = ns + elemento.Name.LocalName;
+            foreach (var hijo in elemento.Elements())
+            {
+                AsignarNamespace(hijo, ns);
+            }
         }
 
         /// <summary>
@@ -223,21 +236,28 @@ namespace Facturapro.Services.DGII
         /// </summary>
         private string FirmarConCertificado(string xmlContent, X509Certificate2 certificado)
         {
-            // NOTA: Esta es una implementación simplificada
-            // Para producción, se debe implementar la firma XML-DSig según especificaciones DGII
-
             var doc = new XmlDocument();
+            doc.PreserveWhitespace = true;
             doc.LoadXml(xmlContent);
 
-            // Agregar nodo de firma (implementación completa requeriría System.Security.Cryptography.Xml)
-            var firmaNode = doc.CreateElement("FirmaDigital");
-            firmaNode.InnerText = Convert.ToBase64String(certificado.GetRawCertData());
-            doc.DocumentElement?.AppendChild(firmaNode);
+            var signedXml = new SignedXml(doc)
+            {
+                SigningKey = certificado.GetRSAPrivateKey()
+            };
 
-            // Agregar fecha de firma
-            var fechaFirma = doc.CreateElement("FechaHoraFirma");
-            fechaFirma.InnerText = DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss");
-            doc.DocumentElement?.AppendChild(fechaFirma);
+            var reference = new Reference { Uri = "" };
+            var env = new XmlDsigEnvelopedSignatureTransform();
+            reference.AddTransform(env);
+            signedXml.AddReference(reference);
+
+            var keyInfo = new KeyInfo();
+            keyInfo.AddClause(new KeyInfoX509Data(certificado));
+            signedXml.KeyInfo = keyInfo;
+
+            signedXml.ComputeSignature();
+            var xmlDigitalSignature = signedXml.GetXml();
+
+            doc.DocumentElement?.AppendChild(doc.ImportNode(xmlDigitalSignature, true));
 
             return doc.OuterXml;
         }

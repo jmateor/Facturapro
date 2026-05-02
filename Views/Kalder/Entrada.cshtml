@@ -1,76 +1,193 @@
 @model Facturapro.Models.Entities.Producto
 
 @{
-    ViewData["Title"] = "Registrar Entrada - Kalder";
+    ViewData["Title"] = "Entrada de Inventario - Kalder";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
 }
 
-<div class="page-header">
-    <div class="page-title">
-        <h1>Registrar Entrada</h1>
-        <p>Agregar stock al inventario</p>
-    </div>
-    <div class="page-actions">
-        <a href="@Url.Action("Inventario")" class="btn btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Volver
-        </a>
+<!-- Header con Breadcrumbs -->
+<div class="page-header-title">
+    <div class="d-flex align-items-center justify-content-between">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index")">Kalder</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Inventario")">Inventario</a></li>
+                    <li class="breadcrumb-item active">Entrada</li>
+                </ol>
+            </nav>
+            <h4 class="page-title mb-1">
+                <i class="ri-download-2-line me-1 text-success"></i>
+                Registrar Entrada de Mercancía
+            </h4>
+            <p class="text-muted mb-0">Incrementa el stock disponible para este producto</p>
+        </div>
+        <div>
+            <a href="@Url.Action("Inventario")" class="btn btn-soft-secondary">
+                <i class="ri-arrow-left-line me-1"></i> Volver al Almacén
+            </a>
+        </div>
     </div>
 </div>
 
-<div class="card" style="max-width: 600px; margin: 0 auto;">
-    <div class="card-header">
-        <h3 class="card-title">@Model.Nombre</h3>
-    </div>
-    <div class="card-body">
-        <div style="background: var(--gray-50); padding: var(--space-lg); border-radius: var(--radius); margin-bottom: var(--space-lg);">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md);">
-                <div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Código</div>
-                    <div style="font-weight: 600;">@Model.Codigo</div>
-                </div>
-                <div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">Stock Actual</div>
-                    <div style="font-weight: 600; font-size: 1.25rem;">@Model.Stock unidades</div>
-                </div>
-            </div>
-        </div>
-
-        <form asp-action="Entrada" method="post">
+<div class="row justify-content-center">
+    <div class="col-xl-8">
+        <form asp-action="Entrada" method="post" id="entradaForm">
             @Html.AntiForgeryToken()
             <input type="hidden" name="id" value="@Model.Id" />
 
-            <div class="form-group">
-                <label class="form-label required">Cantidad a Ingresar</label>
-                <input type="number" name="cantidad" class="form-input" min="1" required autofocus />
-                <span class="form-hint">Ingrese la cantidad de unidades que están entrando al almacén</span>
+            <!-- Card del Producto -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-4 bg-soft-success d-flex align-items-center justify-content-center p-4" style="border-radius: var(--radius-lg) 0 0 var(--radius-lg);">
+                            <div class="text-center">
+                                <div class="avatar-xl bg-white rounded-circle shadow-sm mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                    <i class="ri-box-3-line display-4 text-success"></i>
+                                </div>
+                                <span class="badge bg-success">@Model.Codigo</span>
+                            </div>
+                        </div>
+                        <div class="col-md-8 p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h3 class="fw-bold mb-1">@Model.Nombre</h3>
+                                    <p class="text-muted mb-0">@Model.Descripcion</p>
+                                </div>
+                                <div class="text-end">
+                                    <p class="text-muted small mb-0">Stock Actual</p>
+                                    <h2 class="fw-bold text-primary mb-0">@Model.Stock</h2>
+                                    <span class="text-muted small">unidades</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-4">
+                                <div>
+                                    <span class="text-muted small d-block">Categoría</span>
+                                    <span class="fw-semibold">@(Model.Categoria?.Nombre ?? "Sin categoría")</span>
+                                </div>
+                                <div>
+                                    <span class="text-muted small d-block">Precio Venta</span>
+                                    <span class="fw-semibold text-success">@Model.Precio.ToString("C", cultura)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Proveedor</label>
-                <input type="text" name="proveedor" class="form-input" placeholder="Nombre del proveedor (opcional)" />
-            </div>
+            <!-- Formulario de Entrada -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <!-- Columna Principal: Cantidad -->
+                        <div class="col-md-6 border-end">
+                            <h5 class="card-title mb-4"><i class="ri-add-circle-line me-2 text-primary"></i>Datos de Ingreso</h5>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Cantidad a Entrar</label>
+                                <div class="input-group input-group-lg">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(-1)">-</button>
+                                    <input type="number" name="cantidad" id="inputCantidad" class="form-control text-center fw-bold fs-4" value="1" min="1" required />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="adjustQty(1)">+</button>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mt-3">
+                                    <button type="button" class="btn btn-sm btn-soft-primary" onclick="setQty(5)">+5</button>
+                                    <button type="button" class="btn btn-sm btn-soft-primary" onclick="setQty(10)">+10</button>
+                                    <button type="button" class="btn btn-sm btn-soft-primary" onclick="setQty(50)">+50</button>
+                                    <button type="button" class="btn btn-sm btn-soft-primary" onclick="setQty(100)">+100</button>
+                                </div>
+                            </div>
 
-            <div class="form-group">
-                <label class="form-label">N° Factura Proveedor</label>
-                <input type="text" name="numeroFacturaProveedor" class="form-input" placeholder="Número de referencia (opcional)" />
-            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Motivo de la Entrada</label>
+                                <select name="motivo" class="form-select">
+                                    <option value="Compra a proveedor">Compra a proveedor</option>
+                                    <option value="Devolución de cliente">Devolución de cliente</option>
+                                    <option value="Ajuste de inventario">Ajuste de inventario</option>
+                                    <option value="Traspaso de almacén">Traspaso de almacén</option>
+                                    <option value="Otro">Otro (especificar en notas)</option>
+                                </select>
+                            </div>
+                        </div>
 
-            <div class="form-group">
-                <label class="form-label">Motivo / Notas</label>
-                <textarea name="motivo" class="form-textarea" rows="3" placeholder="Motivo de la entrada..."></textarea>
-            </div>
+                        <!-- Columna Secundaria: Referencias -->
+                        <div class="col-md-6">
+                            <h5 class="card-title mb-4"><i class="ri-file-list-3-line me-2 text-primary"></i>Referencias Fiscales</h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Proveedor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="ri-store-2-line text-muted"></i></span>
+                                    <input type="text" name="proveedor" class="form-control" placeholder="Nombre del proveedor" />
+                                </div>
+                            </div>
 
-            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: var(--space-md);">
-                <a href="@Url.Action("Inventario")" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-success">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                    </svg>
-                    Registrar Entrada
-                </button>
+                            <div class="mb-3">
+                                <label class="form-label">N° Factura o Conduce</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="ri-bill-line text-muted"></i></span>
+                                    <input type="text" name="numeroFacturaProveedor" class="form-control" placeholder="Ej: FAC-2024-001" />
+                                </div>
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label">Notas Adicionales</label>
+                                <textarea name="notas" class="form-control" rows="2" placeholder="Observaciones sobre esta entrada..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-4 border-0 text-end">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-start">
+                            <p class="text-muted small mb-0">Nuevo Stock Proyectado:</p>
+                            <h5 class="mb-0 fw-bold" id="proyectado">@Model.Stock + 1 = @(Model.Stock + 1)</h5>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="@Url.Action("Inventario")" class="btn btn-link text-muted">Cancelar</a>
+                            <button type="submit" class="btn btn-success px-5 py-2 shadow-sm">
+                                <i class="ri-check-line me-1"></i> Confirmar Entrada
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const stockActual = @Model.Stock;
+        const inputCantidad = document.getElementById('inputCantidad');
+        const textProyectado = document.getElementById('proyectado');
+
+        function updateProyectado() {
+            const qty = parseInt(inputCantidad.value) || 0;
+            const nuevo = stockActual + qty;
+            textProyectado.innerHTML = `${stockActual} + ${qty} = <span class="text-success">${nuevo}</span>`;
+        }
+
+        function adjustQty(amount) {
+            let current = parseInt(inputCantidad.value) || 0;
+            inputCantidad.value = Math.max(1, current + amount);
+            updateProyectado();
+        }
+
+        function setQty(amount) {
+            inputCantidad.value = amount;
+            updateProyectado();
+        }
+
+        inputCantidad.addEventListener('input', updateProyectado);
+
+        // Confirmación visual al enviar
+        document.getElementById('entradaForm').addEventListener('submit', function(e) {
+            const qty = inputCantidad.value;
+            if (qty <= 0) {
+                e.preventDefault();
+                alert('La cantidad debe ser mayor a cero');
+            }
+        });
+    </script>
+}

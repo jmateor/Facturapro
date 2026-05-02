@@ -42,7 +42,7 @@
 <div class="row">
     <!-- Columna Izquierda - Formulario -->
     <div class="col-xl-8">
-        <form asp-action="Edit" method="post" id="clienteForm">
+        <form asp-action="Edit" method="post" id="clienteForm" class="dirty-check">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="Id" />
             <input type="hidden" asp-for="FechaAlta" />
@@ -321,88 +321,6 @@
                 descripcion.textContent = 'El cliente no aparecerá en los listados ni podrá realizar compras.';
                 alerta.className = 'alert alert-secondary border-0 mt-3 mb-0';
             }
-        });
-
-        // Validación de RNC - Solo números
-        document.querySelector('input[name="RNC"]').addEventListener('input', function(e) {
-            this.value = this.value.replace(/[^0-9]/g, '');
-        });
-
-        // Validación de Teléfono - Formato dominicano
-        document.querySelector('input[name="Telefono"]').addEventListener('input', function(e) {
-            let value = this.value.replace(/[^0-9]/g, '');
-            if (value.length > 3 && value.length <= 6) {
-                value = value.slice(0, 3) + '-' + value.slice(3);
-            } else if (value.length > 6) {
-                value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
-            }
-            this.value = value;
-        });
-
-        // Validación de Email - Convertir a minúsculas
-        document.querySelector('input[name="Email"]').addEventListener('input', function(e) {
-            this.value = this.value.toLowerCase();
-        });
-
-        // Validación del formulario antes de enviar
-        document.getElementById('clienteForm').addEventListener('submit', function(e) {
-            let isValid = true;
-            const camposObligatorios = ['Nombre', 'RNC', 'Email'];
-
-            camposObligatorios.forEach(function(campo) {
-                const elemento = document.querySelector('input[name="' + campo + '"]');
-                if (elemento && !elemento.value.trim()) {
-                    isValid = false;
-                    elemento.classList.add('is-invalid');
-                    elemento.classList.add('border-danger');
-                } else if (elemento) {
-                    elemento.classList.remove('is-invalid');
-                    elemento.classList.remove('border-danger');
-                }
-            });
-
-            // Validar formato de RNC (9 o 11 dígitos)
-            const rncInput = document.querySelector('input[name="RNC"]');
-            if (rncInput && rncInput.value.trim()) {
-                const rncValor = rncInput.value.trim();
-                if (rncValor.length !== 9 && rncValor.length !== 11) {
-                    isValid = false;
-                    rncInput.classList.add('is-invalid');
-                    rncInput.classList.add('border-danger');
-                }
-            }
-
-            if (!isValid) {
-                e.preventDefault();
-
-                // Mostrar alerta de error
-                const alerta = document.createElement('div');
-                alerta.className = 'alert alert-danger border-0 alert-dismissible fade show';
-                alerta.setAttribute('role', 'alert');
-                alerta.innerHTML = `
-                    <i class="ri-error-warning-line me-2"></i>
-                    Por favor completa los campos requeridos y verifica el formato del RNC.
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                `;
-
-                const formContainer = document.querySelector('.page-header-title');
-                const alertaExistente = formContainer.parentElement.querySelector('.alert-danger');
-                if (alertaExistente) {
-                    alertaExistente.remove();
-                }
-                formContainer.after(alerta);
-
-                // Scroll al primer error
-                document.querySelector('.is-invalid')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
-
-        // Remover clase de error al escribir
-        document.querySelectorAll('.form-control').forEach(function(input) {
-            input.addEventListener('input', function() {
-                this.classList.remove('is-invalid');
-                this.classList.remove('border-danger');
-            });
         });
     </script>
 }
