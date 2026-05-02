@@ -1,35 +1,45 @@
 # 📋 Estado del Proyecto Facturapro
 
-> **Última actualización:** 21 de abril de 2026  
-> **Versión:** 1.0.0-beta  
-> **Desarrollador:** Sistema en construcción
+> **Última actualización:** 2 de mayo de 2026  
+> **Versión:** 1.2.0  
+> **Desarrollador:** Sistema en estabilización E2E
 
 ---
 
 ## 🎯 Progreso General
 
 ```
-[██████████████████████░░░░░░░░░░░░░░░░░░] 55% Completado
+[████████████████████████████████████░░░░] 90% Completado
 ```
 
 | Módulo | Estado | Notas |
 |--------|--------|-------|
-| Facturación Electrónica (DGII) | ✅ Completado | API integrada, envío real a DGII |
+| Facturación Electrónica (DGII) | ✅ Completado | API integrada, Bimonetario (USD/DOP) |
 | Clientes | ✅ CRUD Completo | Listo para producción |
 | Productos | ✅ CRUD + Código de barras | Listo |
 | Inventario | ✅ Entradas/Salidas/Ajustes | Listo |
-| POS (Punto de Venta) | ✅ Funcional | Con carrito y códigos de barras |
+| POS (Punto de Venta) | ✅ Funcional | Elite UI, Bimonetario, Carrito rápido |
 | Proveedores | ✅ CRUD Completo | Listo |
 | Compras | ✅ Registro de compras | Listo |
 | Rangos de Numeración | ✅ Gestión completa | Integrado con DGII |
-| Autenticación/Usuarios | ❌ No implementado | **SIGUIENTE PRIORIDAD** |
-| Reportes | ✅ Avanzado | Dashboard con gráficos y reportes funcionales |
+| Autenticación/Usuarios | ✅ Completado | Identity + RBAC (Roles) + SameSite Seguro |
+| Reportes | ✅ Avanzado | Dashboard, PDF, DGII Form 606 |
 | Notas Crédito/Débito | 🟡 Parcial | Modelo existe, flujo incompleto |
 | Generación PDF | ✅ Completado | QuestPDF + QR integrados |
 
 ---
 
 ## ✅ Últimos Cambios Realizados
+
+### 02 Mayo 2026 - Modernización Elite y Seguridad
+- ✅ **Elite UI:** Rediseño completo del POS y Facturación con estética moderna, CSS aislado (`pos-limpio.css`) y navegación ultrarrápida.
+- ✅ **Bimonetario:** Soporte completo para transacciones en DOP y USD con cálculo automático de tasas.
+- ✅ **Reportes DGII:** Generador automatizado del archivo TXT para el Formato 606.
+- ✅ **Seguridad y RBAC:** 
+  - Políticas de Cookies configuradas como `SameSiteMode.Lax` y `Secure`.
+  - Sistema de roles estructurado (Super Admin, Gerente, Vendedor, Cajero).
+  - Menú lateral (Sidebar) dinámico según permisos (`User.IsInRole()`).
+- ✅ **Correcciones E2E:** Solucionados errores de validación silenciosa (`ModelState`) en la creación de facturas.
 
 ### 21 Abril 2026 - Dashboard y Reportes
 - ✅ Dashboard con datos reales y gráficos Chart.js
@@ -60,22 +70,25 @@
 
 ## 🔴 Pendientes Críticos (Próximos Pasos)
 
-### 1. Autenticación y Seguridad 🔴 ALTA
-**Estado:** No iniciado  
-**Descripción:** El sistema no tiene login ni control de usuarios
+### 1. Certificación Producción DGII 🔴 ALTA
+**Estado:** Pendiente  
+**Descripción:** Pasar el set de pruebas de la DGII para obtener pase a producción.
 
 **Tareas:**
-- [ ] Implementar ASP.NET Core Identity
-- [ ] Crear modelo Usuario con roles (Admin, Cajero, Vendedor)
-- [ ] Proteger controladores con `[Authorize]`
-- [ ] Crear vistas Login/Register
-- [ ] Auditoría de acciones (quién hizo qué)
+- [ ] Procesar el set de pruebas (Factura de Consumo, Crédito Fiscal, Notas de Crédito).
+- [ ] Solicitar pase a producción en Oficina Virtual.
+- [ ] Cambiar URLs a ambiente de Producción y usar certificado definitivo.
 
-**Archivos a modificar:**
-- `Program.cs` - Agregar Identity
-- Nuevo: `Models/ApplicationUser.cs`
-- Nuevo: `Controllers/AccountController.cs`
-- Vistas: `Views/Account/Login.cshtml`, `Register.cshtml`
+---
+
+### 2. Pruebas E2E (End-to-End) Finales 🟡 MEDIA
+**Estado:** En Proceso (Paso 2 completándose)  
+**Descripción:** Validar flujo de creación, detalle, cálculo de ITBIS y firmado.
+
+**Tareas:**
+- [x] Validar Login y creación de encabezado de factura.
+- [ ] Validar adición de ítems y cálculos matemáticos (Subtotal, ITBIS, Total).
+- [ ] Validar firma digital y generación de XML final.
 
 ---
 
@@ -97,15 +110,13 @@
 
 ---
 
-### 3. Generación de PDF ✅ COMPLETADO
-**Estado:** Completado - 21 Abril 2026  
-**Descripción:** PDFs generados con QuestPDF incluyendo QR de verificación
+### 3. Notas de Crédito y Débito 🟡 MEDIA
+**Estado:** Parcial  
+**Descripción:** Completar el flujo para anulación parcial o total de facturas.
 
-**Tareas completadas:**
-- [x] Integrar librería QuestPDF 2024.10.4
-- [x] Diseñar template de factura profesional
-- [x] Generar representación impresa con QR
-- [ ] Soporte para impresora térmica (futuro)
+**Pendientes:**
+- [ ] Interfaz para crear E33 y E34 referenciando un NCF anterior.
+- [ ] Reversión de stock al emitir nota de crédito.
 
 ---
 
@@ -128,7 +139,8 @@ Facturapro/
 │   ├── FacturasController.cs          ✅ (Con integración DGII)
 │   ├── ConfiguracionController.cs     ✅
 │   ├── POSController.cs               ✅
-│   └── AccountController.cs           ❌ (NO EXISTE - Crear)
+│   ├── UsuariosController.cs          ✅ (Gestión RBAC)
+│   └── AccountController.cs           ✅ (Identity)
 ├── Models/
 │   ├── DGII/
 │   │   └── DGIIApiModels.cs           ✅ (Nuevo)
@@ -136,7 +148,7 @@ Facturapro/
 │   │   ├── Factura.cs                 ✅
 │   │   ├── Cliente.cs                 ✅
 │   │   └── ConfiguracionEmpresa.cs    ✅
-│   └── ApplicationUser.cs             ❌ (NO EXISTE - Crear)
+│   └── ApplicationUser.cs             ✅
 ├── Services/
 │   ├── DGII/
 │   │   ├── DGIIService.cs             ✅ (Nuevo)
@@ -150,11 +162,10 @@ Facturapro/
 │   │   └── Details.cshtml             ✅
 │   ├── Configuracion/
 │   │   └── DGII.cshtml                ✅ (Con panel de estado)
-│   └── Account/                       ❌ (NO EXISTE - Crear)
-│       ├── Login.cshtml
-│       └── Register.cshtml
+│   └── Areas/Identity/                ✅ (Identity Scaffolded)
+│       └── Pages/Account/
 └── Data/
-    └── ApplicationDbContext.cs        ⚠️ (Agregar Identity)
+    └── ApplicationDbContext.cs        ✅ (Configurado con Identity)
 ```
 
 ---
@@ -183,7 +194,7 @@ Facturapro/
 ✅ IFacturacionElectronicaAPIService / FacturacionElectronicaAPIService
 ✅ FacturacionElectronicaService
 ✅ DGIIBackgroundService (Hosted)
-❌ Identity (Pendiente)
+✅ Identity (Roles y Usuarios configurados)
 ```
 
 ---
@@ -210,19 +221,10 @@ Facturapro/
 
 ## 🚀 Próximos Pasos Recomendados
 
-1. **Implementar Identity** (Usuario/Login) - Esto desbloquea:
-   - Control de acceso
-   - Auditoría
-   - Multiusuario
-
-2. **Crear Reportes Básicos**:
-   - Ventas por fecha
-   - Inventario actual
-   - Facturas por estado
-
-3. **Generación de PDF** para facturas
-
-4. **Tests** - El proyecto no tiene tests unitarios
+1. **Pasar Set de Pruebas DGII**: Facturar E31, E32, E33 y E34 en ambiente de Test.
+2. **Impresión Térmica**: Adaptar los recibos generados en POS para formato de 80mm.
+3. **Cierre de Caja Avanzado**: Implementar cuadre ciego para cajeros.
+4. **App Móvil (Kalder)**: Integrar escáner de Cédula mediante ML Kit.
 
 ---
 
