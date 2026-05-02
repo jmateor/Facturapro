@@ -148,6 +148,16 @@ namespace Facturapro.Services.DGII
 
             encabezado.Add(totales);
 
+            // Información Referencia (Obligatorio para Notas de Crédito E34 y Débito E33)
+            if ((factura.TipoECF == "33" || factura.TipoECF == "34") && !string.IsNullOrEmpty(factura.NCFModificado))
+            {
+                var informacionReferencia = new XElement("InformacionReferencia");
+                informacionReferencia.Add(new XElement("NCFModificado", factura.NCFModificado));
+                // Código 1: Devolución/Descuento/Ajuste (Típico para Notas de Crédito/Débito)
+                informacionReferencia.Add(new XElement("CodigoModificacion", "1")); 
+                encabezado.Add(informacionReferencia);
+            }
+
             return encabezado;
         }
 

@@ -462,6 +462,102 @@ namespace Facturapro.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // POST: Facturas/EmitirNotaCredito/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmitirNotaCredito(int id)
+        {
+            var original = await _context.Facturas
+                .Include(f => f.Lineas)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
+            if (original == null || string.IsNullOrEmpty(original.eNCF))
+            {
+                TempData["ErrorMessage"] = "Factura original no encontrada o no tiene e-CF.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (original.EstadoDGII != "Aprobado" && original.EstadoDGII != "Firmado" && original.EstadoDGII != "Enviado")
+            {
+                TempData["ErrorMessage"] = "Solo se pueden emitir notas de crédito para facturas válidas ante la DGII.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Verificar rangos para E34 (Nota de Crédito)
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var resultadoRango = await _rangoService.ObtenerSiguienteNumeroAsync("34");
+                if (!resultadoRango.Exito)
+                {
+                    TempData["ErrorMessage"] = "No hay secuencias disponibles para Notas de Crédito (E34). Configúrelas primero en Rangos DGII.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                var notaCredito = new Factura
+                {
+                    ClienteId = original.ClienteId,
+                    TipoECF = "34",
+                    NCFModificado = original.eNCF,
+                    FechaEmision = DateTime.Now,
+                    FechaVencimiento = DateTime.Now.AddDays(30),
+                    eNCF = resultadoRango.Data?.ToString(),
+                    Estado = "Pendiente",
+                    EstadoDGII = "Pendiente",
+                    TipoIngresos = original.TipoIngresos,
+                    TipoPago = original.TipoPago,
+                    PorcentajeITBIS = original.PorcentajeITBIS,
+                    Subtotal = original.Subtotal, // En E34 los montos positivos actúan como crédito
+                    MontoITBIS = original.MontoITBIS,
+                    TotalITBIS = original.TotalITBIS,
+                    Total = original.Total,
+                    TotalDOP = original.TotalDOP,
+                    Moneda = original.Moneda,
+                    TasaCambio = original.TasaCambio,
+                    Notas = $"Nota de Crédito que afecta a la factura {original.eNCF}"
+                };
+
+                notaCredito.NumeroFactura = notaCredito.eNCF ?? $"NC-{DateTime.Now:yyyyMMdd}-{original.Id}";
+
+                _context.Facturas.Add(notaCredito);
+                await _context.SaveChangesAsync();
+
+                // Copiar líneas (idealmente el usuario debería poder borrar las que no aplican, pero las copiamos como base)
+                if (original.Lineas != null)
+                {
+                    foreach (var linea in original.Lineas)
+                    {
+                        _context.FacturaLineas.Add(new FacturaLinea
+                        {
+                            FacturaId = notaCredito.Id,
+                            NumeroLinea = linea.NumeroLinea,
+                            Descripcion = linea.Descripcion,
+                            NombreItem = linea.NombreItem,
+                            IndicadorFacturacion = linea.IndicadorFacturacion,
+                            IndicadorBienoServicio = linea.IndicadorBienoServicio,
+                            Cantidad = linea.Cantidad,
+                            PrecioUnitario = linea.PrecioUnitario,
+                            Subtotal = linea.Subtotal,
+                            MontoITBIS = linea.MontoITBIS
+                        });
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = $"Nota de Crédito {notaCredito.eNCF} creada en borrador. Revísela y fírmela.";
+                return RedirectToAction(nameof(Edit), new { id = notaCredito.Id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error al generar Nota de Crédito para factura {Id}", id);
+                TempData["ErrorMessage"] = "Ocurrió un error al generar la Nota de Crédito.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+        }
+
         private async Task RecalcularTotales(int facturaId)
         {
             var factura = await _context.Facturas
