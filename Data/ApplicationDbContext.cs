@@ -27,6 +27,7 @@ namespace Facturapro.Data
         public DbSet<MovimientoInventario> MovimientosInventario { get; set; }
         public DbSet<FacturaAudit> FacturaAudits { get; set; }
         public DbSet<LogAuditoria> LogsAuditoria { get; set; }
+        public DbSet<SesionCaja> SesionesCaja { get; set; }
 
         // Módulo de Sucursales y Almacenes
         public DbSet<Sucursal> Sucursales { get; set; }

@@ -417,6 +417,13 @@
                         </li>
 
                         <li class="side-nav-item">
+                            <a href="@Url.Action("EstadoResultados", "Reportes")" class="side-nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "EstadoResultados" ? "active" : "")">
+                                <i class="ri-pie-chart-2-line"></i>
+                                <span> Estado de Resultados </span>
+                            </a>
+                        </li>
+
+                        <li class="side-nav-item">
                             <a href="@Url.Action("Inventario", "Reportes")" class="side-nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Inventario" ? "active" : "")">
                                 <i class="ri-pie-chart-line"></i>
                                 <span> Reporte de Inventario </span>

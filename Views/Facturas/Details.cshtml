@@ -423,10 +423,16 @@
                     <p class="small text-muted mb-3">
                         Utilice esta opción para realizar una devolución o ajuste que disminuya el valor de esta factura.
                     </p>
-                    <form asp-action="EmitirNotaCredito" asp-route-id="@Model.Id" method="post">
+                    <form asp-action="EmitirNotaCredito" asp-route-id="@Model.Id" method="post" class="mb-2">
                         <button type="submit" class="btn btn-outline-warning w-100"
-                                onclick="return confirm('¿Desea crear una Nota de Crédito (E34) para esta factura?');">
+                                onclick="return confirm('¿Desea crear una Nota de Crédito (E34) para esta factura? (Disminuye el monto original)');">
                             <i class="ri-arrow-go-back-line me-1"></i> Emitir Nota de Crédito
+                        </button>
+                    </form>
+                    <form asp-action="EmitirNotaDebito" asp-route-id="@Model.Id" method="post">
+                        <button type="submit" class="btn btn-outline-info w-100"
+                                onclick="return confirm('¿Desea crear una Nota de Débito (E33) para esta factura? (Aumenta el monto original por cargos o penalidades)');">
+                            <i class="ri-add-box-line me-1"></i> Emitir Nota de Débito
                         </button>
                     </form>
                 </div>

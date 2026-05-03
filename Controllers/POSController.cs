@@ -135,6 +135,12 @@ namespace Facturapro.Controllers
         // GET: POS
         public async Task<IActionResult> Index()
         {
+            var userId = _context.Users.FirstOrDefault(u => u.UserName == User.Identity!.Name)?.Id;
+            var sesionActiva = await _context.SesionesCaja
+                .FirstOrDefaultAsync(s => s.UsuarioId == userId && s.Estado == "Abierta");
+
+            ViewBag.RequiereAperturaCaja = sesionActiva == null;
+
             // Cargar clientes activos
             var clientes = await _context.Clientes
                 .Where(c => c.Activo)
@@ -175,6 +181,54 @@ namespace Facturapro.Controllers
             CalcularTotales(carrito);
 
             return View(viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AbrirCaja(decimal montoInicial)
+        {
+            var userId = _context.Users.FirstOrDefault(u => u.UserName == User.Identity!.Name)?.Id;
+            if (userId == null) return Json(new { success = false, message = "Usuario no encontrado" });
+
+            var sesionActiva = await _context.SesionesCaja.FirstOrDefaultAsync(s => s.UsuarioId == userId && s.Estado == "Abierta");
+            if (sesionActiva != null) return Json(new { success = false, message = "Ya tienes una caja abierta" });
+
+            var sesion = new SesionCaja
+            {
+                UsuarioId = userId,
+                FechaApertura = DateTime.Now,
+                MontoInicial = montoInicial,
+                Estado = "Abierta"
+            };
+
+            _context.SesionesCaja.Add(sesion);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CerrarCaja(decimal montoDeclarado, string? notas)
+        {
+            var userId = _context.Users.FirstOrDefault(u => u.UserName == User.Identity!.Name)?.Id;
+            if (userId == null) return Json(new { success = false, message = "Usuario no encontrado" });
+
+            var sesionActiva = await _context.SesionesCaja.FirstOrDefaultAsync(s => s.UsuarioId == userId && s.Estado == "Abierta");
+            if (sesionActiva == null) return Json(new { success = false, message = "No hay caja abierta" });
+
+            // Calcular ventas en esta sesión (para este ejemplo tomamos las facturas desde la apertura)
+            var ventasSesion = await _context.Facturas
+                .Where(f => f.FechaEmision >= sesionActiva.FechaApertura && f.Estado == "Pagada")
+                .SumAsync(f => f.MontoEfectivo); // Solo efectivo para cuadre de caja, tarjeta va al banco
+
+            sesionActiva.MontoFinalCalculado = sesionActiva.MontoInicial + ventasSesion;
+            sesionActiva.MontoFinalDeclarado = montoDeclarado;
+            sesionActiva.FechaCierre = DateTime.Now;
+            sesionActiva.Estado = "Cerrada";
+            sesionActiva.Notas = notas;
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, diferencia = sesionActiva.Diferencia });
         }
 
         [HttpPost]
@@ -286,6 +340,15 @@ namespace Facturapro.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcesarVenta([Bind("ClienteId,TipoNcf,Notas")] POSVentaViewModel venta)
         {
+            // Validar si la caja está abierta
+            var userId = _context.Users.FirstOrDefault(u => u.UserName == User.Identity!.Name)?.Id;
+            var sesionActiva = await _context.SesionesCaja.FirstOrDefaultAsync(s => s.UsuarioId == userId && s.Estado == "Abierta");
+            if (sesionActiva == null)
+            {
+                TempData["ErrorMessage"] = "Debe abrir una caja antes de procesar ventas";
+                return RedirectToAction(nameof(Index));
+            }
+
             var carrito = ObtenerCarrito();
             if (!carrito.Any())
             {
@@ -434,6 +497,14 @@ namespace Facturapro.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcesarPago([Bind("ClienteId,TipoNcf,Notas,MetodoPago,MontoEfectivo,MontoTarjeta,MontoTransferencia,MontoRecibido,NumeroTarjeta,AutorizacionTarjeta,Moneda,TasaCambio")] POSPagoViewModel pago)
         {
+            // Validar si la caja está abierta
+            var userId = _context.Users.FirstOrDefault(u => u.UserName == User.Identity!.Name)?.Id;
+            var sesionActiva = await _context.SesionesCaja.FirstOrDefaultAsync(s => s.UsuarioId == userId && s.Estado == "Abierta");
+            if (sesionActiva == null)
+            {
+                return Json(new { success = false, message = "Debe abrir una caja antes de procesar pagos" });
+            }
+
             var carrito = ObtenerCarrito();
             if (!carrito.Any())
             {

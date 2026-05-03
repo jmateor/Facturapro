@@ -56,5 +56,18 @@ namespace Facturapro.Controllers
 
             return File(bytes, "text/plain", fileName);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Exportar608(int mes, int año)
+        {
+            var config = await _context.ConfiguracionEmpresas.FirstOrDefaultAsync();
+            var rncEmisor = config?.RNCEmisor?.Replace("-", "") ?? "000000000";
+
+            var content = await _fiscalService.Generar608Async(mes, año);
+            var bytes = Encoding.UTF8.GetBytes(content);
+            var fileName = $"608_{rncEmisor}_{año}{mes:D2}.txt";
+
+            return File(bytes, "text/plain", fileName);
+        }
     }
 }

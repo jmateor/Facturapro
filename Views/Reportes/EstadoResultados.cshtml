@@ -1,0 +1,114 @@
+@model Facturapro.Models.ViewModels.Reportes.EstadoResultadosViewModel
+@{
+    ViewData["Title"] = "Estado de Resultados (P&L)";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <form method="get" class="d-flex align-items-center">
+                    <select name="mes" class="form-select form-select-sm me-2" asp-items="ViewBag.Meses" onchange="this.form.submit()" style="width: 150px;"></select>
+                    <select name="anio" class="form-select form-select-sm" asp-items="ViewBag.Anios" onchange="this.form.submit()" style="width: 100px;"></select>
+                </form>
+            </div>
+            <h4 class="page-title"><i class="ri-pie-chart-2-line me-1 text-primary"></i> Estado de Resultados</h4>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-4 col-md-12">
+        <div class="card bg-primary text-white mb-4 shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title text-white-50 text-uppercase mt-0">Ingresos Totales</h5>
+                <h2 class="text-white my-2">@Model.TotalIngresos.ToString("C", cultura)</h2>
+                <p class="mb-0 text-white-50 small">Ventas y otros ingresos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-12">
+        <div class="card bg-danger text-white mb-4 shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title text-white-50 text-uppercase mt-0">Costos y Gastos Totales</h5>
+                <h2 class="text-white my-2">@Model.TotalEgresos.ToString("C", cultura)</h2>
+                <p class="mb-0 text-white-50 small">Costo de ventas, nómina y gastos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-12">
+        <div class="card bg-success text-white mb-4 shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="card-title text-white-50 text-uppercase mt-0">Utilidad Neta</h5>
+                <h2 class="text-white my-2">@Model.UtilidadNeta.ToString("C", cultura)</h2>
+                <p class="mb-0 text-white-50 small">Beneficio final del periodo</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-centered mb-0 text-dark">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Concepto</th>
+                                <th class="text-end">Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- INGRESOS -->
+                            <tr class="bg-light"><td colspan="2" class="fw-bold fs-5 text-primary"><i class="ri-arrow-right-down-line"></i> INGRESOS</td></tr>
+                            @foreach(var item in Model.DetalleIngresos)
+                            {
+                                <tr>
+                                    <td class="ps-4">@item.Concepto</td>
+                                    <td class="text-end text-success">@item.Monto.ToString("C", cultura)</td>
+                                </tr>
+                            }
+                            <tr class="fw-bold">
+                                <td class="text-end">Total Ingresos:</td>
+                                <td class="text-end text-success fs-5">@Model.TotalIngresos.ToString("C", cultura)</td>
+                            </tr>
+                            
+                            <!-- COSTOS -->
+                            <tr class="bg-light"><td colspan="2" class="fw-bold fs-5 text-danger"><i class="ri-arrow-right-up-line"></i> COSTOS Y GASTOS</td></tr>
+                            <tr>
+                                <td class="ps-4 fw-bold text-muted">Costo de Ventas</td>
+                                <td class="text-end text-danger">@Model.CostoVentas.ToString("C", cultura)</td>
+                            </tr>
+                            <tr class="fw-bold bg-light">
+                                <td class="text-end">Utilidad Bruta:</td>
+                                <td class="text-end text-primary fs-5">@Model.UtilidadBruta.ToString("C", cultura)</td>
+                            </tr>
+                            
+                            <!-- GASTOS OPERATIVOS -->
+                            @foreach(var item in Model.DetalleEgresos.Where(x => x.Concepto != "Telecomunicaciones" && x.Concepto != "Compras y Gastos al Exterior"))
+                            {
+                                <tr>
+                                    <td class="ps-4">@item.Concepto</td>
+                                    <td class="text-end text-danger">@item.Monto.ToString("C", cultura)</td>
+                                </tr>
+                            }
+
+                            <tr class="fw-bold">
+                                <td class="text-end">Total Gastos y Costos:</td>
+                                <td class="text-end text-danger fs-5">@Model.TotalEgresos.ToString("C", cultura)</td>
+                            </tr>
+                            
+                            <!-- UTILIDAD NETA -->
+                            <tr class="bg-dark text-white fw-bold">
+                                <td class="text-end fs-4">UTILIDAD NETA:</td>
+                                <td class="text-end fs-4">@Model.UtilidadNeta.ToString("C", cultura)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

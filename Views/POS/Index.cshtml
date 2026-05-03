@@ -42,8 +42,29 @@
         <a href="@Url.Action("Index", "Facturas")" class="btn btn-sm btn-soft-primary">
             <i class="ri-file-list-3-line"></i> Facturas
         </a>
+        @if (ViewBag.RequiereAperturaCaja != true)
+        {
+            <button type="button" class="btn btn-sm btn-danger" onclick="abrirModalCerrarCaja()">
+                <i class="ri-lock-2-line"></i> Cerrar Caja
+            </button>
+        }
     </div>
 </div>
+
+@if (ViewBag.RequiereAperturaCaja == true)
+{
+    <!-- Overlay Bloqueo de POS -->
+    <div class="position-absolute w-100 h-100 top-0 start-0 d-flex justify-content-center align-items-center" style="background: rgba(255,255,255,0.9); z-index: 1040; margin-left: -12px;">
+        <div class="text-center">
+            <i class="ri-lock-unlock-line text-primary" style="font-size: 4rem;"></i>
+            <h3 class="mt-3">Turno Cerrado</h3>
+            <p class="text-muted">Debes abrir la caja para poder facturar.</p>
+            <button type="button" class="btn btn-primary btn-lg mt-2" onclick="abrirModalAperturaCaja()">
+                <i class="ri-door-open-line me-2"></i>Abrir Caja
+            </button>
+        </div>
+    </div>
+}
 
 
 <!-- Contenedor Principal POS -->
@@ -380,6 +401,78 @@
                     <a href="#" target="_blank" class="btn btn-primary" id="btnImprimir"><i class="ri-printer-line me-2"></i>Ver / Imprimir Factura</a>
                     <button type="button" class="btn btn-soft-secondary" onclick="nuevaVenta()">Nueva Venta</button>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Abrir Caja -->
+<div class="modal fade" id="modalAbrirCaja" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="ri-door-open-line me-2"></i>Apertura de Caja</h5>
+            </div>
+            <div class="modal-body">
+                <form id="formAbrirCaja">
+                    <div class="mb-3">
+                        <label class="form-label">Monto Inicial en Caja (Efectivo)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">RD$</span>
+                            <input type="number" step="0.01" class="form-control" id="montoInicial" value="0.00" required />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" onclick="abrirCajaSubmit()">Abrir Caja</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cerrar Caja -->
+<div class="modal fade" id="modalCerrarCaja" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="ri-lock-2-line me-2"></i>Cierre de Caja</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formCerrarCaja">
+                    <div class="mb-3">
+                        <label class="form-label">Efectivo Físico en Caja (Declarado)</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">RD$</span>
+                            <input type="number" step="0.01" class="form-control" id="montoDeclarado" placeholder="0.00" required />
+                        </div>
+                        <small class="text-muted">Ingresa cuánto dinero cuentas físicamente en este momento.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas o Comentarios del Cierre</label>
+                        <textarea class="form-control" id="notasCierre" rows="2" placeholder="Opcional..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-soft-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="cerrarCajaSubmit()">Procesar Cierre</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Resultado Cierre -->
+<div class="modal fade" id="modalResultadoCierre" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content text-center">
+            <div class="modal-body p-4">
+                <div id="cierreIcon" class="mb-3" style="font-size:4rem;"></div>
+                <h4 class="mb-2">Caja Cerrada</h4>
+                <p class="text-muted mb-3">La caja se ha cerrado correctamente.</p>
+                <div class="alert mb-3" id="cierreDiferenciaAlert"></div>
+                <button type="button" class="btn btn-primary w-100" onclick="location.reload()">Aceptar</button>
             </div>
         </div>
     </div>
@@ -1144,5 +1237,83 @@
                 if (card) card.classList.add('in-cart');
             });
         });
+        // ========================================
+        // CUADRE DE CAJA
+        // ========================================
+
+        function abrirModalAperturaCaja() {
+            var modal = new bootstrap.Modal(document.getElementById('modalAbrirCaja'));
+            modal.show();
+        }
+
+        function abrirCajaSubmit() {
+            const monto = document.getElementById('montoInicial').value;
+            if(!monto) return;
+
+            fetch('/POS/AbrirCaja', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `montoInicial=${monto}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    mostrarNotificacion(data.message, 'danger');
+                }
+            });
+        }
+
+        function abrirModalCerrarCaja() {
+            var modal = new bootstrap.Modal(document.getElementById('modalCerrarCaja'));
+            modal.show();
+        }
+
+        function cerrarCajaSubmit() {
+            const monto = document.getElementById('montoDeclarado').value;
+            const notas = document.getElementById('notasCierre').value;
+            if(!monto) return;
+
+            fetch('/POS/CerrarCaja', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                },
+                body: `montoDeclarado=${monto}&notas=${encodeURIComponent(notas)}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalCerrarCaja')).hide();
+                    
+                    const icon = document.getElementById('cierreIcon');
+                    const alert = document.getElementById('cierreDiferenciaAlert');
+                    
+                    if (data.diferencia === 0) {
+                        icon.innerHTML = '<i class="ri-checkbox-circle-fill text-success"></i>';
+                        alert.className = 'alert alert-success';
+                        alert.innerHTML = '¡Cuadre perfecto! Sin diferencias.';
+                    } else if (data.diferencia > 0) {
+                        icon.innerHTML = '<i class="ri-arrow-up-circle-fill text-info"></i>';
+                        alert.className = 'alert alert-info';
+                        alert.innerHTML = `Sobrante de RD$ ${data.diferencia.toFixed(2)}`;
+                    } else {
+                        icon.innerHTML = '<i class="ri-arrow-down-circle-fill text-danger"></i>';
+                        alert.className = 'alert alert-danger';
+                        alert.innerHTML = `Faltante de RD$ ${Math.abs(data.diferencia).toFixed(2)}`;
+                    }
+
+                    var modalRes = new bootstrap.Modal(document.getElementById('modalResultadoCierre'));
+                    modalRes.show();
+                } else {
+                    mostrarNotificacion(data.message, 'danger');
+                }
+            });
+        }
     </script>
 }

@@ -654,6 +654,81 @@ namespace Facturapro.Controllers
             return File(pdfBytes, "application/pdf", fileName);
         }
 
+        // GET: Reportes/EstadoResultados
+        public async Task<IActionResult> EstadoResultados(int? mes, int? anio)
+        {
+            var targetAnio = anio ?? DateTime.Today.Year;
+            var targetMes = mes ?? DateTime.Today.Month;
+
+            // Facturas aprobadas o firmadas en el mes
+            var facturas = await _context.Facturas
+                .Include(f => f.Lineas)
+                .Where(f => f.FechaEmision.Year == targetAnio && f.FechaEmision.Month == targetMes 
+                    && (f.EstadoDGII == "Aprobado" || f.EstadoDGII == "Firmado") 
+                    && (f.TipoECF == "31" || f.TipoECF == "32" || f.TipoECF == "44" || f.TipoECF == "45" || f.TipoECF == "46"))
+                .ToListAsync();
+
+            // Notas de crédito en el mes
+            var notasCredito = await _context.Facturas
+                .Where(f => f.FechaEmision.Year == targetAnio && f.FechaEmision.Month == targetMes 
+                    && (f.EstadoDGII == "Aprobado" || f.EstadoDGII == "Firmado") 
+                    && f.TipoECF == "34")
+                .ToListAsync();
+
+            // Compras registradas
+            var compras = await _context.Compras
+                .Where(c => c.FechaCompra.Year == targetAnio && c.FechaCompra.Month == targetMes)
+                .ToListAsync();
+
+            var viewModel = new EstadoResultadosViewModel
+            {
+                Anio = targetAnio,
+                Mes = targetMes,
+                MesNombre = new System.Globalization.CultureInfo("es-DO").DateTimeFormat.GetMonthName(targetMes).ToUpper(),
+                
+                // Los ingresos son la suma de facturas menos las notas de crédito
+                TotalIngresosVentas = facturas.Sum(f => f.Subtotal) - notasCredito.Sum(nc => nc.Subtotal),
+                TotalIngresosOtros = 0, // A futuro
+                
+                // Mapear gastos basado en TipoGasto de compras (02=Gastos Personal, 03=Trabajo/Suministro, 09=Gastos Financieros, etc)
+                CostoVentas = compras.Where(c => c.TipoGasto == "08" || c.TipoGasto == "11").Sum(c => c.MontoServicios + c.MontoBienes),
+                GastosOperativos = compras.Where(c => c.TipoGasto == "01" || c.TipoGasto == "03" || c.TipoGasto == "04" || c.TipoGasto == "06").Sum(c => c.MontoServicios + c.MontoBienes),
+                GastosNomina = compras.Where(c => c.TipoGasto == "02").Sum(c => c.MontoServicios + c.MontoBienes),
+                GastosFinancieros = compras.Where(c => c.TipoGasto == "09" || c.TipoGasto == "10").Sum(c => c.MontoServicios + c.MontoBienes),
+                OtrosGastos = compras.Where(c => c.TipoGasto != "08" && c.TipoGasto != "11" && c.TipoGasto != "01" && c.TipoGasto != "03" && c.TipoGasto != "04" && c.TipoGasto != "06" && c.TipoGasto != "02" && c.TipoGasto != "09" && c.TipoGasto != "10").Sum(c => c.MontoServicios + c.MontoBienes)
+            };
+
+            // Detalle Ingresos
+            viewModel.DetalleIngresos.Add(new DetalleCuenta { Concepto = "Ventas de Bienes y Servicios", Monto = facturas.Sum(f => f.Subtotal), Categoria = "Ingreso Operativo" });
+            if(notasCredito.Any())
+                viewModel.DetalleIngresos.Add(new DetalleCuenta { Concepto = "Devoluciones sobre Ventas", Monto = -notasCredito.Sum(nc => nc.Subtotal), Categoria = "Deducción de Ingreso" });
+
+            // Detalle Egresos
+            foreach(var c in compras.GroupBy(x => x.TipoGasto))
+            {
+                var nombreGasto = c.Key switch {
+                    "01" => "Honorarios por Servicios",
+                    "02" => "Sueldos y Salarios",
+                    "03" => "Gastos de Representación",
+                    "04" => "Arrendamientos",
+                    "05" => "Gastos de Depreciación",
+                    "06" => "Gastos por Trabajos/Suministros",
+                    "07" => "Primas de Seguros",
+                    "08" => "Telecomunicaciones",
+                    "09" => "Gastos Financieros",
+                    "10" => "Gastos Extraordinarios",
+                    "11" => "Compras y Gastos al Exterior",
+                    _ => "Otros Gastos"
+                };
+                viewModel.DetalleEgresos.Add(new DetalleCuenta { Concepto = nombreGasto, Monto = c.Sum(x => x.MontoServicios + x.MontoBienes), Categoria = "Gasto" });
+            }
+
+            ViewBag.Meses = new SelectList(Enumerable.Range(1, 12).Select(i => new { Value = i, Text = new System.Globalization.CultureInfo("es-DO").DateTimeFormat.GetMonthName(i) }), "Value", "Text", targetMes);
+            ViewBag.Anios = new SelectList(Enumerable.Range(DateTime.Today.Year - 5, 6).OrderByDescending(i => i), targetAnio);
+
+            return View(viewModel);
+        }
+
         #region Métodos Auxiliares
 
         private async Task<List<VentaPorDiaViewModel>> GetVentasUltimos7Dias(DateTime desde, DateTime hasta)

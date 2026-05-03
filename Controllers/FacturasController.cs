@@ -243,6 +243,44 @@ namespace Facturapro.Controllers
                     factura.FechaHoraFirma = DateTime.Now;
                     factura.EstadoDGII = "Firmado";
 
+                    // Revertir stock si es una Nota de Crédito (E34)
+                    if (factura.TipoECF == "34")
+                    {
+                        var almacenPrincipal = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
+                        if (almacenPrincipal != null && factura.Lineas != null)
+                        {
+                            foreach (var linea in factura.Lineas)
+                            {
+                                var prod = await _context.Productos.FirstOrDefaultAsync(p => p.Nombre == linea.NombreItem || p.Nombre == linea.Descripcion);
+                                if (prod != null)
+                                {
+                                    var stockAnterior = prod.Stock;
+                                    var cantidadEntera = (int)Math.Round(linea.Cantidad);
+                                    prod.Stock += cantidadEntera;
+
+                                    var stockAlm = await _context.StocksAlmacen.FirstOrDefaultAsync(s => s.ProductoId == prod.Id && s.AlmacenId == almacenPrincipal.Id);
+                                    if (stockAlm != null)
+                                    {
+                                        stockAlm.Cantidad += cantidadEntera;
+                                    }
+
+                                    _context.MovimientosInventario.Add(new MovimientoInventario
+                                    {
+                                        ProductoId = prod.Id,
+                                        TipoMovimiento = TipoMovimiento.EntradaDevolucion,
+                                        Cantidad = cantidadEntera,
+                                        StockAnterior = stockAnterior,
+                                        StockNuevo = prod.Stock,
+                                        Motivo = $"Nota de Crédito {factura.eNCF}",
+                                        FacturaId = factura.Id,
+                                        FechaMovimiento = DateTime.Now,
+                                        UsuarioRegistro = User.Identity?.Name ?? "Sistema"
+                                    });
+                                }
+                            }
+                        }
+                    }
+
                     await _context.SaveChangesAsync();
 
                     TempData["SuccessMessage"] = $"Factura {factura.eNCF} firmada digitalmente. Lista para enviar a la DGII.";
@@ -455,6 +493,42 @@ namespace Facturapro.Controllers
             factura.TipoAnulacion = tipoAnulacion;
             factura.MotivoAnulacion = motivo;
             
+            // Revertir stock al anular
+            var lineas = await _context.FacturaLineas.Where(l => l.FacturaId == id).ToListAsync();
+            var almacenPrincipal = await _context.Almacenes.FirstOrDefaultAsync(a => a.EsPrincipalAlmacen && a.Activo);
+            if (almacenPrincipal != null && lineas.Any())
+            {
+                foreach (var linea in lineas)
+                {
+                    var prod = await _context.Productos.FirstOrDefaultAsync(p => p.Nombre == linea.NombreItem || p.Nombre == linea.Descripcion);
+                    if (prod != null)
+                    {
+                        var stockAnterior = prod.Stock;
+                        var cantidadEntera = (int)Math.Round(linea.Cantidad);
+                        prod.Stock += cantidadEntera;
+
+                        var stockAlm = await _context.StocksAlmacen.FirstOrDefaultAsync(s => s.ProductoId == prod.Id && s.AlmacenId == almacenPrincipal.Id);
+                        if (stockAlm != null)
+                        {
+                            stockAlm.Cantidad += cantidadEntera;
+                        }
+
+                        _context.MovimientosInventario.Add(new MovimientoInventario
+                        {
+                            ProductoId = prod.Id,
+                            TipoMovimiento = TipoMovimiento.EntradaDevolucion,
+                            Cantidad = cantidadEntera,
+                            StockAnterior = stockAnterior,
+                            StockNuevo = prod.Stock,
+                            Motivo = $"Anulación de Factura {factura.eNCF ?? factura.NumeroFactura}",
+                            FacturaId = factura.Id,
+                            FechaMovimiento = DateTime.Now,
+                            UsuarioRegistro = User.Identity?.Name ?? "Sistema"
+                        });
+                    }
+                }
+            }
+
             _context.Update(factura);
             await _context.SaveChangesAsync();
 
@@ -554,6 +628,78 @@ namespace Facturapro.Controllers
                 await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error al generar Nota de Crédito para factura {Id}", id);
                 TempData["ErrorMessage"] = "Ocurrió un error al generar la Nota de Crédito.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+        }
+
+        // POST: Facturas/EmitirNotaDebito/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EmitirNotaDebito(int id)
+        {
+            var original = await _context.Facturas
+                .Include(f => f.Lineas)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
+            if (original == null || string.IsNullOrEmpty(original.eNCF))
+            {
+                TempData["ErrorMessage"] = "Factura original no encontrada o no tiene e-CF.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (original.EstadoDGII != "Aprobado" && original.EstadoDGII != "Firmado" && original.EstadoDGII != "Enviado")
+            {
+                TempData["ErrorMessage"] = "Solo se pueden emitir notas de débito para facturas válidas ante la DGII.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var resultadoRango = await _rangoService.ObtenerSiguienteNumeroAsync("33"); // 33 = Nota de Débito
+                if (!resultadoRango.Exito)
+                {
+                    TempData["ErrorMessage"] = "No hay secuencias disponibles para Notas de Débito (E33). Configúrelas primero en Rangos DGII.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                var notaDebito = new Factura
+                {
+                    ClienteId = original.ClienteId,
+                    TipoECF = "33",
+                    NCFModificado = original.eNCF,
+                    FechaEmision = DateTime.Now,
+                    FechaVencimiento = DateTime.Now.AddDays(30),
+                    eNCF = resultadoRango.Data?.ToString(),
+                    Estado = "Pendiente",
+                    EstadoDGII = "Pendiente",
+                    TipoIngresos = original.TipoIngresos,
+                    TipoPago = original.TipoPago,
+                    PorcentajeITBIS = original.PorcentajeITBIS,
+                    Subtotal = 0, // Se inicializa en 0 para que el usuario agregue los cargos extra
+                    MontoITBIS = 0,
+                    TotalITBIS = 0,
+                    Total = 0,
+                    TotalDOP = 0,
+                    Moneda = original.Moneda,
+                    TasaCambio = original.TasaCambio,
+                    Notas = $"Nota de Débito que afecta a la factura {original.eNCF}. Cargo por penalidad o diferencia."
+                };
+
+                notaDebito.NumeroFactura = notaDebito.eNCF ?? $"ND-{DateTime.Now:yyyyMMdd}-{original.Id}";
+
+                _context.Facturas.Add(notaDebito);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = $"Nota de Débito {notaDebito.eNCF} creada en borrador. Agregue los cargos y fírmela.";
+                return RedirectToAction(nameof(Edit), new { id = notaDebito.Id });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "Error al generar Nota de Débito para factura {Id}", id);
+                TempData["ErrorMessage"] = "Ocurrió un error al generar la Nota de Débito.";
                 return RedirectToAction(nameof(Details), new { id });
             }
         }

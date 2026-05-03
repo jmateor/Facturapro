@@ -93,8 +93,8 @@
 ---
 
 ### 2. Reportes y Estadísticas ✅ AVANZADO
-**Estado:** Dashboard con gráficos funcionando  
-**Descripción:** Dashboard con datos reales, reportes de ventas e inventario
+**Estado:** Dashboard con gráficos funcionando y Reportes DGII completados
+**Descripción:** Dashboard con datos reales, reportes de ventas, inventario y archivos de envíos fiscales DGII
 
 **Tareas completadas:**
 - [x] Dashboard con tarjetas y gráficos
@@ -102,21 +102,24 @@
 - [x] Reporte de inventario con alertas
 - [x] Top productos y clientes
 - [x] Variaciones vs períodos anteriores
+- [x] Reportes DGII (606, 607, 608) en TXT exportables
 
-**Pendientes:**
-- [ ] Estado de resultados (P&L) detallado
-- [ ] Cuadre de caja
-- [ ] Reportes DGII (606, 607, 608)
+**Pendientes y Plan de Acción:**
+- [x] **Estado de resultados (P&L) detallado:** 
+  - Implementada vista `EstadoResultados.cshtml` en `ReportesController`. La lógica calcula el total de `Facturas` (Ingresos) menos `Compras` (Egresos), agrupando por mes y categoría.
+- [x] **Cuadre de caja (Cierre de Turno):** 
+  - Implementada tabla `SesionCaja`. Se añadió la interfaz al POS (Index) que bloquea el sistema si no hay caja abierta, requiriendo el "Monto Inicial", y permite "Cerrar Caja" con cálculo automático de diferencias (Sobrante/Faltante).
 
 ---
 
-### 3. Notas de Crédito y Débito 🟡 MEDIA
-**Estado:** Parcial  
-**Descripción:** Completar el flujo para anulación parcial o total de facturas.
+### 3. Notas de Crédito y Débito ✅ COMPLETADO
+**Estado:** Finalizado
+**Descripción:** Flujo completo para emisión y anulación (E33, E34) de facturas referenciadas.
 
-**Pendientes:**
-- [ ] Interfaz para crear E33 y E34 referenciando un NCF anterior.
-- [ ] Reversión de stock al emitir nota de crédito.
+**Tareas completadas:**
+- [x] Interfaz para crear E33 (Notas de Débito) y E34 (Notas de Crédito) referenciando un NCF anterior desde Detalles de Factura.
+- [x] Lógica de backend para asignar secuencias NCF correspondientes y preparar XML en borrador.
+- [x] Reversión automática de stock al anular una factura o al emitir y firmar una Nota de Crédito (E34).
 
 ---
 
