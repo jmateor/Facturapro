@@ -1,8 +1,8 @@
 # 📋 Estado del Proyecto Facturapro
 
-> **Última actualización:** 2 de mayo de 2026  
-> **Versión:** 1.2.0  
-> **Desarrollador:** Sistema en estabilización E2E
+> **Última actualización:** 3 de mayo de 2026  
+> **Versión:** 1.3.0  
+> **Desarrollador:** Sistema en estabilización E2E / Elite UX Integration
 
 ---
 
@@ -18,13 +18,13 @@
 | Clientes | ✅ CRUD Completo | Listo para producción |
 | Productos | ✅ CRUD + Código de barras | Listo |
 | Inventario | ✅ Entradas/Salidas/Ajustes | Listo |
-| POS (Punto de Venta) | ✅ Funcional | Elite UI, Bimonetario, Carrito rápido |
+| POS (Punto de Venta) | ✅ Completado | Elite UI, Bimonetario, Ventas a Crédito |
 | Proveedores | ✅ CRUD Completo | Listo |
 | Compras | ✅ Registro de compras | Listo |
 | Rangos de Numeración | ✅ Gestión completa | Integrado con DGII |
 | Autenticación/Usuarios | ✅ Completado | Identity + RBAC (Roles) + SameSite Seguro |
 | Reportes | ✅ Avanzado | Dashboard, PDF, DGII Form 606 |
-| Notas Crédito/Débito | 🟡 Parcial | Modelo existe, flujo incompleto |
+| Notas Crédito/Débito | ✅ Completado | Módulo dedicado, reversión stock |
 | Generación PDF | ✅ Completado | QuestPDF + QR integrados |
 
 ---
@@ -40,6 +40,13 @@
   - Sistema de roles estructurado (Super Admin, Gerente, Vendedor, Cajero).
   - Menú lateral (Sidebar) dinámico según permisos (`User.IsInRole()`).
 - ✅ **Correcciones E2E:** Solucionados errores de validación silenciosa (`ModelState`) en la creación de facturas.
+
+### 03 Mayo 2026 - Crédito y Optimización de Módulos
+- ✅ **Ventas a Crédito (POS):** Integración completa de la condición de pago "A Crédito" en el punto de venta, permitiendo abonos iniciales y generación automática de recibos.
+- ✅ **Cuentas por Cobrar:** Sincronización automática de ventas a crédito con el balance de clientes.
+- ✅ **Módulo de Notas de Crédito:** Creación de un acceso directo dedicado en el sidebar y flujo optimizado para emisión de E34 desde facturas existentes.
+- ✅ **Optimización de Facturación:** Implementación de "Dashboard de Resumen" en el listado de facturas y corrección de bugs de renderizado (AJAX/JS).
+- ✅ **Visibilidad Fiscal:** Actualización de PDF y vistas para identificar claramente facturas a crédito y balances pendientes.
 
 ### 21 Abril 2026 - Dashboard y Reportes
 - ✅ Dashboard con datos reales y gráficos Chart.js
@@ -123,13 +130,15 @@
 
 ---
 
-### 4. Pagos y Cobranzas 🔴 ALTA
-**Estado:** No implementado
+### 4. Pagos y Cobranzas ✅ COMPLETADO
+**Estado:** Finalizado
+**Descripción:** Módulo centralizado para el control de Cuentas por Cobrar.
 
-**Tareas:**
-- [ ] Control de cuentas por cobrar
-- [ ] Registro de pagos parciales
-- [ ] Múltiples métodos de pago
+**Tareas completadas:**
+- [x] Control de facturas emitidas a crédito (Cuentas por Cobrar).
+- [x] Registro de pagos (Recibos de Ingreso) con soporte para pagos parciales y métodos de pago (Efectivo, Tarjeta, Transferencia).
+- [x] Actualización automática del balance pendiente y cambio de estado de la factura a "Pago Parcial" o "Pagada" según corresponda.
+- [x] Múltiples métodos de pago (Efectivo, Tarjeta, Transferencia en una misma transacción).
 - [ ] Estados de cuenta de clientes
 
 ---

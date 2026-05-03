@@ -1,0 +1,83 @@
+@model IEnumerable<Facturapro.Controllers.FacturaPendienteViewModel>
+
+@{
+    ViewData["Title"] = "Cuentas por Cobrar";
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <h4 class="page-title">Cuentas por Cobrar</h4>
+        </div>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-line me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-centered dt-responsive nowrap w-100" id="cobros-datatable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Factura</th>
+                                <th>e-NCF</th>
+                                <th>Cliente</th>
+                                <th>Fecha Emisión</th>
+                                <th>Vencimiento</th>
+                                <th>Días Vencidos</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Abonado</th>
+                                <th class="text-end">Balance</th>
+                                <th class="text-end">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <a href="@Url.Action("Details", "Facturas", new { id = item.FacturaId })" class="text-body fw-semibold">
+                                            @item.NumeroFactura
+                                        </a>
+                                    </td>
+                                    <td>@item.ENCF</td>
+                                    <td>@item.ClienteNombre</td>
+                                    <td>@item.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                    <td>@item.FechaVencimiento.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        @if (item.DiasVencidos > 0)
+                                        {
+                                            <span class="badge bg-danger">@item.DiasVencidos días</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Al día</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">@item.Total.ToString("C", cultura)</td>
+                                    <td class="text-end text-success">@item.Abonado.ToString("C", cultura)</td>
+                                    <td class="text-end fw-bold text-danger">@item.Balance.ToString("C", cultura)</td>
+                                    <td class="text-end">
+                                        <a href="@Url.Action("Registrar", new { id = item.FacturaId })" class="btn btn-sm btn-primary">
+                                            <i class="ri-money-dollar-circle-line"></i> Cobrar
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

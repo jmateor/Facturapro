@@ -1,0 +1,43 @@
+@model IEnumerable<Facturapro.Models.Entities.ReciboPago>
+
+@{
+    var cultura = new System.Globalization.CultureInfo("es-DO");
+}
+
+@if (!Model.Any())
+{
+    <div class="text-center py-4 text-muted">
+        <i class="ri-money-dollar-circle-line display-4 mb-2 d-block opacity-25"></i>
+        <p>No hay pagos registrados para esta factura.</p>
+    </div>
+}
+else
+{
+    <div class="timeline-alt py-0">
+        @foreach (var recibo in Model)
+        {
+            <div class="timeline-item">
+                <i class="ri-check-double-line bg-success-lighten text-success timeline-icon"></i>
+                <div class="timeline-item-info">
+                    <h5 class="mt-0 mb-1 text-success">@recibo.MontoTotal.ToString("C", cultura)</h5>
+                    <p class="font-14 mb-0 text-muted">
+                        @recibo.FechaPago.ToString("dd MMM yyyy hh:mm tt")
+                        <br/>
+                        <small>
+                            Efectivo: @recibo.MontoEfectivo.ToString("C") | 
+                            Tarj: @recibo.MontoTarjeta.ToString("C") | 
+                            Trans: @recibo.MontoTransferencia.ToString("C")
+                        </small>
+                    </p>
+                    @if (!string.IsNullOrEmpty(recibo.Referencia))
+                    {
+                        <p class="mb-0 text-muted small"><i class="ri-bank-card-line me-1"></i> Ref: @recibo.Referencia</p>
+                    }
+                    <p class="text-muted mt-1 mb-0 pb-1 small text-truncate">
+                        Por: @(recibo.Usuario?.UserName ?? "Sistema")
+                    </p>
+                </div>
+            </div>
+        }
+    </div>
+}

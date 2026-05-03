@@ -1,7 +1,7 @@
 # 🧾 Facturapro
 
 > **Sistema de Facturación Electrónica para República Dominicana**  
-> **Versión:** 1.0.0-beta | **Compatible DGII** ✅
+> **Versión:** 1.3.0 | **Compatible DGII** ✅
 
 ![.NET 8.0](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat-square&logo=dotnet)
 ![Entity Framework](https://img.shields.io/badge/EF%20Core-8.0-512BD4?style=flat-square)
@@ -21,7 +21,8 @@ Facturapro es un sistema completo de facturación electrónica diseñado para cu
 - 👥 **Gestión de Clientes** - Base de datos completa
 - 📊 **Reportes** - Estadísticas de ventas e inventario
 - 🔐 **Firma Digital** - Certificados PFX/P12 compatibles
-- 📱 **Responsive** - Funciona en dispositivos móviles
+- 💳 **Cuentas por Cobrar** - Seguimiento de facturas a crédito y abonos
+- 📱 **Responsive** - Funciona en dispositivos móviles (Elite UI)
 
 ---
 
@@ -108,6 +109,7 @@ Facturapro/
 | Documento | Descripción |
 |-----------|-------------|
 | [📘 MANUAL_USUARIO.md](./MANUAL_USUARIO.md) | Guía completa para usuarios finales |
+| [🛠️ MANUAL_TECNICO.md](./MANUAL_TECNICO.md) | Documentación de arquitectura y backend |
 | [🏛️ DGII_IMPORTANTE.md](./DGII_IMPORTANTE.md) | Notas críticas sobre integración DGII |
 | [📋 PROJECT_STATUS.md](./PROJECT_STATUS.md) | Estado actual del desarrollo |
 
@@ -167,21 +169,23 @@ Crear Factura → Firmar Digitalmente → Enviar a DGII → Obtener TrackId → 
 - [x] CRUD de facturas electrónicas
 - [x] Integración API DGII (envío real)
 - [x] Firma digital con certificados
-- [x] Punto de Venta (POS)
-- [x] Control de inventario
+- [x] Punto de Venta (POS) Bimonetario
+- [x] Control de inventario (Kalder)
 - [x] Gestión de clientes y proveedores
+- [x] Sistema de autenticación (Identity) y Roles
+- [x] Reportes avanzados y Formato 606
+- [x] Generación de PDF (QuestPDF) y QR
+- [x] Gestión de Notas de Crédito y Débito
+- [x] Ventas a Crédito y Cuentas por Cobrar
 
 ### En Progreso 🚧
-- [ ] Sistema de autenticación (Identity)
-- [ ] Reportes avanzados
-- [ ] Generación de PDF
-- [ ] App móvil
+- [ ] App móvil Nativa (Kalder App)
+- [ ] Multiempresa e Instituciones Públicas
 
 ### Pendiente 📋
-- [ ] Multiempresa
-- [ ] API REST para integraciones
-- [ ] Dashboard analítico
-- [ ] Contabilidad integrada
+- [ ] API REST para integraciones de terceros
+- [ ] Dashboard analítico avanzado (PowerBI/ChartJS)
+- [ ] Contabilidad fiscal automática (607, 608)
 
 ---
 

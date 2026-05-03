@@ -5,27 +5,17 @@
     var cultura = new System.Globalization.CultureInfo("es-DO");
 }
 
-<!-- Header con Breadcrumbs -->
-<div class="page-header-title">
-    <div class="d-flex align-items-center justify-content-between">
-        <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-2">
-                    <li class="breadcrumb-item"><a href="@Url.Action("Index")">Kalder</a></li>
-                    <li class="breadcrumb-item"><a href="@Url.Action("Inventario")">Inventario</a></li>
-                    <li class="breadcrumb-item active">Entrada</li>
-                </ol>
-            </nav>
-            <h4 class="page-title mb-1">
-                <i class="ri-download-2-line me-1 text-success"></i>
-                Registrar Entrada de Mercancía
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <a href="@Url.Action("Inventario")" class="btn btn-secondary">
+                    <i class="ri-arrow-go-back-line me-1"></i> Volver al Almacén
+                </a>
+            </div>
+            <h4 class="page-title">
+                <i class="ri-download-2-line me-1 text-success"></i> Registrar Entrada de Mercancía
             </h4>
-            <p class="text-muted mb-0">Incrementa el stock disponible para este producto</p>
-        </div>
-        <div>
-            <a href="@Url.Action("Inventario")" class="btn btn-soft-secondary">
-                <i class="ri-arrow-left-line me-1"></i> Volver al Almacén
-            </a>
         </div>
     </div>
 </div>

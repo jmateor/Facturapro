@@ -108,6 +108,21 @@
                                 </span>
                             }
                         </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Condición de Pago</label>
+                        <div class="fw-semibold">
+                            <i class="ri-calendar-check-line me-1 text-primary"></i>
+                            @(Model.TipoPago == 2 ? "A Crédito" : "Al Contado")
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted small">Estado de Factura</label>
+                        <div>
+                            <span class="badge @(Model.Estado == "Pagada" ? "bg-success-soft text-success" : (Model.Estado == "Cancelada" ? "bg-danger-soft text-danger" : "bg-warning-soft text-warning"))">
+                                <i class="@(Model.Estado == "Pagada" ? "ri-checkbox-circle-fill" : (Model.Estado == "Cancelada" ? "ri-close-circle-fill" : "ri-time-fill")) me-1"></i>
+                                @Model.Estado
+                            </span>
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted small">Fecha de Emisión</label>

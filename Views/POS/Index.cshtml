@@ -213,8 +213,23 @@
                         <input type="hidden" name="TasaCambio" id="inputTasaCambio" value="@Model.TasaUSD.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" />
                     </div>
 
-                    <!-- Método de Pago -->
+                    <!-- Condición de Pago -->
                     <div class="mb-3">
+                        <label class="form-label"><i class="ri-calendar-check-line me-1"></i>Condición de Pago</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="CondicionPago" id="condicionContado" value="Contado" checked autocomplete="off" onchange="actualizarCamposPago()">
+                                <label class="btn btn-outline-success w-100" for="condicionContado">Al Contado</label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="CondicionPago" id="condicionCredito" value="Crédito" autocomplete="off" onchange="actualizarCamposPago()">
+                                <label class="btn btn-outline-warning w-100" for="condicionCredito">A Crédito</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Método de Pago -->
+                    <div class="mb-3" id="seccionMetodoPago">
                         <label class="form-label"><i class="ri-wallet-line me-1"></i>Método de Pago</label>
                         <div class="row g-2">
                             <div class="col-3">
@@ -830,10 +845,12 @@
         }
 
         function actualizarCamposPago() {
+            const condicion = document.querySelector('input[name="CondicionPago"]:checked')?.value;
             const metodo = document.querySelector('input[name="MetodoPago"]:checked')?.value;
             const camposEfectivo = document.getElementById('camposEfectivo');
             const camposTarjeta = document.getElementById('camposTarjeta');
             const camposMixto = document.getElementById('camposMixto');
+            const seccionMetodoPago = document.getElementById('seccionMetodoPago');
 
             camposEfectivo.style.display = 'none';
             camposTarjeta.style.display = 'none';
@@ -841,13 +858,22 @@
             document.getElementById('montoRecibido').required = false;
             document.getElementById('mixtoAlert').style.display = 'none';
 
-            if (metodo === 'Efectivo') {
+            if (condicion === 'Crédito') {
+                seccionMetodoPago.style.display = 'none';
                 camposEfectivo.style.display = 'block';
-                document.getElementById('montoRecibido').required = true;
-            } else if (metodo === 'Tarjeta') {
-                camposTarjeta.style.display = 'block';
-            } else if (metodo === 'Mixto') {
-                camposMixto.style.display = 'block';
+                document.getElementById('montoRecibido').required = false;
+                document.getElementById('montoRecibido').placeholder = 'Abono inicial (opcional)';
+            } else {
+                seccionMetodoPago.style.display = 'block';
+                if (metodo === 'Efectivo') {
+                    camposEfectivo.style.display = 'block';
+                    document.getElementById('montoRecibido').required = true;
+                    actualizarTotalesModal(); // reset placeholder a total
+                } else if (metodo === 'Tarjeta') {
+                    camposTarjeta.style.display = 'block';
+                } else if (metodo === 'Mixto') {
+                    camposMixto.style.display = 'block';
+                }
             }
         }
 
@@ -916,13 +942,14 @@
             }
 
             // Validación final: verificar monto recibido si es efectivo
-            const metodoPago = document.querySelector('input[name="MetodoPago"]:checked')?.value;
+            const condicionPago = document.querySelector('input[name="CondicionPago"]:checked')?.value;
+            const metodoPago = condicionPago === 'Crédito' ? 'Efectivo' : document.querySelector('input[name="MetodoPago"]:checked')?.value;
             const montoRecibidoInput = document.getElementById('montoRecibido');
             const recibido = montoRecibidoInput ? parseFloat(montoRecibidoInput.value) || 0 : 0;
             const factor = monedaSeleccionada === 'USD' ? (1 / tasaUSDGlobal) : 1;
             const totalEnMoneda = totalActual * factor;
 
-            if (metodoPago === 'Efectivo' && recibido < totalEnMoneda - 0.01) {
+            if (condicionPago !== 'Crédito' && metodoPago === 'Efectivo' && recibido < totalEnMoneda - 0.01) {
                 mostrarNotificacion('El monto recibido es insuficiente', 'danger');
                 return;
             }
@@ -945,7 +972,11 @@
             const formData = new FormData(form);
 
             // Asignar montos según método de pago y moneda seleccionada
-            if (metodoPago === 'Efectivo') {
+            if (condicionPago === 'Crédito') {
+                formData.set('MontoEfectivo', recibido > 0 ? recibido.toFixed(2) : '0');
+                formData.set('MontoTarjeta', '0');
+                formData.set('MontoTransferencia', '0');
+            } else if (metodoPago === 'Efectivo') {
                 const montoEfectivo = recibido > 0 ? recibido : totalEnMoneda;
                 formData.set('MontoEfectivo', montoEfectivo.toFixed(2));
                 formData.set('MontoTarjeta', '0');

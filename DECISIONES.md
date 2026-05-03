@@ -8,6 +8,8 @@ Este documento registra las decisiones arquitectónicas importantes tomadas en e
 2. [ADR-002: Generación de Códigos de Barra](#adr-002-generación-de-códigos-de-barra)
 3. [ADR-003: Soporte de Lectora de Código de Barra en POS](#adr-003-soporte-de-lectora-de-código-de-barra-en-pos)
 4. [ADR-004: Módulo Kalder para Gestión de Almacén](#adr-004-módulo-kalder-para-gestión-de-almacén)
+5. [ADR-005: Gestión de Ventas a Crédito y Cuentas por Cobrar](#adr-005-gestión-de-ventas-a-crédito-y-cuentas-por-cobrar)
+6. [ADR-006: Módulo Dedicado de Notas de Crédito (E34)](#adr-006-módulo-dedicado-de-notas-de-crédito-e34)
 
 ---
 
@@ -128,6 +130,60 @@ Este documento registra las decisiones arquitectónicas importantes tomadas en e
 
 ---
 
+## ADR-005: Gestión de Ventas a Crédito y Cuentas por Cobrar
+
+**Estado:** Aceptado  
+**Fecha:** 2026-05-03  
+**Contexto:** Se requería que el sistema permitiera realizar ventas sin cobro inmediato, manteniendo un registro de deudas por cliente.
+
+**Decisión:** Integrar la condición de pago "A Crédito" en el POS y crear un sistema de seguimiento automático en la entidad `Cliente` y un módulo de `Cuentas por Cobrar`.
+
+**Motivación:**
+- Necesidad de soportar el flujo comercial dominicano de facturas a crédito.
+- El POS debe permitir abonos iniciales (pagos parciales).
+- Sincronización automática con el balance del cliente para evitar errores manuales.
+- Visibilidad fiscal en PDF indicando balance pendiente.
+
+**Consecuencias:**
+- ✅ El POS ahora permite seleccionar "Crédito" como condición.
+- ✅ Las facturas a crédito se guardan con balance pendiente.
+- ✅ Los recibos de venta muestran "Monto Pagado" y "Balance Pendiente".
+- ✅ Integración con el módulo de Cuentas por Cobrar para gestión de abonos posteriores.
+
+**Implementación:**
+- `Factura.TipoPago = 2` (Crédito) en base de datos.
+- `POSController.FinalizarVenta()` - Lógica de abono y cálculo de balance.
+- Vista `POS/Completada.cshtml` - Etiquetas dinámicas de condición de pago.
+
+---
+
+## ADR-006: Módulo Dedicado de Notas de Crédito (E34)
+
+**Estado:** Aceptado  
+**Fecha:** 2026-05-03  
+**Contexto:** La emisión de Notas de Crédito era un proceso manual y propenso a errores de referencia fiscal.
+
+**Decisión:** Crear un flujo de emisión simplificado "One-Click" que automatice la creación de documentos E34 referenciando facturas originales y revertiendo stock.
+
+**Motivación:**
+- Requerimiento fiscal de la DGII para anulación o corrección de facturas emitidas.
+- Necesidad de asegurar la trazabilidad (nodo `<InformacionReferencia>` en XML).
+- Mejorar la UX permitiendo emitir la nota directamente desde el listado de facturas.
+- Automatizar la devolución de productos al inventario al anular la factura.
+
+**Consecuencias:**
+- ✅ Nuevo acceso dedicado en el sidebar para "Notas de Crédito".
+- ✅ Botón de acción rápida en `Facturas/Index` para emisión inmediata.
+- ✅ Autocompletado de datos del cliente e ítems desde la factura de origen.
+- ✅ Garantía de cumplimiento fiscal para el e-NCF E34.
+
+**Implementación:**
+- `FacturasController.Index()` - Filtro dinámico por parámetro `tipoECF`.
+- `FacturasController.EmitirNotaCredito()` - Acción para generar el documento vinculado.
+- Sidebar dinámico con resaltado de sección activa.
+
+---
+
 ## Notas Generales
 
 ### Convenciones seguidas:
@@ -137,6 +193,6 @@ Este documento registra las decisiones arquitectónicas importantes tomadas en e
 - Seguir convenciones de nomenclatura del proyecto
 
 ### Consideraciones futuras:
-- Evaluar migración a EAN-13 si se requiere cumplimiento GS1
+- ✅ **Cumplimiento GS1 (EAN-13):** Implementado el 03 de mayo. El sistema ahora detecta códigos de 12/13 dígitos y los genera bajo el estándar global.
 - Considerar paginación en reportes grandes de Kalder
 - Posible integración con impresoras térmicas para códigos de barra

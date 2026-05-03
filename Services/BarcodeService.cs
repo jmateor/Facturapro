@@ -50,10 +50,25 @@ namespace Facturapro.Services
         private const string StartB = "11010010000";
         private const string StopPattern = "1100011101011";
 
+        // EAN-13 Patterns
+        private static readonly string[] EAN_L = { "0001101", "0011001", "0010011", "0111101", "0100011", "0110001", "0101111", "0111011", "0110111", "0001011" };
+        private static readonly string[] EAN_G = { "0100111", "0110011", "0011011", "0100001", "0011101", "0111001", "0000101", "0010001", "0001001", "0010111" };
+        private static readonly string[] EAN_R = { "1110010", "1100110", "1101100", "1000010", "1011100", "1001110", "1010000", "1000100", "1001000", "1110100" };
+        private static readonly string[] EAN_Parity = { "LLLLLL", "LLGLGG", "LLGGLG", "LLGGGL", "LGLLGG", "LGGLLG", "LGGGLL", "LGLGLG", "LGLGGL", "LGGLGL" };
+
         public string GenerarCodigoBarras(string codigoProducto, int productoId)
         {
-            // Generar un código de barras único basado en el código del producto
-            // Formato: PROD + ID del producto (rellenado con ceros) + código
+            // Si el código ya parece ser un EAN-13 (12 o 13 dígitos numéricos)
+            if (codigoProducto.Length >= 12 && codigoProducto.All(char.IsDigit))
+            {
+                if (codigoProducto.Length == 12)
+                {
+                    return codigoProducto + CalcularCheckDigitEan13(codigoProducto);
+                }
+                return codigoProducto;
+            }
+
+            // Generar un código de barras único basado en el código del producto para uso interno
             var barcode = $"{codigoProducto}-{productoId:D6}";
             return barcode.Length > 20 ? barcode.Substring(0, 20) : barcode;
         }
@@ -63,30 +78,71 @@ namespace Facturapro.Services
             if (string.IsNullOrEmpty(code))
                 return string.Empty;
 
-            var encoded = EncodeCode128(code);
+            bool isEan13 = code.Length == 13 && code.All(char.IsDigit);
+            string encoded = isEan13 ? EncodeEan13(code) : EncodeCode128(code);
+            
             var barWidth = 2;
             var height = 80;
             var width = encoded.Length * barWidth;
 
             var svg = new StringBuilder();
-            svg.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height + 20}\" viewBox=\"0 0 {width} {height + 20}\">");
+            svg.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height + 25}\" viewBox=\"0 0 {width} {height + 25}\">");
             svg.AppendLine("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>");
 
-            int x = 0;
             for (int i = 0; i < encoded.Length; i++)
             {
                 if (encoded[i] == '1')
                 {
-                    svg.AppendLine($"<rect x=\"{x * barWidth}\" y=\"0\" width=\"{barWidth}\" height=\"{height}\" fill=\"black\"/>");
+                    svg.AppendLine($"<rect x=\"{i * barWidth}\" y=\"0\" width=\"{barWidth}\" height=\"{height}\" fill=\"black\"/>");
                 }
-                x++;
             }
 
-            // Añadir texto del código debajo
-            svg.AppendLine($"<text x=\"{width / 2}\" y=\"{height + 15}\" text-anchor=\"middle\" font-family=\"Arial, sans-serif\" font-size=\"12\">{code}</text>");
+            // Texto descriptivo (GS1 Formatting si es EAN-13)
+            string displayCode = isEan13 ? $"{code[0]} {code.Substring(1, 6)} {code.Substring(7)}" : code;
+            svg.AppendLine($"<text x=\"{width / 2}\" y=\"{height + 18}\" text-anchor=\"middle\" font-family=\"monospace\" font-size=\"14\" font-weight=\"bold\">{displayCode}</text>");
             svg.AppendLine("</svg>");
 
             return svg.ToString();
+        }
+
+        private string EncodeEan13(string code)
+        {
+            var result = new StringBuilder();
+            result.Append("101"); // Left Guard
+
+            int firstDigit = code[0] - '0';
+            string parity = EAN_Parity[firstDigit];
+
+            // Left side (6 digits)
+            for (int i = 1; i <= 6; i++)
+            {
+                int digit = code[i] - '0';
+                result.Append(parity[i - 1] == 'L' ? EAN_L[digit] : EAN_G[digit]);
+            }
+
+            result.Append("01010"); // Center Guard
+
+            // Right side (6 digits)
+            for (int i = 7; i <= 12; i++)
+            {
+                int digit = code[i] - '0';
+                result.Append(EAN_R[digit]);
+            }
+
+            result.Append("101"); // Right Guard
+            return result.ToString();
+        }
+
+        private int CalcularCheckDigitEan13(string code12)
+        {
+            int sum = 0;
+            for (int i = 0; i < 12; i++)
+            {
+                int digit = code12[i] - '0';
+                sum += (i % 2 == 0) ? digit : digit * 3;
+            }
+            int checkDigit = (10 - (sum % 10)) % 10;
+            return checkDigit;
         }
 
         private string EncodeCode128(string code)
@@ -115,15 +171,13 @@ namespace Facturapro.Services
 
         private string GetChecksumPattern(int checksum)
         {
-            // Simplified - map checksum to a pattern (Code 128 B subset)
-            // This is a basic implementation
             if (checksum >= 0 && checksum <= 94)
             {
                 char c = (char)(checksum + 32);
                 if (Code128Patterns.TryGetValue(c, out string? pattern))
                     return pattern;
             }
-            return "1100011101011"; // Default to stop pattern variant
+            return "1100011101011";
         }
     }
 }

@@ -48,6 +48,23 @@ namespace Facturapro.Controllers
                 query = query.Where(c => c.Estado == estado.Value);
             }
 
+            // Estadísticas para el Dashboard
+            var hoy = DateTime.Now;
+            var primerDiaMes = new DateTime(hoy.Year, hoy.Month, 1);
+            
+            ViewBag.TotalComprasMes = await _context.Compras
+                .Where(c => c.FechaCompra >= primerDiaMes && c.Estado != EstadoCompra.Cancelada)
+                .SumAsync(c => (decimal?)c.Total) ?? 0;
+
+            ViewBag.PendientesRecibir = await _context.Compras
+                .CountAsync(c => c.Estado == EstadoCompra.Pendiente);
+
+            ViewBag.TotalGastoAnual = await _context.Compras
+                .Where(c => c.FechaCompra.Year == hoy.Year && c.Estado != EstadoCompra.Cancelada)
+                .SumAsync(c => (decimal?)c.Total) ?? 0;
+
+            ViewBag.ProveedoresCount = await _context.Proveedores.CountAsync(p => p.Activo);
+
             ViewData["Estados"] = Enum.GetValues(typeof(EstadoCompra))
                 .Cast<EstadoCompra>()
                 .ToList();

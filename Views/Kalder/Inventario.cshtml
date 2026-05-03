@@ -6,183 +6,162 @@
     var cultura = new System.Globalization.CultureInfo("es-DO");
 }
 
-<style>
-    .stock-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--space-xs);
-        padding: var(--space-xs) var(--space-sm);
-        border-radius: var(--radius);
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
-
-    .stock-badge.normal {
-        background: rgb(16 185 129 / 0.1);
-        color: var(--success-color);
-    }
-
-    .stock-badge.low {
-        background: rgb(245 158 11 / 0.1);
-        color: var(--warning-color);
-    }
-
-    .stock-badge.critical {
-        background: rgb(239 68 68 / 0.1);
-        color: var(--error-color);
-    }
-
-    .action-buttons {
-        display: flex;
-        gap: var(--space-xs);
-        flex-wrap: nowrap;
-    }
-
-    .action-buttons .btn {
-        padding: var(--space-xs) var(--space-sm);
-        font-size: 0.75rem;
-    }
-</style>
-
-<div class="page-header">
-    <div class="page-title">
-        <h1>Inventario</h1>
-        <p>Gestión de stock y movimientos</p>
-    </div>
-    <div class="page-actions">
-        <a href="@Url.Action("Index")" class="btn btn-secondary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            Volver a Kalder
-        </a>
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            <div class="page-title-right">
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="ri-arrow-go-back-line me-1"></i> Volver a Kalder
+                </a>
+            </div>
+            <h4 class="page-title">Gestión de Inventario</h4>
+        </div>
     </div>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success" style="margin-bottom: var(--space-lg);">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
-        @TempData["SuccessMessage"]
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="ri-check-line me-2 fs-4 align-middle"></i>
+        <strong>¡Éxito!</strong> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-error" style="margin-bottom: var(--space-lg);">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-        </svg>
-        @TempData["ErrorMessage"]
+    <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="ri-error-warning-line me-2 fs-4 align-middle"></i>
+        <strong>Error:</strong> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
-<!-- Filtros -->
-<div class="card" style="margin-bottom: var(--space-lg);">
-    <div class="card-body">
-        <form method="get" class="d-flex gap-1" style="flex-wrap: wrap;">
-            <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                <input type="text" name="buscar" class="form-input" placeholder="Buscar por nombre, código o código de barras..." value="@Context.Request.Query["buscar"]" />
-            </div>
-            <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
-                <select name="categoriaId" class="form-select">
-                    <option value="">Todas las categorías</option>
-                    @foreach (var cat in categorias)
-                    {
-                        if (Context.Request.Query["categoriaId"] == cat.Id.ToString())
-                        {
-                            <option value="@cat.Id" selected>@cat.Nombre</option>
-                        }
-                        else
-                        {
-                            <option value="@cat.Id">@cat.Nombre</option>
-                        }
-                    }
-                </select>
-            </div>
-            <button type="submit" class="btn btn-secondary">Filtrar</button>
-        </form>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-body">
-        <div class="table-container">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Producto</th>
-                        <th>Categoría</th>
-                        <th>Stock</th>
-                        <th>Precio</th>
-                        <th>Valor</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
-                        var stockClass = item.Stock == 0 ? "critical" : (item.Stock <= 5 ? "low" : "normal");
-                        var stockText = item.Stock == 0 ? "Agotado" : (item.Stock <= 5 ? "Bajo" : "OK");
-                        var valorInventario = item.Stock * item.Precio;
-
-                        <tr>
-                            <td><span class="badge badge-secondary">@item.Codigo</span></td>
-                            <td>
-                                <div><strong>@item.Nombre</strong></div>
-                                @if (!string.IsNullOrEmpty(item.CodigoBarras))
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <form method="get" class="row gy-2 gx-2 align-items-center mb-4">
+                    <div class="col-sm-auto flex-grow-1">
+                        <label class="visually-hidden" for="buscar">Buscar</label>
+                        <div class="input-group">
+                            <div class="input-group-text bg-light border-0"><i class="ri-search-line"></i></div>
+                            <input type="text" name="buscar" id="buscar" class="form-control bg-light border-0" placeholder="Buscar por nombre, código o código de barras..." value="@Context.Request.Query["buscar"]">
+                        </div>
+                    </div>
+                    <div class="col-sm-auto">
+                        <label class="visually-hidden" for="categoriaId">Categoría</label>
+                        <select name="categoriaId" id="categoriaId" class="form-select bg-light border-0">
+                            <option value="">Todas las categorías</option>
+                            @foreach (var cat in categorias)
+                            {
+                                if (Context.Request.Query["categoriaId"] == cat.Id.ToString())
                                 {
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="display: inline;">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
-                                        </svg>
-                                        @item.CodigoBarras
-                                    </div>
+                                    <option value="@cat.Id" selected>@cat.Nombre</option>
                                 }
-                            </td>
-                            <td>@(item.Categoria?.Nombre ?? "-")</td>
-                            <td>
-                                <span class="stock-badge @stockClass">
-                                    @item.Stock - @stockText
-                                </span>
-                            </td>
-                            <td>@item.Precio.ToString("C", cultura)</td>
-                            <td>@valorInventario.ToString("C", cultura)</td>
-                            <td>
-                                <div class="action-buttons">
-                                    <a href="@Url.Action("Entrada", new { id = item.Id })" class="btn btn-success" title="Registrar Entrada">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                                        </svg>
-                                        Entrada
-                                    </a>
-                                    <a href="@Url.Action("Salida", new { id = item.Id })" class="btn btn-danger" title="Registrar Salida">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-                                        </svg>
-                                        Salida
-                                    </a>
-                                    <a href="@Url.Action("Ajuste", new { id = item.Id })" class="btn btn-warning" title="Ajustar Inventario">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                        </svg>
-                                        Ajuste
-                                    </a>
-                                    <a href="@Url.Action("Kardex", new { id = item.Id })" class="btn btn-primary" title="Ver Kardex">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
-                                        </svg>
-                                        Kardex
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                else
+                                {
+                                    <option value="@cat.Id">@cat.Nombre</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-sm-auto">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="ri-filter-3-line me-1"></i> Filtrar
+                        </button>
+                    </div>
+                </form>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-centered dt-responsive nowrap w-100" id="inventario-datatable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th>Categoría</th>
+                                <th>Stock</th>
+                                <th>Precio Venta</th>
+                                <th>Valor Total</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                var badgeClass = item.Stock == 0 ? "bg-danger" : (item.Stock <= 5 ? "bg-warning" : "bg-success");
+                                var stockText = item.Stock == 0 ? "Agotado" : (item.Stock <= 5 ? "Bajo" : "OK");
+                                var valorInventario = item.Stock * item.Precio;
+
+                                <tr>
+                                    <td>
+                                        <span class="badge badge-outline-secondary fs-6">@item.Codigo</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-2 bg-light rounded d-flex justify-content-center align-items-center">
+                                                <i class="ri-box-3-line fs-3 text-secondary"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="m-0 fw-semibold text-dark">@item.Nombre</h5>
+                                                @if (!string.IsNullOrEmpty(item.CodigoBarras))
+                                                {
+                                                    <p class="m-0 text-muted small">
+                                                        <i class="ri-barcode-line me-1"></i> @item.CodigoBarras
+                                                    </p>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted fw-medium">@(item.Categoria?.Nombre ?? "-")</span>
+                                    </td>
+                                    <td>
+                                        <h5 class="m-0">
+                                            <span class="badge @badgeClass rounded-pill p-2 fs-6">
+                                                @item.Stock <small class="fw-normal">(@stockText)</small>
+                                            </span>
+                                        </h5>
+                                    </td>
+                                    <td class="fw-semibold">@item.Precio.ToString("C", cultura)</td>
+                                    <td class="fw-bold text-primary">@valorInventario.ToString("C", cultura)</td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="@Url.Action("Entrada", new { id = item.Id })" class="btn btn-sm btn-soft-success" data-bs-toggle="tooltip" title="Registrar Entrada">
+                                                <i class="ri-download-2-line"></i>
+                                            </a>
+                                            <a href="@Url.Action("Salida", new { id = item.Id })" class="btn btn-sm btn-soft-danger" data-bs-toggle="tooltip" title="Registrar Salida">
+                                                <i class="ri-upload-2-line"></i>
+                                            </a>
+                                            <a href="@Url.Action("Ajuste", new { id = item.Id })" class="btn btn-sm btn-soft-warning" data-bs-toggle="tooltip" title="Ajuste Manual">
+                                                <i class="ri-equalizer-line"></i>
+                                            </a>
+                                            <a href="@Url.Action("Kardex", new { id = item.Id })" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Ver Kardex">
+                                                <i class="ri-file-list-3-line"></i> Kardex
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            var table = $('#inventario-datatable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                },
+                "pageLength": 10,
+                "order": [[ 3, "asc" ]] // Ordenar por stock por defecto (menor a mayor para ver agostados)
+            });
+            $('[data-bs-toggle="tooltip"]').tooltip();
+        });
+    </script>
+}

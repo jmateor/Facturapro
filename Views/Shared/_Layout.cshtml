@@ -291,9 +291,23 @@
                     </li>
 
                     <li class="side-nav-item">
-                        <a href="@Url.Action("Index", "Facturas")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Facturas" ? "active" : "")">
+                        <a href="@Url.Action("Index", "Facturas")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Facturas" && Context.Request.Query["tipoECF"] != "34" ? "active" : "")">
                             <i class="ri-file-list-3-line"></i>
                             <span> Facturas </span>
+                        </a>
+                    </li>
+
+                    <li class="side-nav-item">
+                        <a href="@Url.Action("Index", "Facturas", new { tipoECF = "34" })" class="side-nav-link @(Context.Request.Query["tipoECF"] == "34" ? "active" : "")">
+                            <i class="ri-file-history-line"></i>
+                            <span> Notas de Crédito </span>
+                        </a>
+                    </li>
+
+                    <li class="side-nav-item">
+                        <a href="@Url.Action("Index", "Cobros")" class="side-nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Cobros" ? "active" : "")">
+                            <i class="ri-money-dollar-circle-line"></i>
+                            <span> Cuentas por Cobrar </span>
                         </a>
                     </li>
 

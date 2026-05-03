@@ -1,7 +1,7 @@
 # 🏛️ NOTAS IMPORTANTES - Módulo DGII (Facturación Electrónica)
 
 > **Documento crítico para implementación y operación**  
-> **Última actualización:** 20 Abril 2026  
+> **Última actualización:** 03 Mayo 2026  
 > **Versión DGII API:** 1.0 (Mayo 2023)
 
 ---
@@ -192,7 +192,7 @@ Authorization: Bearer {TOKEN}
       <TipoPago>1</TipoPago>
       <TablaFormasPago>
         <FormaPago>
-          <TipoPago>1</TipoPago>
+          <TipoPago>2</TipoPago> <!-- 2 = Crédito -->
           <MontoPago>1000.00</MontoPago>
         </FormaPago>
       </TablaFormasPago>
@@ -230,6 +230,14 @@ Authorization: Bearer {TOKEN}
       <MontoITBIS>152.54</MontoITBIS>
     </Item>
   </DetallesItems>
+  <!-- Información de Referencia para Notas de Crédito/Débito -->
+  <InformacionReferencia>
+    <Referencia>
+      <NCFModificado>E310000000001</NCFModificado>
+      <CodigoModificacion>1</CodigoModificacion> <!-- 1 = Anulación, 2 = Corrección -->
+      <FechaReferencia>2026-05-01</FechaReferencia>
+    </Referencia>
+  </InformacionReferencia>
 </ECF>
 ```
 
@@ -252,6 +260,10 @@ Authorization: Bearer {TOKEN}
 | 1 | Contado |
 | 2 | Crédito |
 | 3 | Gratuito |
+| 4 | Permuta |
+| 5 | Otros |
+
+> **Nota:** Para facturas a crédito (TipoPago 2), el sistema debe registrar el balance pendiente en el módulo de Cuentas por Cobrar.
 
 ---
 
@@ -455,5 +467,5 @@ Antes de pasar a producción, verificar:
 
 Mantener actualizado con cada cambio en la implementación de DGII.
 
-**Última revisión:** 20 Abril 2026  
+**Última revisión:** 03 Mayo 2026  
 **Próxima revisión recomendada:** Cuando DGII actualice sus especificaciones

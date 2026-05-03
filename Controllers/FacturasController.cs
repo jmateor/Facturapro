@@ -779,10 +779,11 @@ namespace Facturapro.Controllers
                     tipoECF = f.TipoECF,
                     clienteNombre = f.Cliente != null ? f.Cliente.Nombre : "Consumidor Final",
                     clienteTelefono = f.Cliente != null ? f.Cliente.Telefono : null,
-                    fechaEmision = f.FechaEmision.ToString("dd/MM/yyyy"),
+                    fechaEmisionRaw = f.FechaEmision,
                     total = f.Total,
                     estadoDGII = f.EstadoDGII,
                     estado = f.Estado,
+                    tipoPago = f.TipoPago,
                     xmlFirmado = f.XMLFirmado
                 })
                 .ToListAsync();

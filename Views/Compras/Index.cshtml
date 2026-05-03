@@ -7,47 +7,102 @@
 
 <div class="page-header">
     <div class="page-title">
-        <h1>Compras</h1>
-        <p>Gestiona las compras a proveedores</p>
+        <h1>Compras y Abastecimiento</h1>
+        <p>Gestiona el inventario y las relaciones con tus proveedores</p>
     </div>
     <div class="page-actions">
         <a href="@Url.Action("Create", "Compras")" class="btn btn-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
+            <i class="ri-add-line"></i>
             Nueva Compra
         </a>
+    </div>
+</div>
+
+<!-- Dashboard de Resumen -->
+<div class="row" style="margin-bottom: var(--space-lg);">
+    <div class="col">
+        <div class="card bg-primary-soft">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-1">
+                    <div class="icon-box bg-primary text-white">
+                        <i class="ri-shopping-bag-3-line"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-secondary" style="margin:0;">Total Mes</p>
+                        <h3 style="margin:0;">@(((decimal)ViewBag.TotalComprasMes).ToString("C0"))</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-warning-soft">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-1">
+                    <div class="icon-box bg-warning text-white">
+                        <i class="ri-time-line"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-secondary" style="margin:0;">Pendientes Recibir</p>
+                        <h3 style="margin:0;">@ViewBag.PendientesRecibir</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-success-soft">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-1">
+                    <div class="icon-box bg-success text-white">
+                        <i class="ri-truck-line"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-secondary" style="margin:0;">Proveedores</p>
+                        <h3 style="margin:0;">@ViewBag.ProveedoresCount</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card bg-info-soft">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-1">
+                    <div class="icon-box bg-info text-white">
+                        <i class="ri-line-chart-line"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-secondary" style="margin:0;">Gasto Anual</p>
+                        <h3 style="margin:0;">@(((decimal)ViewBag.TotalGastoAnual).ToString("C0"))</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-        </svg>
+        <i class="ri-checkbox-circle-line"></i>
         @TempData["SuccessMessage"]
     </div>
 }
 
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-        </svg>
-        @TempData["ErrorMessage"]
-    </div>
-}
-
-<!-- Filtros -->
+<!-- Filtros Avanzados -->
 <div class="card" style="margin-bottom: var(--space-lg);">
     <div class="card-body">
-        <form method="get" class="d-flex gap-1" style="flex-wrap: wrap;">
-            <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
-                <input type="text" name="buscar" class="form-input" placeholder="Buscar por número o proveedor..." value="@Context.Request.Query["buscar"]" />
+        <form method="get" class="d-flex gap-1" style="flex-wrap: wrap; align-items: flex-end;">
+            <div class="form-group" style="flex: 2; min-width: 250px; margin-bottom: 0;">
+                <label class="form-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary);">Búsqueda Rápida</label>
+                <div style="position: relative;">
+                    <i class="ri-search-line" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                    <input type="text" name="buscar" class="form-input" style="padding-left: 35px;" placeholder="Número de factura o proveedor..." value="@Context.Request.Query["buscar"]" />
+                </div>
             </div>
-            <div class="form-group" style="min-width: 150px; margin-bottom: 0;">
+            <div class="form-group" style="flex: 1; min-width: 180px; margin-bottom: 0;">
+                <label class="form-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary);">Estado</label>
                 <select name="estado" class="form-select">
                     <option value="">Todos los estados</option>
                     @foreach (var est in estados)
@@ -56,64 +111,109 @@
                     }
                 </select>
             </div>
-            <button type="submit" class="btn btn-secondary">Filtrar</button>
+            <button type="submit" class="btn btn-secondary">
+                <i class="ri-filter-3-line"></i>
+                Filtrar
+            </button>
+            <a href="@Url.Action("Index")" class="btn btn-ghost" title="Limpiar filtros">
+                <i class="ri-refresh-line"></i>
+            </a>
         </form>
     </div>
 </div>
 
 <div class="card">
-    <div class="card-body">
+    <div class="card-body" style="padding: 0;">
         <div class="table-container">
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Factura</th>
-                        <th>NCF</th>
+                        <th style="padding-left: 20px;">Factura / NCF</th>
                         <th>Proveedor</th>
                         <th>Fecha</th>
                         <th>Estado</th>
-                        <th>Total</th>
-                        <th>Acciones</th>
+                        <th class="text-right">Total</th>
+                        <th style="padding-right: 20px;" class="text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="6" style="padding: 60px 0; text-align: center; color: var(--text-secondary);">
+                                <div style="font-size: 48px; margin-bottom: 15px; opacity: 0.3;">
+                                    <i class="ri-shopping-cart-2-line"></i>
+                                </div>
+                                <h4>No se encontraron compras</h4>
+                                <p>Comienza registrando una nueva factura de proveedor.</p>
+                                <a href="@Url.Action("Create")" class="btn btn-primary btn-sm" style="margin-top: 10px;">Registrar Primera Compra</a>
+                            </td>
+                        </tr>
+                    }
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td><span class="badge badge-secondary">@item.NumeroFactura</span></td>
-                            <td><span class="text-info font-monospace">@(item.NCF ?? "-")</span></td>
-                            <td>@item.Proveedor?.Nombre</td>
-                            <td>@item.FechaCompra.ToString("dd/MM/yyyy")</td>
+                            <td style="padding-left: 20px;">
+                                <div style="font-weight: 600;">@item.NumeroFactura</div>
+                                <div class="text-sm text-info font-monospace">@(item.NCF ?? "SIN NCF")</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-0-5">
+                                    <div class="avatar-xs bg-secondary-soft text-secondary">
+                                        @(item.Proveedor?.Nombre?.Substring(0, 1).ToUpper() ?? "P")
+                                    </div>
+                                    @item.Proveedor?.Nombre
+                                </div>
+                            </td>
+                            <td>
+                                <div class="text-sm">@item.FechaCompra.ToString("MMM dd, yyyy")</div>
+                            </td>
                             <td>
                                 @switch (item.Estado)
                                 {
                                     case EstadoCompra.Pendiente:
-                                        <span class="badge badge-warning">Pendiente</span>
+                                        <span class="badge badge-warning-soft text-warning">
+                                            <i class="ri-time-line"></i> Pendiente
+                                        </span>
                                         break;
                                     case EstadoCompra.Recibida:
-                                        <span class="badge badge-success">Recibida</span>
+                                        <span class="badge badge-success-soft text-success">
+                                            <i class="ri-checkbox-circle-line"></i> Recibida
+                                        </span>
                                         break;
                                     case EstadoCompra.Cancelada:
-                                        <span class="badge badge-secondary">Cancelada</span>
+                                        <span class="badge badge-secondary-soft text-secondary">
+                                            <i class="ri-close-circle-line"></i> Cancelada
+                                        </span>
                                         break;
                                 }
                             </td>
-                            <td style="font-weight: 600;">@item.Total.ToString("C", new System.Globalization.CultureInfo("es-ES"))</td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-ghost btn-sm">Ver</a>
+                            <td class="text-right" style="font-weight: 700; font-size: 15px;">
+                                @item.Total.ToString("C", new System.Globalization.CultureInfo("es-DO"))
+                            </td>
+                            <td style="padding-right: 20px;" class="text-right">
+                                <div class="d-flex gap-0-5 justify-content-end">
+                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-ghost btn-sm" title="Ver Detalles">
+                                        <i class="ri-eye-line"></i>
+                                    </a>
+                                    
                                     @if (item.Estado == EstadoCompra.Pendiente)
                                     {
                                         <form asp-action="Recibir" asp-route-id="@item.Id" method="post" style="display: inline;">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-success btn-sm">Recibir</button>
+                                            <button type="submit" class="btn btn-success-soft text-success btn-sm" title="Marcar como Recibida">
+                                                <i class="ri-download-2-line"></i>
+                                            </button>
                                         </form>
                                     }
+                                    
                                     @if (item.Estado != EstadoCompra.Cancelada)
                                     {
                                         <form asp-action="Cancelar" asp-route-id="@item.Id" method="post" style="display: inline;">
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Está seguro de cancelar esta compra?')">Cancelar</button>
+                                            <button type="submit" class="btn btn-danger-soft text-danger btn-sm" title="Cancelar Compra" onclick="return confirm('¿Está seguro de cancelar esta compra?')">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
                                         </form>
                                     }
                                 </div>
@@ -125,3 +225,31 @@
         </div>
     </div>
 </div>
+
+<style>
+    .avatar-xs {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: bold;
+    }
+    
+    .badge-success-soft { background: rgba(16, 183, 89, 0.1); color: #10b759 !important; border: 1px solid rgba(16, 183, 89, 0.2); }
+    .badge-warning-soft { background: rgba(255, 159, 67, 0.1); color: #ff9f43 !important; border: 1px solid rgba(255, 159, 67, 0.2); }
+    .badge-danger-soft { background: rgba(234, 84, 85, 0.1); color: #ea5455 !important; border: 1px solid rgba(234, 84, 85, 0.2); }
+    .badge-secondary-soft { background: rgba(100, 116, 139, 0.1); color: #64748b !important; border: 1px solid rgba(100, 116, 139, 0.2); }
+    .badge-info-soft { background: rgba(0, 207, 232, 0.1); color: #00cfe8 !important; border: 1px solid rgba(0, 207, 232, 0.2); }
+    
+    .btn-success-soft { background: rgba(16, 183, 89, 0.1); }
+    .btn-success-soft:hover { background: #10b759; color: white !important; }
+    
+    .btn-danger-soft { background: rgba(234, 84, 85, 0.1); }
+    .btn-danger-soft:hover { background: #ea5455; color: white !important; }
+
+    .text-right { text-align: right; }
+    .justify-content-end { justify-content: flex-end; }
+</style>

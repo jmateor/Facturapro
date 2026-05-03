@@ -16,14 +16,79 @@
                 </a>
             </div>
             <h4 class="page-title">
-                <i class="ri-file-list-3-line me-2"></i>
-                Facturas
+                <i class="@(Context.Request.Query["tipoECF"] == "34" ? "ri-file-history-line" : "ri-file-list-3-line") me-2"></i>
+                @(Context.Request.Query["tipoECF"] == "34" ? "Notas de Crédito" : "Facturas")
             </h4>
-            <p class="text-muted mb-0">Gestiona todas tus facturas electrónicas (e-CF)</p>
+            <p class="text-muted mb-0">
+                @(Context.Request.Query["tipoECF"] == "34" ? "Gestiona tus notas de crédito electrónicas (e-NCF) y devoluciones" : "Gestiona todas tus facturas electrónicas (e-CF)")
+            </p>
         </div>
     </div>
 </div>
 <!-- end page title -->
+
+<div class="row mb-3">
+    <div class="col-md-3">
+        <div class="card mb-0 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-soft-primary rounded-3 me-3">
+                        <i class="ri-file-list-3-line font-24 text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="text-muted fw-normal mt-0" title="Total Facturas">Total Emitidas</h5>
+                        <h3 class="my-0">@Model.Count()</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-0 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-soft-success rounded-3 me-3">
+                        <i class="ri-checkbox-circle-line font-24 text-success"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="text-muted fw-normal mt-0" title="Aprobadas">Aprobadas DGII</h5>
+                        <h3 class="my-0">@Model.Count(f => f.EstadoDGII == "Aprobado" || f.EstadoDGII == "Firmado")</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-0 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-soft-warning rounded-3 me-3">
+                        <i class="ri-calendar-todo-line font-24 text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="text-muted fw-normal mt-0" title="Pendientes">A Crédito</h5>
+                        <h3 class="my-0">@Model.Count(f => f.TipoPago == 2)</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card mb-0 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="avatar-sm bg-soft-info rounded-3 me-3">
+                        <i class="ri-money-dollar-circle-line font-24 text-info"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="text-muted fw-normal mt-0" title="Total">Total Facturado</h5>
+                        <h3 class="my-0">@Model.Sum(f => f.Total).ToString("C", cultura)</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <!-- Filtros -->
@@ -33,21 +98,21 @@
             <div class="col-md-3">
                 <select name="tipoECF" class="form-select">
                     <option value="">Todos los tipos e-CF</option>
-                    <option value="31" selected='@(Context.Request.Query["tipoECF"] == "31" ? "selected" : "")'>E31 - Factura Crédito Fiscal</option>
-                    <option value="32" selected='@(Context.Request.Query["tipoECF"] == "32" ? "selected" : "")'>E32 - Factura Consumo</option>
-                    <option value="33" selected='@(Context.Request.Query["tipoECF"] == "33" ? "selected" : "")'>E33 - Nota Débito</option>
-                    <option value="34" selected='@(Context.Request.Query["tipoECF"] == "34" ? "selected" : "")'>E34 - Nota Crédito</option>
+                    <option value="31" selected='@(Context.Request.Query["tipoECF"] == "31" ? "selected" : null)'>E31 - Factura Crédito Fiscal</option>
+                    <option value="32" selected='@(Context.Request.Query["tipoECF"] == "32" ? "selected" : null)'>E32 - Factura Consumo</option>
+                    <option value="33" selected='@(Context.Request.Query["tipoECF"] == "33" ? "selected" : null)'>E33 - Nota Débito</option>
+                    <option value="34" selected='@(Context.Request.Query["tipoECF"] == "34" ? "selected" : null)'>E34 - Nota Crédito</option>
                 </select>
             </div>
             <div class="col-md-3">
                 <select name="estadoDGII" class="form-select">
                     <option value="">Estado DGII</option>
-                    <option value="Pendiente" selected='@(Context.Request.Query["estadoDGII"] == "Pendiente" ? "selected" : "")'>Pendiente</option>
-                    <option value="Firmado" selected='@(Context.Request.Query["estadoDGII"] == "Firmado" ? "selected" : "")'>Firmado</option>
-                    <option value="Enviado" selected='@(Context.Request.Query["estadoDGII"] == "Enviado" ? "selected" : "")'>Enviado</option>
-                    <option value="EnProceso" selected='@(Context.Request.Query["estadoDGII"] == "EnProceso" ? "selected" : "")'>En Proceso</option>
-                    <option value="Aprobado" selected='@(Context.Request.Query["estadoDGII"] == "Aprobado" ? "selected" : "")'>Aprobado</option>
-                    <option value="Rechazado" selected='@(Context.Request.Query["estadoDGII"] == "Rechazado" ? "selected" : "")'>Rechazado</option>
+                    <option value="Pendiente" selected='@(Context.Request.Query["estadoDGII"] == "Pendiente" ? "selected" : null)'>Pendiente</option>
+                    <option value="Firmado" selected='@(Context.Request.Query["estadoDGII"] == "Firmado" ? "selected" : null)'>Firmado</option>
+                    <option value="Enviado" selected='@(Context.Request.Query["estadoDGII"] == "Enviado" ? "selected" : null)'>Enviado</option>
+                    <option value="EnProceso" selected='@(Context.Request.Query["estadoDGII"] == "EnProceso" ? "selected" : null)'>En Proceso</option>
+                    <option value="Aprobado" selected='@(Context.Request.Query["estadoDGII"] == "Aprobado" ? "selected" : null)'>Aprobado</option>
+                    <option value="Rechazado" selected='@(Context.Request.Query["estadoDGII"] == "Rechazado" ? "selected" : null)'>Rechazado</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -76,6 +141,7 @@
                         <th>Tipo</th>
                         <th>Cliente</th>
                         <th>Fecha Emisión</th>
+                        <th>Condición</th>
                         <th>Total</th>
                         <th>Estado DGII</th>
                         <th>Acciones</th>
@@ -112,6 +178,11 @@
                             </td>
                             <td>@item.FechaEmision.ToString("dd/MM/yyyy")</td>
                             <td>
+                                <span class="badge @(item.TipoPago == 2 ? "bg-warning-soft text-warning" : "bg-success-soft text-success")">
+                                    @(item.TipoPago == 2 ? "Crédito" : "Contado")
+                                </span>
+                            </td>
+                            <td>
                                 <span class="fw-bold text-primary">@item.Total.ToString("C", cultura)</span>
                             </td>
                             <td>
@@ -119,7 +190,7 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-1 flex-wrap">
-                                    <a href="/Facturas/Details/${item.id}" class="btn btn-sm btn-soft-info"><i class="ri-eye-line"></i></a>
+                                    <a href="@Url.Action("Details", new { id = item.Id })" class="btn btn-sm btn-soft-info"><i class="ri-eye-line"></i></a>
                                 </div>
                             </td>
                         </tr>
@@ -173,11 +244,18 @@
             const body = document.getElementById('tablaFacturasBody');
             const noResults = document.getElementById('noResults');
 
-            window.Skeleton.show('#tablaFacturasBody', 'tableRow', 8);
+            body.innerHTML = '<tr><td colspan="8" class="text-center"><i class="ri-loader-4-line ri-spin me-2"></i>Cargando facturas...</td></tr>';
 
-            fetch(`/Facturas/GetFacturasJson?tipoECF=${tipoECF}&estadoDGII=${estadoDGII}&page=${currentPage}&pageSize=${pageSize}`)
-                .then(r => r.json())
+            const url = `/Facturas/GetFacturasJson?tipoECF=${tipoECF}&estadoDGII=${estadoDGII}&page=${currentPage}&pageSize=${pageSize}`;
+            console.log("Cargando facturas desde:", url);
+
+            fetch(url)
+                .then(r => {
+                    if (!r.ok) throw new Error("Error en servidor: " + r.status);
+                    return r.json();
+                })
                 .then(data => {
+                    console.log("Datos recibidos:", data);
                     const facturas = data.items;
                     if (facturas.length === 0) {
                         body.innerHTML = '';
@@ -190,6 +268,8 @@
                     noResults.style.display = 'none';
                     const html = facturas.map(item => {
                         const estadoClass = getEstadoDGIIClass(item.estadoDGII);
+                        const fecha = item.fechaEmisionRaw ? new Date(item.fechaEmisionRaw).toLocaleDateString('es-DO') : '-';
+                        
                         return `
                             <tr>
                                 <td>
@@ -206,7 +286,12 @@
                                         <span>${item.clienteNombre}</span>
                                     </div>
                                 </td>
-                                <td>${item.fechaEmision}</td>
+                                <td>${fecha}</td>
+                                <td>
+                                    <span class="badge ${item.tipoPago == 2 ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success'}">
+                                        ${item.tipoPago == 2 ? 'Crédito' : 'Contado'}
+                                    </span>
+                                </td>
                                 <td><span class="fw-bold text-primary">${new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP' }).format(item.total)}</span></td>
                                 <td><span class="badge ${estadoClass}">${item.estadoDGII || 'Pendiente'}</span></td>
                                 <td>
@@ -218,7 +303,7 @@
                         `;
                     }).join('');
 
-                    window.Skeleton.hide('#tablaFacturasBody', html);
+                    body.innerHTML = html;
                     
                     const start = ((currentPage - 1) * pageSize) + 1;
                     const end = Math.min(currentPage * pageSize, data.totalItems);
@@ -295,6 +380,17 @@
                 html += `<a href="/Facturas/Firmar/${item.id}" class="btn btn-sm btn-soft-primary" title="Firmar"><i class="ri-signature-line"></i></a>`;
             }
             
+            // Botón Nota de Crédito si está aprobada/firmada
+            if (item.estadoDGII === "Aprobado" || item.estadoDGII === "Firmado") {
+                html += `
+                <form action="/Facturas/EmitirNotaCredito/${item.id}" method="post" style="display:inline;" onsubmit="return confirm('¿Desea crear una Nota de Crédito para esta factura?');">
+                    <input type="hidden" name="__RequestVerificationToken" value="${document.querySelector('input[name=\"__RequestVerificationToken\"]').value}">
+                    <button type="submit" class="btn btn-sm btn-soft-warning" title="Emitir Nota de Crédito">
+                        <i class="ri-arrow-go-back-line"></i>
+                    </button>
+                </form>`;
+            }
+
             html += `<a href="/Facturas/Details/${item.id}" class="btn btn-sm btn-soft-info" title="Ver detalles"><i class="ri-eye-line"></i></a>`;
             
             // Link a PDF si existe

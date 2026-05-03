@@ -1,8 +1,8 @@
 # 📘 Manual de Usuario - Facturapro
 
 > **Sistema de Facturación Electrónica para República Dominicana**  
-> **Versión:** 1.0.0-beta  
-> **Fecha:** Abril 2026
+> **Versión:** 1.3.0  
+> **Fecha:** Mayo 2026
 
 ---
 
@@ -18,10 +18,11 @@
 8. [Módulo de Compras](#módulo-de-compras)
 9. [Módulo de Inventario (Kalder)](#módulo-de-inventario-kalder)
 10. [Punto de Venta (POS)](#punto-de-venta-pos)
-11. [Módulo de Reportes y DGII](#módulo-de-reportes-y-dgii)
-12. [Gestión de Usuarios y Roles](#gestión-de-usuarios-y-roles)
-13. [Solución de Problemas](#solución-de-problemas)
-14. [Preguntas Frecuentes](#preguntas-frecuentes)
+11. [Cuentas por Cobrar](#cuentas-por-cobrar)
+12. [Módulo de Reportes y DGII](#módulo-de-reportes-y-dgii)
+13. [Gestión de Usuarios y Roles](#gestión-de-usuarios-y-roles)
+14. [Solución de Problemas](#solución-de-problemas)
+15. [Preguntas Frecuentes](#preguntas-frecuentes)
 
 ---
 
@@ -203,7 +204,13 @@ Después de crear la factura, será redirigido a la pantalla de **Editar Factura
 
 > ⏱️ **Tiempo estimado:** 10-30 segundos
 
-### Paso 5: Consultar Estado
+### Paso 5: Consultar Estado e Indicadores
+
+En la pantalla principal de **Facturas**, encontrará un **Dashboard de Resumen** que muestra:
+- **Total Emitidas:** Cantidad global de documentos.
+- **Aprobadas DGII:** Documentos con validación fiscal exitosa.
+- **A Crédito:** Conteo de facturas pendientes de cobro.
+- **Total Facturado:** Monto total en moneda local (DOP).
 
 1. Haga clic en **Consultar Estado**
 2. El sistema verificará en la DGII y mostrará:
@@ -266,12 +273,38 @@ Desde la vista de **Detalles** puede compartir la factura:
 | **Nota de Crédito (E34)** | Devoluciones, descuentos posteriores, corrección que disminuye valor | Cliente devuelve producto defectuoso |
 | **Nota de Débito (E33)** | Recargos, intereses, corrección que aumenta valor | Cliente debe pagar interés por mora |
 
-#### Cómo Crear
+#### Cómo Crear desde Cero
+1. Cree una factura normal.
+2. Seleccione el tipo **E33** o **E34**.
+3. Use montos negativos para notas de crédito.
 
-1. Cree una factura normal
-2. Seleccione el tipo **E33** o **E34**
-3. En las líneas, referencie la factura original en la descripción
-4. Use montos negativos para notas de crédito
+#### Cómo Crear desde una Factura Existente (Recomendado)
+El sistema permite emitir una Nota de Crédito vinculada automáticamente para asegurar la trazabilidad fiscal:
+1. **Desde el Listado:** Haga clic en el botón amarillo de la flecha (`ri-arrow-go-back-line`) en la fila de la factura.
+2. **Desde Detalles:** Entre a la factura y en el panel lateral derecho (**Opciones Fiscales**), haga clic en **Emitir Nota de Crédito**.
+
+> 💡 **Nota:** Solo podrá emitir notas de crédito para facturas que ya estén en estado **Firmado** o **Aprobado**.
+
+---
+
+## 💳 Cuentas por Cobrar
+
+Este módulo permite dar seguimiento a las facturas emitidas bajo la condición "A Crédito".
+
+### 1. Seguimiento de Deudas
+- Acceda a **Cuentas por Cobrar** en el menú principal.
+- Visualice el listado de facturas pendientes con su balance actual.
+- Las facturas a crédito muestran claramente el **Monto Pagado** y el **Balance Pendiente**.
+
+### 2. Registrar Abonos y Pagos
+1. Ubique la factura o el cliente.
+2. Haga clic en **Registrar Pago**.
+3. Indique el monto que el cliente está entregando.
+4. Seleccione el método de pago (Efectivo, Tarjeta, Transferencia).
+5. El sistema actualizará el balance y generará un **Recibo de Ingreso**.
+
+### 3. Estado de Cuenta
+- Puede descargar o imprimir el estado de cuenta del cliente para enviárselo por WhatsApp o Email.
 
 ---
 
@@ -601,7 +634,11 @@ El módulo POS permite realizar ventas rápidas con interfaz optimizada para cob
    - Descuento por línea (si está habilitado en configuración)
    - Descuento global al total de la venta
 
-5. **Seleccionar Tipo de Pago:**
+5. **Seleccionar Condición de Pago:**
+   - **Al Contado:** El cliente paga el total en el momento.
+   - **A Crédito:** La factura se guarda como cuenta por cobrar. Se puede registrar un **Abono Inicial** (ej: paga la mitad ahora y el resto después).
+
+6. **Seleccionar Método de Pago:**
    - Efectivo
    - Tarjeta de Crédito/Débito
    - Mixto (efectivo + tarjeta)

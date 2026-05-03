@@ -341,6 +341,14 @@
             }
 
             <div class="resumen-row">
+                <span class="label">Condición de Pago</span>
+                <span class="value fw-bold @(Model.TipoPago == 2 ? "text-warning" : "text-success")">
+                    <i class="@(Model.TipoPago == 2 ? "ri-calendar-todo-line" : "ri-checkbox-circle-line") me-1"></i>
+                    @(Model.TipoPago == 2 ? "A CRÉDITO" : "AL CONTADO")
+                </span>
+            </div>
+
+            <div class="resumen-row">
                 <span class="label">Cliente</span>
                 <span class="value">@(Model.Cliente?.Nombre ?? "Consumidor Final")</span>
             </div>

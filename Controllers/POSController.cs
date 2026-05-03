@@ -495,7 +495,7 @@ namespace Facturapro.Controllers
         // POST: POS/ProcesarPago
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcesarPago([Bind("ClienteId,TipoNcf,Notas,MetodoPago,MontoEfectivo,MontoTarjeta,MontoTransferencia,MontoRecibido,NumeroTarjeta,AutorizacionTarjeta,Moneda,TasaCambio")] POSPagoViewModel pago)
+        public async Task<IActionResult> ProcesarPago([Bind("ClienteId,TipoNcf,Notas,CondicionPago,MetodoPago,MontoEfectivo,MontoTarjeta,MontoTransferencia,MontoRecibido,NumeroTarjeta,AutorizacionTarjeta,Moneda,TasaCambio")] POSPagoViewModel pago)
         {
             // Validar si la caja está abierta
             var userId = _context.Users.FirstOrDefault(u => u.UserName == User.Identity!.Name)?.Id;
@@ -564,7 +564,8 @@ namespace Facturapro.Controllers
                     totalPagadoDOP = totalPagado * pago.TasaCambio;
                 }
 
-                if (Math.Round(totalPagadoDOP, 2) < Math.Round(total, 2))
+                // Si es al contado, el pago debe ser igual o mayor al total
+                if (pago.CondicionPago != "Crédito" && Math.Round(totalPagadoDOP, 2) < Math.Round(total, 2))
                 {
                     string montoMostrar = pago.Moneda == "USD" ? $"US${totalPagado:N2}" : $"RD${totalPagado:N2}";
                     string totalMostrar = pago.Moneda == "USD" ? $"US${(total / pago.TasaCambio):N2}" : $"RD${total:N2}";
@@ -584,20 +585,14 @@ namespace Facturapro.Controllers
                     ClienteId = pago.ClienteId,
                     FechaEmision = DateTime.Now,
                     FechaVencimiento = DateTime.Now.AddDays(30),
-                    Estado = "Pagada",
+                    Estado = pago.CondicionPago == "Crédito" ? (totalPagado > 0 ? "Pago Parcial" : "Pendiente") : "Pagada",
                     Notas = pago.Notas,
                     Moneda = pago.Moneda ?? "DOP",
                     TasaCambio = pago.TasaCambio > 0 ? pago.TasaCambio : 1.0m,
                     PorcentajeITBIS = 18,
                     TotalDOP = total, // total ya viene en DOP desde el carrito
                     Lineas = new List<FacturaLinea>(),
-                    TipoPago = pago.MetodoPago switch
-                    {
-                        "Tarjeta" => 2,
-                        "Transferencia" => 3,
-                        "Mixto" => 4,
-                        _ => 1 // Efectivo
-                    }
+                    TipoPago = pago.CondicionPago == "Crédito" ? 2 : 1
                 };
 
                 // Ajustar montos según la moneda
@@ -687,6 +682,26 @@ namespace Facturapro.Controllers
 
                 _context.Facturas.Add(factura);
                 await _context.SaveChangesAsync();
+                
+                // Si hubo un pago parcial/total, registrar el recibo
+                if (totalPagado > 0)
+                {
+                    var recibo = new ReciboPago
+                    {
+                        FacturaId = factura.Id,
+                        ClienteId = factura.ClienteId,
+                        UsuarioId = userId ?? string.Empty,
+                        FechaPago = DateTime.Now,
+                        MontoEfectivo = pago.MontoEfectivo,
+                        MontoTarjeta = pago.MontoTarjeta,
+                        MontoTransferencia = pago.MontoTransferencia,
+                        Referencia = pago.AutorizacionTarjeta,
+                        Notas = $"Pago POS - {pago.MetodoPago}"
+                    };
+                    _context.RecibosPago.Add(recibo);
+                    await _context.SaveChangesAsync();
+                }
+
                 await transaction.CommitAsync();
 
                 // Registro de Auditoría
@@ -889,6 +904,7 @@ namespace Facturapro.Controllers
         public int ClienteId { get; set; }
         public string? TipoNcf { get; set; }
         public string? Notas { get; set; }
+        public string CondicionPago { get; set; } = "Contado"; // Contado, Crédito
         public string MetodoPago { get; set; } = "Efectivo"; // Efectivo, Tarjeta, Transferencia, Mixto
         public decimal MontoEfectivo { get; set; }
         public decimal MontoTarjeta { get; set; }

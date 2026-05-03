@@ -187,6 +187,11 @@ namespace Facturapro.Services.PDF
 
                         col.Item().Text("VENCE:").Bold().FontSize(10).FontColor(COLOR_SECUNDARIO);
                         col.Item().Text(factura.FechaVencimiento.ToString("dd/MM/yyyy"));
+
+                        col.Item().Height(5);
+
+                        col.Item().Text("CONDICIÓN:").Bold().FontSize(10).FontColor(COLOR_SECUNDARIO);
+                        col.Item().Text(factura.TipoPago == 2 ? "A CRÉDITO" : "AL CONTADO").Bold();
                     });
                 });
 
@@ -222,6 +227,21 @@ namespace Facturapro.Services.PDF
                         // Total
                         table.Cell().Text("TOTAL:").AlignRight().Bold().FontSize(12).FontColor(COLOR_PRIMARIO);
                         table.Cell().Text($"$ {factura.Total:N2}").AlignRight().Bold().FontSize(12).FontColor(COLOR_PRIMARIO);
+
+                        if (factura.TipoPago == 2) // A Crédito
+                        {
+                            decimal pagado = factura.MontoEfectivo + factura.MontoTarjeta + factura.MontoTransferencia;
+                            decimal balance = factura.Total - pagado;
+
+                            // Línea separadora
+                            table.Cell().ColumnSpan(2).PaddingVertical(5).LineHorizontal(1).LineColor(COLOR_SECUNDARIO);
+
+                            table.Cell().Text("Monto Pagado:").AlignRight().SemiBold();
+                            table.Cell().Text($"$ {pagado:N2}").AlignRight();
+
+                            table.Cell().Text("BALANCE PENDIENTE:").AlignRight().Bold().FontColor(Colors.Red.Medium);
+                            table.Cell().Text($"$ {balance:N2}").AlignRight().Bold().FontColor(Colors.Red.Medium);
+                        }
                     });
                 });
 
